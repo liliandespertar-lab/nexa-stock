@@ -319,7 +319,14 @@
                     showToast("Login efetuado!");
                 }
             } catch (error) {
-                errorBox.innerText = "Erro: " + error.message;
+                // TRADUÇÃO DE ERROS DO FIREBASE PARA PORTUGUÊS
+                let msg = error.message;
+                if (error.code === 'auth/invalid-credential') msg = "E-mail ou senha incorretos. Se for o 1º acesso, crie uma conta.";
+                else if (error.code === 'auth/email-already-in-use') msg = "Este e-mail já possui cadastro.";
+                else if (error.code === 'auth/weak-password') msg = "A senha deve ter pelo menos 6 caracteres.";
+                else if (error.code === 'auth/invalid-email') msg = "Formato de e-mail inválido.";
+                
+                errorBox.innerText = msg;
                 errorBox.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
