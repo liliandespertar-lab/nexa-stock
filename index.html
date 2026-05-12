@@ -6,191 +6,428 @@
     <title>NEXA STOCK | Gestão de Estoque</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    
     <style>
         :root { --nexa-deep: #0f172a; --nexa-purple: #2e1065; --nexa-accent: #6366f1; }
-        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; transition: all 0.3s ease; }
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; transition: all 0.3s ease; overflow-x: hidden; }
+        
         .bg-nexa-dark { background: radial-gradient(circle at top right, var(--nexa-purple), var(--nexa-deep)); }
         .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
-        .card-premium { background: white; border: 1px solid #e2e8f0; border-radius: 1.5rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-premium { background: white; border: 1px solid #e2e8f0; border-radius: 1.5rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
         .card-premium:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); }
+        
         .btn-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); transition: all 0.2s; }
         .btn-gradient:hover { filter: brightness(1.1); transform: scale(1.02); }
         
-        .view-container { display: none; min-height: calc(100vh - 80px); }
-        .view-container.active { display: block; animation: fadeIn 0.4s ease-out forwards; }
+        .view-container { display: none; min-height: calc(100vh - 80px); animation: fadeIn 0.4s ease-out forwards; }
+        .view-container.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .input-nexa { width: 100%; padding: 0.75rem 1rem; border-radius: 1rem; border: 1px solid #e2e8f0; outline: none; transition: all 0.2s; }
-        .input-nexa:focus { border-color: var(--nexa-accent); ring: 3px; ring-color: rgba(99, 102, 241, 0.1); }
+        .input-nexa { width: 100%; padding: 0.85rem 1rem; border-radius: 1rem; border: 1px solid #e2e8f0; outline: none; transition: all 0.2s; font-size: 0.875rem; }
+        .input-nexa:focus { border-color: var(--nexa-accent); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+        
+        .dropdown-list { max-height: 200px; overflow-y: auto; position: absolute; width: 100%; z-index: 50; background: white; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; display: none; margin-top: 4px; }
+        .dropdown-list li { padding: 0.75rem 1rem; cursor: pointer; font-size: 0.875rem; border-bottom: 1px solid #f1f5f9; }
+        .dropdown-list li:hover { background-color: #f5f3ff; color: #6366f1; }
+        
         .status-badge { padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+        
+        /* Modal & Toasts */
+        .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 1rem; }
+        .modal-overlay.active { display: flex; }
+        #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
+        .toast { background: white; border-left: 4px solid #6366f1; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideInRight 0.3s ease-out forwards; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.875rem; color: #1e293b; }
+        .toast.error { border-left-color: #ef4444; }
+        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
-<body class="overflow-x-hidden">
+<body>
 
-    <div id="view-login" class="view-container active flex items-center justify-center min-h-screen bg-nexa-dark p-6">
-        <div class="w-full max-w-md glass p-10 rounded-[2.5rem] shadow-2xl relative animate-in">
-            <div class="text-center mb-10">
+    <div id="view-login" class="view-container active flex items-center justify-center min-h-screen bg-nexa-dark p-6 relative overflow-hidden">
+        <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
+        
+        <div class="w-full max-w-md glass p-10 rounded-[2.5rem] shadow-2xl relative z-10">
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 btn-gradient rounded-2xl flex items-center justify-center text-white mx-auto mb-6 shadow-2xl">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                </div>
                 <h1 class="text-3xl font-black text-white tracking-tighter italic uppercase">NEXA <span class="text-indigo-400">STOCK</span></h1>
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.4em] mt-2">Gestão de Estoque</p>
+                <p id="login-subtitle" class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.4em] mt-2">Gestão de Estoque</p>
             </div>
-            <form onsubmit="app.handleLogin(event)" class="space-y-6">
-                <input type="text" id="login-user" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500" placeholder="Usuário">
-                <input type="password" id="login-pass" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500" placeholder="Senha">
-                <div id="login-error" class="hidden text-rose-400 text-xs font-bold text-center bg-rose-500/10 py-2 rounded-lg border border-rose-500/20"></div>
-                <button type="submit" id="btn-login-submit" class="w-full btn-gradient text-white py-5 rounded-2xl font-black shadow-xl uppercase">Entrar no Sistema</button>
+
+            <!-- Formulário Auth -->
+            <form onsubmit="app.handleAuth(event)" class="space-y-4">
+                <div id="register-fields" class="hidden space-y-4">
+                    <input type="text" id="reg-nome" class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="Nome Completo">
+                    <input type="text" id="reg-setor" class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="Setor (Ex: Almoxarifado)">
+                </div>
+                
+                <input type="text" id="login-user" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="Usuário">
+                <input type="password" id="login-pass" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="Senha">
+                
+                <div id="login-error" class="hidden text-rose-400 text-xs font-bold text-center bg-rose-500/10 py-3 rounded-xl border border-rose-500/20"></div>
+                
+                <button type="submit" id="btn-auth-submit" class="w-full btn-gradient text-white py-5 rounded-2xl font-black text-lg shadow-xl uppercase tracking-wider flex justify-center items-center gap-2">
+                    <span>Entrar no Sistema</span>
+                </button>
+                
+                <p class="text-center text-slate-400 text-xs mt-6">
+                    <span id="auth-switch-text">Ainda não tem conta?</span>
+                    <a href="javascript:void(0)" onclick="app.toggleAuthMode()" id="auth-switch-link" class="text-indigo-400 font-bold ml-1 hover:underline">Cadastre-se</a>
+                </p>
             </form>
         </div>
     </div>
 
-    <div id="app-shell" class="hidden">
-        <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-8 py-4 flex justify-between items-center shadow-sm">
-            <div class="flex items-center gap-6">
-                <div onclick="app.showView('dashboard')" class="cursor-pointer">
-                    <h1 class="text-xl font-black italic tracking-tighter uppercase text-slate-800">NEXA <span class="text-indigo-600">STOCK</span></h1>
+    <div id="app-shell" class="hidden min-h-screen flex flex-col">
+        <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-lg">
+            <div class="flex items-center gap-8">
+                <div onclick="app.showView('dashboard')" class="cursor-pointer flex items-center gap-3">
+                    <div class="w-8 h-8 btn-gradient rounded-lg flex items-center justify-center text-white shadow-md">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-black italic tracking-tighter uppercase text-white leading-none">NEXA <span class="text-indigo-400">STOCK</span></h1>
+                    </div>
                 </div>
-                <nav class="hidden md:flex gap-6">
-                    <button onclick="app.showView('dashboard')" class="text-xs font-black uppercase text-slate-400 hover:text-indigo-600 transition">Dashboard</button>
-                    <button onclick="app.showView('operacoes')" class="text-xs font-black uppercase text-slate-400 hover:text-indigo-600 transition">Operações</button>
-                    <button onclick="app.showView('auditoria')" class="text-xs font-black uppercase text-slate-400 hover:text-indigo-600 transition">Auditoria</button>
-                    <button onclick="app.showView('requisicoes')" class="text-xs font-black uppercase text-slate-400 hover:text-indigo-600 transition">Requisições</button>
+                <nav class="hidden md:flex gap-1 bg-slate-800 p-1 rounded-xl">
+                    <button onclick="app.showView('dashboard')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Dashboard</button>
+                    <button onclick="app.showView('operacoes')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Operações</button>
+                    <button onclick="app.showView('auditoria')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Auditoria</button>
+                    <button onclick="app.showView('requisicoes')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Requisições</button>
                 </nav>
             </div>
             <div class="flex items-center gap-4">
-                <span id="user-name" class="text-xs font-bold text-slate-500">...</span>
-                <button onclick="app.logout()" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition">
+                <div class="text-right hidden sm:block border-r border-slate-700 pr-4">
+                    <p id="user-name" class="text-xs font-bold text-white">Usuário</p>
+                    <p class="text-[9px] text-emerald-400 font-black uppercase tracking-widest">Ativo</p>
+                </div>
+                <button onclick="app.logout()" class="p-2 text-rose-400 hover:bg-rose-500/20 rounded-xl transition" title="Sair">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
                 </button>
             </div>
         </header>
 
-        <main class="max-w-7xl mx-auto p-8">
+        <!-- Navegação Mobile -->
+        <div class="md:hidden bg-slate-800 border-b border-slate-700 flex overflow-x-auto p-2 gap-2 sticky top-[72px] z-30">
+            <button onclick="app.showView('dashboard')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Dash</button>
+            <button onclick="app.showView('operacoes')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Operações</button>
+            <button onclick="app.showView('auditoria')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Auditoria</button>
+            <button onclick="app.showView('requisicoes')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Pedidos</button>
+        </div>
+
+        <main class="flex-1 w-full max-w-7xl mx-auto p-6 md:p-10">
             
-            <!-- Dashboard View -->
             <div id="view-dashboard" class="view-container">
-                <h2 class="text-3xl font-black text-slate-800 tracking-tighter uppercase mb-8">Central de <span class="text-indigo-600">Controle</span></h2>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Central de <span class="text-indigo-600">Controle</span></h2>
+                    <p class="text-slate-500 text-sm font-medium mt-1">Visão geral do sistema de estoque.</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="card-premium p-8 border-l-4 border-indigo-500">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total SKU Ativos</p>
-                        <span id="stat-sku" class="text-4xl font-black text-slate-800">0</span>
+                        <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mb-4">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total SKU Ativos</p>
+                        <span id="stat-sku" class="text-5xl font-black text-slate-800 tracking-tighter">0</span>
                     </div>
                     <div class="card-premium p-8 border-l-4 border-rose-500">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estoque Crítico</p>
-                        <span id="stat-critico" class="text-4xl font-black text-rose-600">0</span>
+                        <div class="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 mb-4">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estoque Baixo</p>
+                        <span id="stat-critico" class="text-5xl font-black text-rose-600 tracking-tighter">0</span>
                     </div>
                     <div class="card-premium p-8 border-l-4 border-amber-500">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Pedidos Pendentes</p>
-                        <span id="stat-pendentes" class="text-4xl font-black text-amber-500">0</span>
+                        <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 mb-4">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                        </div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pedidos Pendentes</p>
+                        <span id="stat-pendentes" class="text-5xl font-black text-amber-500 tracking-tighter">0</span>
                     </div>
                 </div>
             </div>
 
-            <!-- Operações View -->
             <div id="view-operacoes" class="view-container">
-                <h2 class="text-3xl font-black text-slate-800 tracking-tighter uppercase mb-8 italic">Operações de <span class="text-indigo-600">Estoque</span></h2>
+                <div class="mb-8">
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Ações de <span class="text-indigo-600">Estoque</span></h2>
+                    <p class="text-slate-500 text-sm font-medium mt-1">Realize registros manuais e ajustes.</p>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="card-premium p-8 text-center cursor-pointer hover:border-emerald-500" onclick="app.openModal('entrada')">
-                        <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                    <div class="card-premium p-10 cursor-pointer hover:border-emerald-500 group flex items-center gap-8" onclick="app.openModal('modal-entrada')">
+                        <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
                         </div>
-                        <h3 class="text-xl font-black text-slate-800">Registrar Entrada</h3>
-                        <p class="text-sm text-slate-500 mt-2">Adicionar suprimentos ao banco de dados.</p>
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800">Registrar Entrada</h3>
+                            <p class="text-sm text-slate-500 mt-2">Adicionar produtos e suprimentos ao banco.</p>
+                        </div>
                     </div>
-                    <div class="card-premium p-8 text-center cursor-pointer hover:border-rose-500" onclick="app.openModal('saida')">
-                        <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                    <div class="card-premium p-10 cursor-pointer hover:border-rose-500 group flex items-center gap-8" onclick="app.openModal('modal-saida')">
+                        <div class="w-20 h-20 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-rose-500 group-hover:text-white transition-colors">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
                         </div>
-                        <h3 class="text-xl font-black text-slate-800">Registrar Saída</h3>
-                        <p class="text-sm text-slate-500 mt-2">Dar baixa em materiais e produtos.</p>
+                        <div>
+                            <h3 class="text-2xl font-black text-slate-800">Registrar Saída</h3>
+                            <p class="text-sm text-slate-500 mt-2">Dar baixa em materiais consumidos.</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Auditoria View -->
             <div id="view-auditoria" class="view-container">
-                 <h2 class="text-3xl font-black text-slate-800 tracking-tighter uppercase mb-8">Auditoria de <span class="text-indigo-600">Logs</span></h2>
+                 <div class="mb-8 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Auditoria de <span class="text-indigo-600">Logs</span></h2>
+                        <p class="text-slate-500 text-sm font-medium mt-1">Histórico completo de transações.</p>
+                    </div>
+                    <button onclick="app.loadAuditoria()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 flex items-center gap-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> Atualizar
+                    </button>
+                 </div>
                  <div class="card-premium overflow-hidden">
-                    <table class="w-full text-left">
-                        <thead class="bg-slate-50">
-                            <tr>
-                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Data</th>
-                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Tipo</th>
-                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Produto</th>
-                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Qtd</th>
-                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Responsável</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-logs">
-                            <!-- Logs injetados aqui -->
-                        </tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="p-4 text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Data/Hora</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-slate-400">Tipo</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-slate-400">Produto (Cód)</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-slate-400 text-right">Qtd</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-slate-400">Local/Setor</th>
+                                    <th class="p-4 text-[10px] font-black uppercase text-slate-400">Resp.</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-logs">
+                                <!-- Preenchido via JS -->
+                            </tbody>
+                        </table>
+                    </div>
                  </div>
             </div>
 
-            <!-- Requisições View -->
             <div id="view-requisicoes" class="view-container">
-                 <h2 class="text-3xl font-black text-slate-800 tracking-tighter uppercase mb-8 italic">Gestão de <span class="text-indigo-600">Pedidos</span></h2>
-                 <div id="grid-requisicoes" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Cards de requisição aqui -->
+                 <div class="mb-8 flex justify-between items-end">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Gestão de <span class="text-indigo-600">Pedidos</span></h2>
+                        <p class="text-slate-500 text-sm font-medium mt-1">Acompanhamento e baixa de solicitações internas.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="app.loadRequisicoes()" class="bg-white border border-slate-200 text-slate-600 p-2 rounded-lg hover:bg-slate-50" title="Atualizar">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+                        </button>
+                    </div>
+                 </div>
+                 
+                 <div id="grid-requisicoes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Cards injetados via JS -->
                  </div>
             </div>
 
         </main>
     </div>
 
+    <!-- Modal Entrada -->
+    <div id="modal-entrada" class="modal-overlay">
+        <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-8 relative">
+            <button onclick="app.closeModal('modal-entrada')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-6">📥 Registro de Entrada</h2>
+            <form id="form-entrada" onsubmit="app.salvarEntrada(event)" class="space-y-4">
+                <div class="relative">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Produto (Nome ou Cód)</label>
+                    <input type="text" id="ent-produto" class="input-nexa" placeholder="Busque na lista ou digite novo..." autocomplete="off" required>
+                    <ul id="list-ent-produto" class="dropdown-list"></ul>
+                    <input type="hidden" id="ent-cod-real">
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="relative">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Local</label>
+                        <input type="text" id="ent-local" class="input-nexa" autocomplete="off" required>
+                        <ul id="list-ent-local" class="dropdown-list"></ul>
+                    </div>
+                    <div class="relative">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Setor</label>
+                        <input type="text" id="ent-setor" class="input-nexa" autocomplete="off" required>
+                        <ul id="list-ent-setor" class="dropdown-list"></ul>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="relative">
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Fornecedor</label>
+                        <input type="text" id="ent-forn" class="input-nexa" autocomplete="off">
+                        <ul id="list-ent-forn" class="dropdown-list"></ul>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Quantidade</label>
+                        <input type="number" id="ent-qtd" class="input-nexa font-mono font-bold" placeholder="0" min="1" required>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold uppercase tracking-widest mt-6 transition shadow-lg flex justify-center items-center">Confirmar Entrada</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Modal Saída -->
+    <div id="modal-saida" class="modal-overlay">
+        <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-8 relative">
+            <button onclick="app.closeModal('modal-saida')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-6">📤 Registro de Saída</h2>
+            <form id="form-saida" onsubmit="app.salvarSaida(event)" class="space-y-4">
+                <div class="relative">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Localizar Produto</label>
+                    <input type="text" id="sai-produto" class="input-nexa border-rose-200 focus:border-rose-500 focus:ring-rose-100" placeholder="Digite código ou nome..." autocomplete="off" required>
+                    <ul id="list-sai-produto" class="dropdown-list"></ul>
+                    <input type="hidden" id="sai-cod-real">
+                </div>
+                <div class="relative">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Colaborador / Retirado por</label>
+                    <input type="text" id="sai-func" class="input-nexa border-rose-200 focus:border-rose-500 focus:ring-rose-100" autocomplete="off" required>
+                    <ul id="list-sai-func" class="dropdown-list"></ul>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Qtd Retirada</label>
+                        <input type="number" id="sai-qtd" class="input-nexa border-rose-200 focus:border-rose-500 focus:ring-rose-100 font-mono font-bold text-rose-600" placeholder="0" min="1" required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Finalidade</label>
+                        <input type="text" id="sai-fin" class="input-nexa border-rose-200 focus:border-rose-500 focus:ring-rose-100" placeholder="Ex: Obra A" required>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white py-4 rounded-xl font-bold uppercase tracking-widest mt-6 transition shadow-lg flex justify-center items-center">Confirmar Saída</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Container de Toasts (Avisos) -->
+    <div id="toast-container"></div>
+
     <script>
+        // URL Oficial da API via Google Apps Script (MANDATÓRIO)
         const API_URL = "https://script.google.com/macros/s/AKfycbx56SItQcH5-0W-CWW7MlnLhcFkV4QpZLYdu1cOoCljZf0dXC_e11_9dFqdKMGfEmtJ5A/exec";
 
         const app = {
             user: null,
-            data: {},
+            isRegisterMode: false,
+            dadosGlobais: { listas: {} },
+
+            showToast(msg, isError = false) {
+                const container = document.getElementById('toast-container');
+                const toast = document.createElement('div');
+                toast.className = `toast ${isError ? 'error' : ''}`;
+                
+                const icon = isError 
+                    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
+                    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
+                
+                toast.innerHTML = `${icon} <span>${msg}</span>`;
+                container.appendChild(toast);
+                setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+            },
+
+            openModal(id) { document.getElementById(id).classList.add('active'); },
+            closeModal(id) { 
+                document.getElementById(id).classList.remove('active'); 
+                const form = document.querySelector(`#${id} form`);
+                if(form) form.reset();
+            },
 
             async callAPI(action, payload = {}) {
                 try {
                     const response = await fetch(API_URL, {
                         method: 'POST',
-                        body: JSON.stringify({ 
-                            action, 
-                            payload, 
-                            user: this.user?.name,
-                            loggedUser: this.user?.name
-                        })
+                        body: JSON.stringify({ action, payload }),
+                        headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain evita block de CORS em redirecionamento no GAS
                     });
                     const res = await response.json();
-                    if (!res.sucesso) throw new Error(res.erro);
+                    if (!res.sucesso) throw new Error(res.erro || "Falha desconhecida na API.");
                     return res.data;
                 } catch (err) {
                     console.error("API Error:", err);
+                    this.showToast(err.message, true);
                     return null;
                 }
             },
 
-            async handleLogin(e) {
+            toggleAuthMode() {
+                this.isRegisterMode = !this.isRegisterMode;
+                const regFields = document.getElementById('register-fields');
+                const btn = document.getElementById('btn-auth-submit');
+                const title = document.getElementById('login-subtitle');
+                const link = document.getElementById('auth-switch-link');
+                const text = document.getElementById('auth-switch-text');
+
+                if (this.isRegisterMode) {
+                    regFields.classList.remove('hidden');
+                    document.getElementById('reg-nome').required = true;
+                    btn.innerHTML = '<span>Criar Minha Conta</span>';
+                    title.innerText = 'Criar Novo Acesso';
+                    text.innerText = 'Já possui uma conta?';
+                    link.innerText = 'Fazer Login';
+                } else {
+                    regFields.classList.add('hidden');
+                    document.getElementById('reg-nome').required = false;
+                    btn.innerHTML = '<span>Entrar no Sistema</span>';
+                    title.innerText = 'Gestão de Estoque';
+                    text.innerText = 'Ainda não tem conta?';
+                    link.innerText = 'Cadastre-se';
+                }
+            },
+
+            async handleAuth(e) {
                 e.preventDefault();
                 const u = document.getElementById('login-user').value;
                 const p = document.getElementById('login-pass').value;
-                const btn = document.getElementById('btn-login-submit');
+                const btn = document.getElementById('btn-auth-submit');
+                const originalText = btn.innerHTML;
                 
                 btn.disabled = true;
-                btn.innerHTML = '<span class="animate-pulse">Autenticando...</span>';
+                btn.innerHTML = '<span class="animate-pulse">Processando...</span>';
 
-                const data = await this.callAPI('login', { user: u, pass: p });
-                if (data) {
-                    this.user = { name: data.user, setor: data.setor };
-                    document.getElementById('user-name').innerText = this.user.name;
-                    document.getElementById('view-login').classList.remove('active');
-                    document.getElementById('app-shell').classList.remove('hidden');
-                    this.showView('dashboard');
-                } else {
-                    const err = document.getElementById('login-error');
-                    err.innerText = "Credenciais inválidas ou erro de rede.";
-                    err.classList.remove('hidden');
+                try {
+                    if (this.isRegisterMode) {
+                        const nome = document.getElementById('reg-nome').value;
+                        const setor = document.getElementById('reg-setor').value;
+                        const res = await this.callAPI('register', { nome, user: u, pass: p, setor });
+                        if (res) {
+                            this.showToast("Conta criada com sucesso! Faça login.");
+                            this.toggleAuthMode();
+                        }
+                    } else {
+                        const data = await this.callAPI('login', { user: u, pass: p });
+                        if (data) {
+                            this.user = { name: data.user, setor: data.setor };
+                            document.getElementById('user-name').innerText = this.user.name;
+                            document.getElementById('view-login').classList.remove('active');
+                            document.getElementById('app-shell').classList.remove('hidden');
+                            this.showView('dashboard');
+                        }
+                    }
+                } finally {
                     btn.disabled = false;
-                    btn.innerHTML = 'Entrar no Sistema';
+                    btn.innerHTML = originalText;
                 }
+            },
+
+            logout() {
+                this.user = null;
+                document.getElementById('app-shell').classList.add('hidden');
+                document.getElementById('view-login').classList.add('active');
+                this.showToast("Sessão encerrada com segurança.");
             },
 
             showView(name) {
                 document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+                document.querySelectorAll('.nav-btn').forEach(btn => {
+                    btn.classList.remove('bg-slate-700', 'text-white');
+                    btn.classList.add('text-slate-300');
+                    if(btn.innerText.toLowerCase().includes(name.substring(0,4))) {
+                        btn.classList.add('bg-slate-700', 'text-white');
+                        btn.classList.remove('text-slate-300');
+                    }
+                });
+
                 const target = document.getElementById('view-' + name);
                 if (target) {
                     target.classList.add('active');
@@ -199,39 +436,213 @@
             },
 
             async loadViewData(name) {
-                if (name === 'dashboard') {
+                if (name === 'dashboard' || name === 'operacoes') {
+                    // Dashboard traz os stats e carrega as listas pros dropdowns de operações
                     const data = await this.callAPI('getDashboard');
                     if (data) {
-                        document.getElementById('stat-sku').innerText = data.stats.totalProdutos;
-                        document.getElementById('stat-critico').innerText = data.stats.estoqueBaixo;
-                        document.getElementById('stat-pendentes').innerText = data.stats.requisicoesPendentes;
+                        if(name === 'dashboard') {
+                            document.getElementById('stat-sku').innerText = data.stats.totalProdutos;
+                            document.getElementById('stat-critico').innerText = data.stats.estoqueBaixo;
+                            document.getElementById('stat-pendentes').innerText = data.stats.requisicoesPendentes;
+                        }
+                        this.dadosGlobais.listas = data.listas || {};
+                        this.configurarDropdowns();
                     }
                 }
+                if (name === 'auditoria') {
+                    this.loadAuditoria();
+                }
                 if (name === 'requisicoes') {
-                    const reqs = await this.callAPI('getRequisicoes');
-                    const grid = document.getElementById('grid-requisicoes');
-                    grid.innerHTML = (reqs || []).map(r => `
-                        <div class="card-premium p-6">
-                            <div class="flex justify-between items-start mb-4">
-                                <div>
-                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">REQ #${r.numero}</span>
-                                    <h4 class="text-lg font-black text-slate-800">${r.material_name}</h4>
-                                </div>
-                                <span class="status-badge bg-indigo-50 text-indigo-600">${r.status}</span>
-                            </div>
-                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                <div class="bg-indigo-500 h-full" style="width: ${(r.total_withdrawn/r.total_requested)*100}%"></div>
-                            </div>
-                        </div>
-                    `).join('');
+                    this.loadRequisicoes();
                 }
             },
 
-            logout() {
-                this.user = null;
-                location.reload();
+            configurarDropdowns() {
+                const l = this.dadosGlobais.listas;
+                const format = (arr) => (arr || []).map(i => typeof i === 'string' ? {label: i, value: i} : {label: `${i[0]} - ${i[1]}`, value: i[0], nome: i[1]});
+                
+                const produtos = format(l.produtos);
+                const locais = format(l.locais);
+                const setores = format(l.setores);
+                const fornecedores = format(l.fornecedores);
+                // Usando setores ou locais como fallback para funcionários se a lista não vier do backend simples
+                const funcionarios = format(l.locais); 
+
+                this.setupDropdown('ent-produto', 'list-ent-produto', produtos, 'ent-cod-real');
+                this.setupDropdown('ent-local', 'list-ent-local', locais);
+                this.setupDropdown('ent-setor', 'list-ent-setor', setores);
+                this.setupDropdown('ent-forn', 'list-ent-forn', fornecedores);
+                
+                this.setupDropdown('sai-produto', 'list-sai-produto', produtos, 'sai-cod-real');
+                this.setupDropdown('sai-func', 'list-sai-func', funcionarios); // Placeholder
+            },
+
+            setupDropdown(inputId, listId, dataSource, hiddenId = null) {
+                const input = document.getElementById(inputId);
+                const list = document.getElementById(listId);
+                const hidden = hiddenId ? document.getElementById(hiddenId) : null;
+                
+                const render = (term) => {
+                    list.innerHTML = '';
+                    const q = (term||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                    const filtered = dataSource.filter(i => i.label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q)).slice(0, 15);
+                    
+                    if(filtered.length === 0 && q.length > 0) {
+                        const li = document.createElement('li'); li.innerHTML = `<span class="text-xs text-slate-400 italic">Usar "${term}" como novo registro</span>`;
+                        list.appendChild(li);
+                    } else {
+                        filtered.forEach(item => {
+                            const li = document.createElement('li'); li.textContent = item.label;
+                            li.onmousedown = () => {
+                                input.value = item.nome ? item.nome : item.label; // Preenche só nome se for prod, senao label
+                                if(hidden) hidden.value = item.value;
+                                if(inputId === 'ent-produto' && hidden) input.value = item.label; // No entrada mantem cod - nome
+                                list.style.display = 'none';
+                            };
+                            list.appendChild(li);
+                        });
+                    }
+                    list.style.display = 'block';
+                };
+                
+                input.addEventListener('focus', () => render(input.value));
+                input.addEventListener('input', () => { render(input.value); if(hidden) hidden.value=''; }); // limpa id se digitar
+                input.addEventListener('blur', () => setTimeout(() => list.style.display = 'none', 200));
+            },
+
+            async salvarEntrada(e) {
+                e.preventDefault();
+                const btn = e.target.querySelector('button');
+                btn.disabled = true; btn.innerHTML = '<span class="animate-pulse">Processando...</span>';
+
+                const payload = {
+                    produto: document.getElementById('ent-cod-real').value || document.getElementById('ent-produto').value.split('-')[0].trim(), // Pega cod do input se for novo
+                    produtoNovoNome: document.getElementById('ent-produto').value, // nome full
+                    local: document.getElementById('ent-local').value,
+                    setor: document.getElementById('ent-setor').value,
+                    fornecedor: document.getElementById('ent-forn').value,
+                    quantidade: document.getElementById('ent-qtd').value
+                };
+
+                const res = await this.callAPI('salvarEntrada', payload);
+                btn.disabled = false; btn.innerHTML = 'Confirmar Entrada';
+                
+                if(res) {
+                    this.showToast("Entrada registrada com sucesso!");
+                    this.closeModal('modal-entrada');
+                }
+            },
+
+            async salvarSaida(e) {
+                e.preventDefault();
+                const btn = e.target.querySelector('button');
+                btn.disabled = true; btn.innerHTML = '<span class="animate-pulse">Processando...</span>';
+
+                const codReal = document.getElementById('sai-cod-real').value;
+                if(!codReal) {
+                    this.showToast("Selecione um produto cadastrado da lista para saída.", true);
+                    btn.disabled = false; btn.innerHTML = 'Confirmar Saída';
+                    return;
+                }
+
+                const payload = {
+                    produto: codReal,
+                    quantidade: document.getElementById('sai-qtd').value,
+                    funcionario: document.getElementById('sai-func').value,
+                    finalidade: document.getElementById('sai-fin').value
+                };
+
+                const res = await this.callAPI('salvarSaida', payload);
+                btn.disabled = false; btn.innerHTML = 'Confirmar Saída';
+                
+                if(res) {
+                    this.showToast("Saída registrada com sucesso!");
+                    this.closeModal('modal-saida');
+                }
+            },
+
+            async loadAuditoria() {
+                const tbody = document.getElementById('table-logs');
+                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-indigo-500 font-bold animate-pulse">Sincronizando logs...</td></tr>';
+                
+                const data = await this.callAPI('getLogs'); // Usando endpoint genérico de relatorio/logs se implementado.
+                // Como getLogs / getRelatorioCompleto retorna lista de obj ou arrays. Assumindo modelo similar ao anterior.
+                if(!data || !data.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-slate-400">Nenhum registro encontrado.</td></tr>';
+                    return;
+                }
+
+                // Proteção caso dados não sejam array ou estruturados diferente
+                if(Array.isArray(data)) {
+                     tbody.innerHTML = data.slice(0,50).map(r => {
+                        const isEntrada = String(r.tipo||r[1]).toUpperCase().includes('ENTRADA');
+                        const isSaida = String(r.tipo||r[1]).toUpperCase().includes('SAÍDA') || String(r.tipo||r[1]).toUpperCase().includes('SAIDA');
+                        const cor = isEntrada ? 'text-emerald-600' : isSaida ? 'text-rose-600' : 'text-indigo-600';
+                        
+                        return `
+                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
+                                <td class="p-4 text-xs font-medium text-slate-600 whitespace-nowrap">${r.data || r[0] || '-'}</td>
+                                <td class="p-4 text-xs font-bold ${cor}">${r.tipo || r[1] || '-'}</td>
+                                <td class="p-4 text-xs font-medium text-slate-800">${r.codProduto || r[2] || '-'} - ${r.nomeProduto || r[3] || '-'}</td>
+                                <td class="p-4 text-xs font-black text-slate-800 text-right">${r.quantidade || r[4] || '-'}</td>
+                                <td class="p-4 text-xs text-slate-500">${r.local || r[5] || '-'} / ${r.setor || r[6] || '-'}</td>
+                                <td class="p-4 text-xs text-slate-500">${r.funcionario || r[9] || '-'}</td>
+                            </tr>
+                        `;
+                    }).join('');
+                }
+            },
+
+            async loadRequisicoes() {
+                const grid = document.getElementById('grid-requisicoes');
+                grid.innerHTML = '<div class="col-span-full text-center py-10 text-indigo-500 font-bold animate-pulse">Sincronizando pedidos...</div>';
+                
+                const data = await this.callAPI('getRequisicoes');
+                if(!data || !data.length) {
+                    grid.innerHTML = '<div class="col-span-full bg-slate-50 border border-slate-200 rounded-xl p-10 text-center text-slate-400">Nenhum pedido pendente registrado no sistema.</div>';
+                    return;
+                }
+
+                grid.innerHTML = data.map((r) => {
+                    const statusLower = String(r.status||'').toLowerCase();
+                    const isComplete = statusLower.includes('entregue') || statusLower.includes('complete');
+                    const isPartial = statusLower.includes('parcial') || statusLower.includes('partial');
+                    
+                    const statusClass = isComplete ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
+                                      : isPartial ? 'bg-blue-100 text-blue-700 border-blue-200' 
+                                      : 'bg-amber-100 text-amber-700 border-amber-200';
+                                      
+                    const perc = r.total_requested > 0 ? Math.min((r.total_withdrawn / r.total_requested) * 100, 100) : 0;
+
+                    return `
+                        <div class="card-premium p-6 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-4">
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded-md">REQ #${r.numero}</span>
+                                    <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${statusClass}">${r.status || 'Pendente'}</span>
+                                </div>
+                                <h4 class="text-lg font-black text-slate-800 leading-tight mb-4">${r.material_name}</h4>
+                            </div>
+                            
+                            <div class="space-y-2 mt-4 pt-4 border-t border-slate-100">
+                                <div class="flex justify-between text-[10px] font-black text-slate-500 uppercase tracking-widest">
+                                    <span>Progresso</span>
+                                    <span>${r.total_withdrawn || 0} / ${r.total_requested}</span>
+                                </div>
+                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                    <div class="h-full ${isComplete ? 'bg-emerald-500' : 'bg-indigo-500'}" style="width: ${perc}%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
         };
+
+        // Impede submissões padrões e garante fallback seguro em enter.
+        document.querySelectorAll('form').forEach(f => {
+            f.addEventListener('keypress', e => { if(e.key === 'Enter') e.preventDefault(); });
+        });
     </script>
 </body>
 </html>
