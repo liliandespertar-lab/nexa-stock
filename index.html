@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXA STOCK | Gestão de Estoque</title>
+    <title>NEXA STOCK | ERP Firebase</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <style>
@@ -171,10 +171,11 @@
                                 <th>Setor/Forn.</th>
                                 <th>Usuário/Responsável</th>
                                 <th>Finalidade</th>
+                                <th class="text-right">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="grid-movimentacoes">
-                            <tr><td colspan="8" class="text-center py-10 text-slate-400 font-medium">Carregando histórico...</td></tr>
+                            <tr><td colspan="9" class="text-center py-10 text-slate-400 font-medium">Carregando histórico...</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -348,6 +349,57 @@
         </div>
     </div>
 
+    <!-- Modal de Edição de Movimentação -->
+    <div id="modal-edit-mov" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4">
+        <div class="glass-form w-full max-w-xl p-8 animate-slide relative">
+            <button onclick="fecharModal('modal-edit-mov')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
+            <div class="mb-6">
+                <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">✏️ Editar Registro</h2>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Ajuste de log e recálculo automático de estoque</p>
+            </div>
+            <form id="form-edit-mov" class="space-y-4">
+                <input type="hidden" id="edit-mov-id">
+                <input type="hidden" id="edit-mov-tipo">
+                <input type="hidden" id="edit-mov-prod-id">
+                <input type="hidden" id="edit-mov-qtd-antiga">
+                
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-4 flex justify-between items-center">
+                    <div>
+                        <span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto</span>
+                        <span id="edit-mov-prod-nome" class="font-bold text-slate-800 text-sm">--</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo</span>
+                        <span id="edit-mov-tipo-display" class="font-bold text-sm">--</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nova Quantidade</label>
+                        <input type="number" id="edit-mov-qtd" class="input-nexa font-black text-indigo-600 text-xl" min="1" required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Setor / Fornecedor</label>
+                        <input type="text" id="edit-mov-setor" class="input-nexa" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Responsável / Usuário</label>
+                        <input type="text" id="edit-mov-user" class="input-nexa" required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Finalidade</label>
+                        <input type="text" id="edit-mov-fin" class="input-nexa">
+                    </div>
+                </div>
+                
+                <button type="submit" id="btn-salvar-edit-mov" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm mt-4 shadow-lg hover:bg-indigo-700 transition active:scale-95">SALVAR ALTERAÇÕES</button>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -370,6 +422,7 @@
 
         window.bancoProdutos = [];
         window.bancoRequisicoes = [];
+        window.bancoMovimentacoes = []; // Array Global para armazenar logs na memória
 
         // UI Toast Helper
         window.showToast = (msg, isError = false) => {
@@ -590,19 +643,24 @@
 
         window.carregarMovimentacoes = async () => {
             const grid = document.getElementById('grid-movimentacoes');
-            grid.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-slate-400 font-medium animate-pulse">Buscando registros...</td></tr>';
+            grid.innerHTML = '<tr><td colspan="9" class="text-center py-10 text-slate-400 font-medium animate-pulse">Buscando registros...</td></tr>';
             try {
                 const q = query(collection(db, "movimentacoes"), orderBy("data", "desc"), limit(100));
                 const snap = await getDocs(q);
                 grid.innerHTML = '';
+                window.bancoMovimentacoes = [];
                 
                 if (snap.empty) {
-                    grid.innerHTML = '<tr><td colspan="8" class="text-center py-10 text-slate-400">Nenhum registro encontrado.</td></tr>';
+                    grid.innerHTML = '<tr><td colspan="9" class="text-center py-10 text-slate-400">Nenhum registro encontrado.</td></tr>';
                     return;
                 }
 
+                let idx = 0;
                 snap.forEach(doc => {
                     const d = doc.data();
+                    d.id = doc.id;
+                    window.bancoMovimentacoes.push(d);
+
                     const dt = d.data && d.data.toDate ? d.data.toDate().toLocaleString('pt-BR') : 'Data inválida';
                     const tipoCor = d.tipo === 'ENTRADA' ? 'text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-md' : 'text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded-md';
                     
@@ -616,11 +674,17 @@
                         <td class="text-xs">Setor: ${d.setor || '-'}<br>Forn: ${d.fornecedor || '-'}</td>
                         <td class="text-xs">${d.usuario_retirou || d.usuario || d.usuario_sistema}</td>
                         <td class="text-xs truncate max-w-[150px] cursor-help" title="${d.finalidade || '-'}">${d.finalidade || '-'}</td>
+                        <td class="text-right">
+                            <button onclick="abrirModalEditMov(${idx})" class="text-indigo-500 hover:text-indigo-700 p-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition" title="Editar Lançamento">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                        </td>
                     `;
                     grid.appendChild(tr);
+                    idx++;
                 });
             } catch (e) {
-                grid.innerHTML = `<tr><td colspan="8" class="text-center py-10 text-rose-500 font-bold">Erro ao carregar dados: ${e.message}</td></tr>`;
+                grid.innerHTML = `<tr><td colspan="9" class="text-center py-10 text-rose-500 font-bold">Erro ao carregar dados: ${e.message}</td></tr>`;
             }
         };
 
@@ -785,6 +849,93 @@
                 }
             }
         };
+
+        // ================= EDITAR MOVIMENTAÇÕES =================
+        window.abrirModalEditMov = (idx) => {
+            const m = window.bancoMovimentacoes[idx];
+            document.getElementById('edit-mov-id').value = m.id;
+            document.getElementById('edit-mov-tipo').value = m.tipo;
+            document.getElementById('edit-mov-prod-id').value = m.produto_id || m.produto;
+            document.getElementById('edit-mov-qtd-antiga').value = m.quantidade;
+            
+            document.getElementById('edit-mov-prod-nome').innerText = `${m.produto_id || m.produto} - ${m.produto_nome || m.produto || ''}`;
+            const tipoEl = document.getElementById('edit-mov-tipo-display');
+            tipoEl.innerText = m.tipo;
+            tipoEl.className = m.tipo === 'ENTRADA' ? 'font-bold text-sm text-emerald-600' : 'font-bold text-sm text-rose-600';
+            
+            document.getElementById('edit-mov-qtd').value = m.quantidade;
+            document.getElementById('edit-mov-setor').value = m.setor || m.fornecedor || '';
+            document.getElementById('edit-mov-user').value = m.usuario_retirou || m.usuario || m.usuario_sistema || '';
+            document.getElementById('edit-mov-fin').value = m.finalidade || '';
+            
+            abrirModal('modal-edit-mov');
+        };
+
+        document.getElementById('form-edit-mov').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-edit-mov');
+            btn.innerText = 'SALVANDO...'; btn.disabled = true;
+
+            const id = document.getElementById('edit-mov-id').value;
+            const tipo = document.getElementById('edit-mov-tipo').value;
+            const prodId = document.getElementById('edit-mov-prod-id').value;
+            const qtdAntiga = Number(document.getElementById('edit-mov-qtd-antiga').value);
+            
+            const novaQtd = Number(document.getElementById('edit-mov-qtd').value);
+            const novoSetor = document.getElementById('edit-mov-setor').value.trim();
+            const novoUser = document.getElementById('edit-mov-user').value.trim();
+            const novaFin = document.getElementById('edit-mov-fin').value.trim();
+
+            try {
+                // 1. Compensar Saldo do Produto se a quantidade for alterada
+                const diff = novaQtd - qtdAntiga;
+                if (diff !== 0 && prodId) {
+                    const prodRef = doc(db, 'produtos', prodId);
+                    const snap = await getDoc(prodRef);
+                    
+                    if (snap.exists()) {
+                        let saldoAtual = snap.data().saldo || 0;
+                        let novoSaldo;
+                        if (tipo === 'ENTRADA') {
+                            novoSaldo = saldoAtual + diff; 
+                        } else {
+                            novoSaldo = saldoAtual - diff;
+                        }
+                        
+                        // Segurança anti-negativos
+                        if (novoSaldo < 0) throw new Error(`A alteração deixaria o saldo negativo (${novoSaldo}).`);
+                        
+                        await updateDoc(prodRef, { saldo: novoSaldo });
+                    }
+                }
+
+                // 2. Atualizar o documento da Movimentação (Histórico)
+                const payloadMov = {
+                    quantidade: novaQtd,
+                    finalidade: novaFin,
+                };
+                
+                if (tipo === 'ENTRADA') {
+                    payloadMov.fornecedor = novoSetor;
+                    payloadMov.setor = novoSetor; 
+                    payloadMov.usuario_sistema = novoUser;
+                } else {
+                    payloadMov.setor = novoSetor;
+                    payloadMov.usuario_retirou = novoUser;
+                }
+
+                await updateDoc(doc(db, 'movimentacoes', id), payloadMov);
+
+                showToast('Lançamento atualizado com sucesso!');
+                fecharModal('modal-edit-mov');
+                carregarMovimentacoes();
+                carregarProdutos(); // atualiza KPI superior
+            } catch (err) {
+                showToast('Erro: ' + err.message, true);
+            } finally {
+                btn.innerText = 'SALVAR ALTERAÇÕES'; btn.disabled = false;
+            }
+        });
 
     </script>
 </body>
