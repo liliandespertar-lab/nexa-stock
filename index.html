@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NEXA STOCK | Gestão de Estoque</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <style>
+        :root { --nexa-deep: #0f172a; --nexa-purple: #2e1065; --nexa-accent: #6366f1; }
+        body { font-family: 'Inter', sans-serif; background: #f8fafc; color: #1e293b; transition: all 0.3s ease; }
+        .bg-nexa-dark { background: radial-gradient(circle at top right, var(--nexa-purple), var(--nexa-deep)); }
+        .glass { background: rgba(255, 255, 255, 0.03); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.1); }
+        .card-premium { background: white; border: 1px solid #e2e8f0; border-radius: 1.5rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
+        .card-premium:hover { transform: translateY(-5px); box-shadow: 0 20px 25px -5px rgba(0,0,0,0.05); }
+        .btn-gradient { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); transition: all 0.2s; }
+        .btn-gradient:hover { filter: brightness(1.1); transform: scale(1.02); }
+        
+        .view-container { display: none; min-height: calc(100vh - 80px); }
+        .view-container.active { display: block; animation: fadeIn 0.4s ease-out forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .input-nexa { width: 100%; padding: 0.75rem 1rem; border-radius: 1rem; border: 1px solid #e2e8f0; outline: none; transition: all 0.2s; }
+        .input-nexa:focus { border-color: var(--nexa-accent); ring: 3px; ring-color: rgba(99, 102, 241, 0.1); }
+        .status-badge { padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
+    </style>
+</head>
+<body class="overflow-x-hidden">
+
+    <div id="view-login" class="view-container active flex items-center justify-center min-h-screen bg-nexa-dark p-6">
+        <div class="w-full max-w-md glass p-10 rounded-[2.5rem] shadow-2xl relative animate-in">
+            <div class="text-center mb-10">
+                <h1 class="text-3xl font-black text-white tracking-tighter italic uppercase">NEXA <span class="text-indigo-400">STOCK</span></h1>
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.4em] mt-2">Gestão de Estoque</p>
+            </div>
+            <form onsubmit="app.handleLogin(event)" class="space-y-6">
+                <input type="text" id="login-user" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500" placeholder="Usuário">
+                <input type="password" id="login-pass" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500" placeholder="Senha">
+                <div id="login-error" class="hidden text-rose-400 text-xs font-bold text-center bg-rose-500/10 py-2 rounded-lg border border-rose-500/20"></div>
+                <button type="submit" id="btn-login-submit" class="w-full btn-gradient text-white py-5 rounded-2xl font-black shadow-xl uppercase">Entrar no Sistema</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="app-shell" class="hidden">
+        <header class="bg-white border-b border-slate-200 sticky top-0 z-50 px-8 py-4 flex justify-between items-center shadow-sm">
+            <div class="flex items-center gap-6">
+                <div onclick="app.showView('dashboard')" class="cursor-pointer">
+                    <h1 class="text-xl font-black italic tracking-tighter uppercase text-slate-800">NEXA <span class="text-indigo-600">STOCK</span></h1>
+                </div>
+                <nav class="hidden md:flex gap-6">
+                    <button onclick="app.showView('dashboard')" class="text-xs font-black uppercase text-slate-400 hover:text-indigo-600 transition">Dashboard</button>
+                    <button onclick="app.showView('operacoes')" class="text-xs font-black uppercase text-slate-400 hover:text-indigo-600 transition">Operações</button>
+                    <button onclick="app.showView('auditoria')" class="text-xs font-black uppercase text-slate-400 hover:text-indigo-600 transition">Auditoria</button>
+                    <button onclick="app.showView('requisicoes')" class="text-xs font-black uppercase text-slate-400 hover:text-indigo-600 transition">Requisições</button>
+                </nav>
+            </div>
+            <div class="flex items-center gap-4">
+                <span id="user-name" class="text-xs font-bold text-slate-500">...</span>
+                <button onclick="app.logout()" class="p-2 text-rose-500 hover:bg-rose-50 rounded-lg transition">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
+                </button>
+            </div>
+        </header>
+
+        <main class="max-w-7xl mx-auto p-8">
+            
+            <!-- Dashboard View -->
+            <div id="view-dashboard" class="view-container">
+                <h2 class="text-3xl font-black text-slate-800 tracking-tighter uppercase mb-8">Central de <span class="text-indigo-600">Controle</span></h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="card-premium p-8 border-l-4 border-indigo-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Total SKU Ativos</p>
+                        <span id="stat-sku" class="text-4xl font-black text-slate-800">0</span>
+                    </div>
+                    <div class="card-premium p-8 border-l-4 border-rose-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Estoque Crítico</p>
+                        <span id="stat-critico" class="text-4xl font-black text-rose-600">0</span>
+                    </div>
+                    <div class="card-premium p-8 border-l-4 border-amber-500">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Pedidos Pendentes</p>
+                        <span id="stat-pendentes" class="text-4xl font-black text-amber-500">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Operações View -->
+            <div id="view-operacoes" class="view-container">
+                <h2 class="text-3xl font-black text-slate-800 tracking-tighter uppercase mb-8 italic">Operações de <span class="text-indigo-600">Estoque</span></h2>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <div class="card-premium p-8 text-center cursor-pointer hover:border-emerald-500" onclick="app.openModal('entrada')">
+                        <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                        </div>
+                        <h3 class="text-xl font-black text-slate-800">Registrar Entrada</h3>
+                        <p class="text-sm text-slate-500 mt-2">Adicionar suprimentos ao banco de dados.</p>
+                    </div>
+                    <div class="card-premium p-8 text-center cursor-pointer hover:border-rose-500" onclick="app.openModal('saida')">
+                        <div class="w-16 h-16 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                        </div>
+                        <h3 class="text-xl font-black text-slate-800">Registrar Saída</h3>
+                        <p class="text-sm text-slate-500 mt-2">Dar baixa em materiais e produtos.</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Auditoria View -->
+            <div id="view-auditoria" class="view-container">
+                 <h2 class="text-3xl font-black text-slate-800 tracking-tighter uppercase mb-8">Auditoria de <span class="text-indigo-600">Logs</span></h2>
+                 <div class="card-premium overflow-hidden">
+                    <table class="w-full text-left">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Data</th>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Tipo</th>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Produto</th>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Qtd</th>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Responsável</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-logs">
+                            <!-- Logs injetados aqui -->
+                        </tbody>
+                    </table>
+                 </div>
+            </div>
+
+            <!-- Requisições View -->
+            <div id="view-requisicoes" class="view-container">
+                 <h2 class="text-3xl font-black text-slate-800 tracking-tighter uppercase mb-8 italic">Gestão de <span class="text-indigo-600">Pedidos</span></h2>
+                 <div id="grid-requisicoes" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Cards de requisição aqui -->
+                 </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script>
+        const API_URL = "SUA_URL_DO_GOOGLE_APPS_SCRIPT_AQUI";
+
+        const app = {
+            user: null,
+            data: {},
+
+            async callAPI(action, payload = {}) {
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        body: JSON.stringify({ 
+                            action, 
+                            payload, 
+                            user: this.user?.name,
+                            loggedUser: this.user?.name
+                        })
+                    });
+                    const res = await response.json();
+                    if (!res.sucesso) throw new Error(res.erro);
+                    return res.data;
+                } catch (err) {
+                    console.error("API Error:", err);
+                    return null;
+                }
+            },
+
+            async handleLogin(e) {
+                e.preventDefault();
+                const u = document.getElementById('login-user').value;
+                const p = document.getElementById('login-pass').value;
+                const btn = document.getElementById('btn-login-submit');
+                
+                btn.disabled = true;
+                btn.innerHTML = '<span class="animate-pulse">Autenticando...</span>';
+
+                const data = await this.callAPI('login', { user: u, pass: p });
+                if (data) {
+                    this.user = { name: data.user, setor: data.setor };
+                    document.getElementById('user-name').innerText = this.user.name;
+                    document.getElementById('view-login').classList.remove('active');
+                    document.getElementById('app-shell').classList.remove('hidden');
+                    this.showView('dashboard');
+                } else {
+                    const err = document.getElementById('login-error');
+                    err.innerText = "Credenciais inválidas ou erro de rede.";
+                    err.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerHTML = 'Entrar no Sistema';
+                }
+            },
+
+            showView(name) {
+                document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+                const target = document.getElementById('view-' + name);
+                if (target) {
+                    target.classList.add('active');
+                    this.loadViewData(name);
+                }
+            },
+
+            async loadViewData(name) {
+                if (name === 'dashboard') {
+                    const data = await this.callAPI('getDashboard');
+                    if (data) {
+                        document.getElementById('stat-sku').innerText = data.stats.totalProdutos;
+                        document.getElementById('stat-critico').innerText = data.stats.estoqueBaixo;
+                        document.getElementById('stat-pendentes').innerText = data.stats.requisicoesPendentes;
+                    }
+                }
+                if (name === 'requisicoes') {
+                    const reqs = await this.callAPI('getRequisicoes');
+                    const grid = document.getElementById('grid-requisicoes');
+                    grid.innerHTML = (reqs || []).map(r => `
+                        <div class="card-premium p-6">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest">REQ #${r.numero}</span>
+                                    <h4 class="text-lg font-black text-slate-800">${r.material_name}</h4>
+                                </div>
+                                <span class="status-badge bg-indigo-50 text-indigo-600">${r.status}</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                                <div class="bg-indigo-500 h-full" style="width: ${(r.total_withdrawn/r.total_requested)*100}%"></div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+            },
+
+            logout() {
+                this.user = null;
+                location.reload();
+            }
+        };
+    </script>
+</body>
+</html>
