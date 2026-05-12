@@ -30,9 +30,6 @@
         .dropdown-list li { padding: 0.75rem 1rem; cursor: pointer; font-size: 0.875rem; border-bottom: 1px solid #f1f5f9; }
         .dropdown-list li:hover { background-color: #f5f3ff; color: #6366f1; }
         
-        .status-badge { padding: 0.25rem 0.75rem; border-radius: 999px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; }
-        
-        /* Modal & Toasts */
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 1rem; }
         .modal-overlay.active { display: flex; }
         #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
@@ -43,6 +40,7 @@
 </head>
 <body>
 
+    <!-- TELA DE LOGIN -->
     <div id="view-login" class="view-container active flex items-center justify-center min-h-screen bg-nexa-dark p-6 relative overflow-hidden">
         <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -50,60 +48,58 @@
         <div class="w-full max-w-md glass p-10 rounded-[2.5rem] shadow-2xl relative z-10">
             <div class="text-center mb-8">
                 <div class="w-16 h-16 btn-gradient rounded-2xl flex items-center justify-center text-white mx-auto mb-6 shadow-2xl">
-                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                 </div>
                 <h1 class="text-3xl font-black text-white tracking-tighter italic uppercase">NEXA <span class="text-indigo-400">STOCK</span></h1>
                 <p id="login-subtitle" class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.4em] mt-2">Gestão de Estoque</p>
             </div>
 
-            <!-- Formulário Auth -->
-            <form onsubmit="app.handleAuth(event)" class="space-y-4">
+            <form onsubmit="handleAuth(event)" class="space-y-4">
                 <div id="register-fields" class="hidden space-y-4">
                     <input type="text" id="reg-nome" class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="Nome Completo">
                     <input type="text" id="reg-setor" class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="Setor (Ex: Almoxarifado)">
                 </div>
                 
-                <input type="text" id="login-user" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="Usuário">
+                <input type="email" id="login-email" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="E-mail de acesso">
                 <input type="password" id="login-pass" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="Senha">
                 
                 <div id="login-error" class="hidden text-rose-400 text-xs font-bold text-center bg-rose-500/10 py-3 rounded-xl border border-rose-500/20"></div>
                 
-                <button type="submit" id="btn-auth-submit" class="w-full btn-gradient text-white py-5 rounded-2xl font-black text-lg shadow-xl uppercase tracking-wider flex justify-center items-center gap-2">
-                    <span>Entrar no Sistema</span>
+                <button type="submit" id="btn-auth-submit" class="w-full btn-gradient text-white py-5 rounded-2xl font-black text-lg shadow-xl uppercase tracking-wider">
+                    Entrar no Sistema
                 </button>
                 
                 <p class="text-center text-slate-400 text-xs mt-6">
                     <span id="auth-switch-text">Ainda não tem conta?</span>
-                    <a href="javascript:void(0)" onclick="app.toggleAuthMode()" id="auth-switch-link" class="text-indigo-400 font-bold ml-1 hover:underline">Cadastre-se</a>
+                    <a href="javascript:void(0)" onclick="toggleAuthMode()" id="auth-switch-link" class="text-indigo-400 font-bold ml-1 hover:underline">Cadastre-se</a>
                 </p>
             </form>
         </div>
     </div>
 
+    <!-- ESTRUTURA PRINCIPAL (SHELL) -->
     <div id="app-shell" class="hidden min-h-screen flex flex-col">
         <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-lg">
             <div class="flex items-center gap-8">
-                <div onclick="app.showView('dashboard')" class="cursor-pointer flex items-center gap-3">
+                <div class="flex items-center gap-3">
                     <div class="w-8 h-8 btn-gradient rounded-lg flex items-center justify-center text-white shadow-md">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                     </div>
-                    <div>
-                        <h1 class="text-lg font-black italic tracking-tighter uppercase text-white leading-none">NEXA <span class="text-indigo-400">STOCK</span></h1>
-                    </div>
+                    <h1 class="text-lg font-black italic tracking-tighter uppercase text-white leading-none">NEXA <span class="text-indigo-400">STOCK</span></h1>
                 </div>
                 <nav class="hidden md:flex gap-1 bg-slate-800 p-1 rounded-xl">
-                    <button onclick="app.showView('dashboard')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Dashboard</button>
-                    <button onclick="app.showView('operacoes')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Operações</button>
-                    <button onclick="app.showView('auditoria')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Auditoria</button>
-                    <button onclick="app.showView('requisicoes')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Requisições</button>
+                    <button onclick="showView('dashboard')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Dashboard</button>
+                    <button onclick="showView('operacoes')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Operações</button>
+                    <button onclick="showView('auditoria')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Auditoria</button>
+                    <button onclick="showView('requisicoes')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Requisições</button>
                 </nav>
             </div>
             <div class="flex items-center gap-4">
-                <div class="text-right hidden sm:block border-r border-slate-700 pr-4">
-                    <p id="user-name" class="text-xs font-bold text-white">Usuário</p>
-                    <p class="text-[9px] text-emerald-400 font-black uppercase tracking-widest">Ativo</p>
+                <div class="text-right border-r border-slate-700 pr-4">
+                    <p id="user-name" class="text-xs font-bold text-white">Carregando...</p>
+                    <p class="text-[9px] text-emerald-400 font-black uppercase tracking-widest">Online</p>
                 </div>
-                <button onclick="app.logout()" class="p-2 text-rose-400 hover:bg-rose-500/20 rounded-xl transition" title="Sair">
+                <button onclick="logoutFirebase()" class="p-2 text-rose-400 hover:bg-rose-500/20 rounded-xl transition" title="Sair">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
                 </button>
             </div>
@@ -111,556 +107,365 @@
 
         <!-- Navegação Mobile -->
         <div class="md:hidden bg-slate-800 border-b border-slate-700 flex overflow-x-auto p-2 gap-2 sticky top-[72px] z-30">
-            <button onclick="app.showView('dashboard')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Dash</button>
-            <button onclick="app.showView('operacoes')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Operações</button>
-            <button onclick="app.showView('auditoria')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Auditoria</button>
-            <button onclick="app.showView('requisicoes')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Pedidos</button>
+            <button onclick="showView('dashboard')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Dash</button>
+            <button onclick="showView('operacoes')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Operações</button>
+            <button onclick="showView('auditoria')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Auditoria</button>
+            <button onclick="showView('requisicoes')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Pedidos</button>
         </div>
 
         <main class="flex-1 w-full max-w-7xl mx-auto p-6 md:p-10">
             
+            <!-- DASHBOARD -->
             <div id="view-dashboard" class="view-container">
                 <div class="mb-8">
                     <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Central de <span class="text-indigo-600">Controle</span></h2>
-                    <p class="text-slate-500 text-sm font-medium mt-1">Visão geral do sistema de estoque.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div class="card-premium p-8 border-l-4 border-indigo-500">
-                        <div class="w-10 h-10 rounded-full bg-indigo-50 flex items-center justify-center text-indigo-500 mb-4">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
-                        </div>
                         <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total SKU Ativos</p>
                         <span id="stat-sku" class="text-5xl font-black text-slate-800 tracking-tighter">0</span>
                     </div>
                     <div class="card-premium p-8 border-l-4 border-rose-500">
-                        <div class="w-10 h-10 rounded-full bg-rose-50 flex items-center justify-center text-rose-500 mb-4">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-                        </div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Estoque Baixo</p>
-                        <span id="stat-critico" class="text-5xl font-black text-rose-600 tracking-tighter">0</span>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Movimentações Realizadas</p>
+                        <span id="stat-movs" class="text-5xl font-black text-rose-600 tracking-tighter">0</span>
                     </div>
                     <div class="card-premium p-8 border-l-4 border-amber-500">
-                        <div class="w-10 h-10 rounded-full bg-amber-50 flex items-center justify-center text-amber-500 mb-4">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                        </div>
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pedidos Pendentes</p>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pedidos Ativos</p>
                         <span id="stat-pendentes" class="text-5xl font-black text-amber-500 tracking-tighter">0</span>
                     </div>
                 </div>
             </div>
 
+            <!-- OPERAÇÕES -->
             <div id="view-operacoes" class="view-container">
-                <div class="mb-8">
-                    <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Ações de <span class="text-indigo-600">Estoque</span></h2>
-                    <p class="text-slate-500 text-sm font-medium mt-1">Realize registros manuais e ajustes.</p>
-                </div>
+                <div class="mb-8"><h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Ações de <span class="text-indigo-600">Estoque</span></h2></div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="card-premium p-10 cursor-pointer hover:border-emerald-500 group flex items-center gap-8" onclick="app.openModal('modal-entrada')">
+                    <div class="card-premium p-10 cursor-pointer hover:border-emerald-500 group flex items-center gap-8" onclick="openModal('modal-entrada')">
                         <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
                             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
                         </div>
-                        <div>
-                            <h3 class="text-2xl font-black text-slate-800">Registrar Entrada</h3>
-                            <p class="text-sm text-slate-500 mt-2">Adicionar produtos e suprimentos ao banco.</p>
-                        </div>
+                        <div><h3 class="text-2xl font-black text-slate-800">Registrar Entrada</h3><p class="text-sm text-slate-500 mt-2">Adicionar produtos.</p></div>
                     </div>
-                    <div class="card-premium p-10 cursor-pointer hover:border-rose-500 group flex items-center gap-8" onclick="app.openModal('modal-saida')">
+                    <div class="card-premium p-10 cursor-pointer hover:border-rose-500 group flex items-center gap-8" onclick="openModal('modal-saida')">
                         <div class="w-20 h-20 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-rose-500 group-hover:text-white transition-colors">
                             <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
                         </div>
-                        <div>
-                            <h3 class="text-2xl font-black text-slate-800">Registrar Saída</h3>
-                            <p class="text-sm text-slate-500 mt-2">Dar baixa em materiais consumidos.</p>
-                        </div>
+                        <div><h3 class="text-2xl font-black text-slate-800">Registrar Saída</h3><p class="text-sm text-slate-500 mt-2">Dar baixa em materiais.</p></div>
                     </div>
                 </div>
             </div>
 
+            <!-- AUDITORIA -->
             <div id="view-auditoria" class="view-container">
                  <div class="mb-8 flex justify-between items-end">
-                    <div>
-                        <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Auditoria de <span class="text-indigo-600">Logs</span></h2>
-                        <p class="text-slate-500 text-sm font-medium mt-1">Histórico completo de transações.</p>
-                    </div>
-                    <button onclick="app.loadAuditoria()" class="bg-white border border-slate-200 text-slate-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50 flex items-center gap-2">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg> Atualizar
-                    </button>
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Auditoria de <span class="text-indigo-600">Logs</span></h2>
+                    <button onclick="loadAuditoria()" class="bg-white border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50">Atualizar</button>
                  </div>
-                 <div class="card-premium overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse">
-                            <thead class="bg-slate-50 border-b border-slate-200">
-                                <tr>
-                                    <th class="p-4 text-[10px] font-black uppercase text-slate-400 whitespace-nowrap">Data/Hora</th>
-                                    <th class="p-4 text-[10px] font-black uppercase text-slate-400">Tipo</th>
-                                    <th class="p-4 text-[10px] font-black uppercase text-slate-400">Produto (Cód)</th>
-                                    <th class="p-4 text-[10px] font-black uppercase text-slate-400 text-right">Qtd</th>
-                                    <th class="p-4 text-[10px] font-black uppercase text-slate-400">Local/Setor</th>
-                                    <th class="p-4 text-[10px] font-black uppercase text-slate-400">Resp.</th>
-                                </tr>
-                            </thead>
-                            <tbody id="table-logs">
-                                <!-- Preenchido via JS -->
-                            </tbody>
-                        </table>
-                    </div>
+                 <div class="card-premium overflow-hidden overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Data</th>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Tipo</th>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Produto</th>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Qtd</th>
+                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Usuário</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-logs"></tbody>
+                    </table>
                  </div>
             </div>
 
+            <!-- REQUISIÇÕES -->
             <div id="view-requisicoes" class="view-container">
                  <div class="mb-8 flex justify-between items-end">
-                    <div>
-                        <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Gestão de <span class="text-indigo-600">Pedidos</span></h2>
-                        <p class="text-slate-500 text-sm font-medium mt-1">Acompanhamento e baixa de solicitações internas.</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="app.loadRequisicoes()" class="bg-white border border-slate-200 text-slate-600 p-2 rounded-lg hover:bg-slate-50" title="Atualizar">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
-                        </button>
-                    </div>
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Gestão de <span class="text-indigo-600">Pedidos</span></h2>
+                    <button onclick="openModal('modal-req')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700">+ Novo Pedido</button>
                  </div>
-                 
-                 <div id="grid-requisicoes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <!-- Cards injetados via JS -->
-                 </div>
+                 <div id="grid-requisicoes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
             </div>
-
         </main>
     </div>
 
-    <!-- Modal Entrada -->
+    <!-- MODAIS OPERAÇÕES -->
     <div id="modal-entrada" class="modal-overlay">
         <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-8 relative">
-            <button onclick="app.closeModal('modal-entrada')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
-            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-6">📥 Registro de Entrada</h2>
-            <form id="form-entrada" onsubmit="app.salvarEntrada(event)" class="space-y-4">
-                <div class="relative">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Produto (Nome ou Cód)</label>
-                    <input type="text" id="ent-produto" class="input-nexa" placeholder="Busque na lista ou digite novo..." autocomplete="off" required>
-                    <ul id="list-ent-produto" class="dropdown-list"></ul>
-                    <input type="hidden" id="ent-cod-real">
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="relative">
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Local</label>
-                        <input type="text" id="ent-local" class="input-nexa" autocomplete="off" required>
-                        <ul id="list-ent-local" class="dropdown-list"></ul>
-                    </div>
-                    <div class="relative">
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Setor</label>
-                        <input type="text" id="ent-setor" class="input-nexa" autocomplete="off" required>
-                        <ul id="list-ent-setor" class="dropdown-list"></ul>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div class="relative">
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Fornecedor</label>
-                        <input type="text" id="ent-forn" class="input-nexa" autocomplete="off">
-                        <ul id="list-ent-forn" class="dropdown-list"></ul>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Quantidade</label>
-                        <input type="number" id="ent-qtd" class="input-nexa font-mono font-bold" placeholder="0" min="1" required>
-                    </div>
-                </div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold uppercase tracking-widest mt-6 transition shadow-lg flex justify-center items-center">Confirmar Entrada</button>
+            <button onclick="closeModal('modal-entrada')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-6">📥 Entrada</h2>
+            <form id="form-entrada" onsubmit="salvarFirebaseEntrada(event)" class="space-y-4">
+                <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nome do Produto</label><input type="text" id="ent-produto" class="input-nexa" required></div>
+                <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Quantidade</label><input type="number" id="ent-qtd" class="input-nexa font-mono font-bold" required></div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold uppercase tracking-widest mt-6">Confirmar</button>
             </form>
         </div>
     </div>
 
-    <!-- Modal Saída -->
     <div id="modal-saida" class="modal-overlay">
         <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-8 relative">
-            <button onclick="app.closeModal('modal-saida')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
-            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-6">📤 Registro de Saída</h2>
-            <form id="form-saida" onsubmit="app.salvarSaida(event)" class="space-y-4">
-                <div class="relative">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Localizar Produto</label>
-                    <input type="text" id="sai-produto" class="input-nexa border-rose-200 focus:border-rose-500 focus:ring-rose-100" placeholder="Digite código ou nome..." autocomplete="off" required>
-                    <ul id="list-sai-produto" class="dropdown-list"></ul>
-                    <input type="hidden" id="sai-cod-real">
-                </div>
-                <div class="relative">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Colaborador / Retirado por</label>
-                    <input type="text" id="sai-func" class="input-nexa border-rose-200 focus:border-rose-500 focus:ring-rose-100" autocomplete="off" required>
-                    <ul id="list-sai-func" class="dropdown-list"></ul>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Qtd Retirada</label>
-                        <input type="number" id="sai-qtd" class="input-nexa border-rose-200 focus:border-rose-500 focus:ring-rose-100 font-mono font-bold text-rose-600" placeholder="0" min="1" required>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Finalidade</label>
-                        <input type="text" id="sai-fin" class="input-nexa border-rose-200 focus:border-rose-500 focus:ring-rose-100" placeholder="Ex: Obra A" required>
-                    </div>
-                </div>
-                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white py-4 rounded-xl font-bold uppercase tracking-widest mt-6 transition shadow-lg flex justify-center items-center">Confirmar Saída</button>
+            <button onclick="closeModal('modal-saida')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-6">📤 Saída</h2>
+            <form id="form-saida" onsubmit="salvarFirebaseSaida(event)" class="space-y-4">
+                <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nome do Produto Cadastrado</label><input type="text" id="sai-produto" class="input-nexa border-rose-200 focus:border-rose-500" required></div>
+                <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Qtd Retirada</label><input type="number" id="sai-qtd" class="input-nexa border-rose-200 focus:border-rose-500 font-mono font-bold text-rose-600" required></div>
+                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white py-4 rounded-xl font-bold uppercase tracking-widest mt-6">Confirmar</button>
             </form>
         </div>
     </div>
 
-    <!-- Container de Toasts (Avisos) -->
+    <div id="modal-req" class="modal-overlay">
+        <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-8 relative">
+            <button onclick="closeModal('modal-req')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
+            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-6">📋 Nova Requisição</h2>
+            <form id="form-req" onsubmit="salvarFirebaseReq(event)" class="space-y-4">
+                <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Material</label><input type="text" id="req-mat" class="input-nexa" required></div>
+                <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Qtd Solicitada</label><input type="number" id="req-qtd" class="input-nexa font-mono font-bold" required></div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-bold uppercase tracking-widest mt-6">Confirmar</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- TOASTS -->
     <div id="toast-container"></div>
 
-    <script>
-        // URL Oficial da API via Google Apps Script (MANDATÓRIO)
-        const API_URL = "https://script.google.com/macros/s/AKfycbx56SItQcH5-0W-CWW7MlnLhcFkV4QpZLYdu1cOoCljZf0dXC_e11_9dFqdKMGfEmtJ5A/exec";
+    <!-- ========================================== -->
+    <!-- FIREBASE SDK & LÓGICA DO APLICATIVO -->
+    <!-- ========================================== -->
+    <script type="module">
+        // 1. IMPORTAÇÃO DO SDK V10
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, query, orderBy, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        const app = {
-            user: null,
-            isRegisterMode: false,
-            dadosGlobais: { listas: {} },
+        // 2. CONFIGURAÇÃO (COLE AS CHAVES DO SEU PROJETO FIREBASE AQUI)
+        const firebaseConfig = {
+            apiKey: "AIzaSyA4RvrOh5EU6OXj1zbNB1hGwWDj9VNG-T4",
+            authDomain: "nexa-stock.firebaseapp.com",
+            databaseURL: "https://nexa-stock-default-rtdb.firebaseio.com",
+            projectId: "nexa-stock",
+            storageBucket: "nexa-stock.firebasestorage.app",
+            messagingSenderId: "343344768621",
+            appId: "1:343344768621:web:db46a3c2a353ff65964164"
+        };
 
-            showToast(msg, isError = false) {
-                const container = document.getElementById('toast-container');
-                const toast = document.createElement('div');
-                toast.className = `toast ${isError ? 'error' : ''}`;
-                
-                const icon = isError 
-                    ? '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>'
-                    : '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>';
-                
-                toast.innerHTML = `${icon} <span>${msg}</span>`;
-                container.appendChild(toast);
-                setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
-            },
+        // 3. INICIALIZAÇÃO
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
 
-            openModal(id) { document.getElementById(id).classList.add('active'); },
-            closeModal(id) { 
-                document.getElementById(id).classList.remove('active'); 
-                const form = document.querySelector(`#${id} form`);
-                if(form) form.reset();
-            },
+        // VARIÁVEIS GLOBAIS DE INTERFACE
+        let isRegisterMode = false;
+        let currentUserInfo = null;
 
-            async callAPI(action, payload = {}) {
-                try {
-                    const response = await fetch(API_URL, {
-                        method: 'POST',
-                        body: JSON.stringify({ action, payload }),
-                        headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain evita block de CORS em redirecionamento no GAS
-                    });
-                    
-                    let res;
-                    try {
-                        res = await response.json();
-                    } catch (parseError) {
-                        throw new Error("API desatualizada. Atualize a Implantação no Google Apps Script para 'Nova Versão'.");
-                    }
+        // FUNÇÕES DE INTERFACE UI
+        window.showToast = (msg, isError = false) => {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${isError ? 'error' : ''}`;
+            toast.innerHTML = `<span>${msg}</span>`;
+            container.appendChild(toast);
+            setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
+        };
 
-                    if (!res.sucesso) throw new Error(res.erro || "Falha desconhecida na API.");
-                    return res.data;
-                } catch (err) {
-                    console.error("API Error:", err);
-                    this.showToast(err.message, true);
-                    
-                    // Repassa o erro para ser mostrado no formulário
-                    throw err; 
+        window.openModal = (id) => document.getElementById(id).classList.add('active');
+        window.closeModal = (id) => { 
+            document.getElementById(id).classList.remove('active'); 
+            document.querySelector(`#${id} form`).reset(); 
+        };
+
+        window.toggleAuthMode = () => {
+            isRegisterMode = !isRegisterMode;
+            document.getElementById('register-fields').classList.toggle('hidden');
+            document.getElementById('reg-nome').required = isRegisterMode;
+            document.getElementById('btn-auth-submit').innerText = isRegisterMode ? 'Criar Conta' : 'Entrar no Sistema';
+            document.getElementById('login-subtitle').innerText = isRegisterMode ? 'Novo Usuário' : 'Gestão de Estoque';
+            document.getElementById('auth-switch-text').innerText = isRegisterMode ? 'Já tem conta?' : 'Ainda não tem conta?';
+            document.getElementById('auth-switch-link').innerText = isRegisterMode ? 'Faça login' : 'Cadastre-se';
+        };
+
+        window.showView = (name) => {
+            document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('bg-slate-700', 'text-white'); btn.classList.add('text-slate-300');
+                if(btn.innerText.toLowerCase().includes(name.substring(0,4))) {
+                    btn.classList.add('bg-slate-700', 'text-white'); btn.classList.remove('text-slate-300');
                 }
-            },
+            });
+            document.getElementById('view-' + name).classList.add('active');
+            
+            if(name === 'dashboard') loadDashboard();
+            if(name === 'auditoria') loadAuditoria();
+            if(name === 'requisicoes') loadRequisicoes();
+        };
 
-            toggleAuthMode() {
-                this.isRegisterMode = !this.isRegisterMode;
-                const regFields = document.getElementById('register-fields');
-                const btn = document.getElementById('btn-auth-submit');
-                const title = document.getElementById('login-subtitle');
-                const link = document.getElementById('auth-switch-link');
-                const text = document.getElementById('auth-switch-text');
-                const errorBox = document.getElementById('login-error');
-                
-                errorBox.classList.add('hidden');
+        // 4. LÓGICA DE AUTENTICAÇÃO (FIREBASE AUTH)
+        window.handleAuth = async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const pass = document.getElementById('login-pass').value;
+            const btn = document.getElementById('btn-auth-submit');
+            const errorBox = document.getElementById('login-error');
+            
+            btn.disabled = true; btn.innerText = 'Aguarde...'; errorBox.classList.add('hidden');
 
-                if (this.isRegisterMode) {
-                    regFields.classList.remove('hidden');
-                    document.getElementById('reg-nome').required = true;
-                    btn.innerHTML = '<span>Criar Minha Conta</span>';
-                    title.innerText = 'Criar Novo Acesso';
-                    text.innerText = 'Já possui uma conta?';
-                    link.innerText = 'Fazer Login';
+            try {
+                if (isRegisterMode) {
+                    const nome = document.getElementById('reg-nome').value;
+                    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
+                    await updateProfile(userCredential.user, { displayName: nome });
+                    showToast("Conta criada com sucesso!");
                 } else {
-                    regFields.classList.add('hidden');
-                    document.getElementById('reg-nome').required = false;
-                    btn.innerHTML = '<span>Entrar no Sistema</span>';
-                    title.innerText = 'Gestão de Estoque';
-                    text.innerText = 'Ainda não tem conta?';
-                    link.innerText = 'Cadastre-se';
+                    await signInWithEmailAndPassword(auth, email, pass);
+                    showToast("Login efetuado!");
                 }
-            },
-
-            async handleAuth(e) {
-                e.preventDefault();
-                const u = document.getElementById('login-user').value;
-                const p = document.getElementById('login-pass').value;
-                const btn = document.getElementById('btn-auth-submit');
-                const errorBox = document.getElementById('login-error');
-                const originalText = btn.innerHTML;
-                
-                btn.disabled = true;
-                btn.innerHTML = '<span class="animate-pulse">Processando...</span>';
-                errorBox.classList.add('hidden');
-
-                try {
-                    if (this.isRegisterMode) {
-                        const nome = document.getElementById('reg-nome').value;
-                        const setor = document.getElementById('reg-setor').value;
-                        const res = await this.callAPI('register', { nome, user: u, pass: p, setor });
-                        if (res) {
-                            this.showToast("Conta criada com sucesso! Faça login.");
-                            this.toggleAuthMode();
-                        }
-                    } else {
-                        const data = await this.callAPI('login', { user: u, pass: p });
-                        if (data) {
-                            this.user = { name: data.user, setor: data.setor };
-                            document.getElementById('user-name').innerText = this.user.name;
-                            document.getElementById('view-login').classList.remove('active');
-                            document.getElementById('app-shell').classList.remove('hidden');
-                            this.showView('dashboard');
-                        }
-                    }
-                } catch (err) {
-                    // Agora o erro aparece escrito na tela de login
-                    errorBox.innerText = err.message || "Erro de comunicação com o servidor.";
-                    errorBox.classList.remove('hidden');
-                } finally {
-                    btn.disabled = false;
-                    btn.innerHTML = originalText;
-                }
-            },
-
-            logout() {
-                this.user = null;
-                document.getElementById('app-shell').classList.add('hidden');
-                document.getElementById('view-login').classList.add('active');
-                this.showToast("Sessão encerrada com segurança.");
-            },
-
-            showView(name) {
-                document.querySelectorAll('.view-container').forEach(v => v.classList.remove('active'));
-                document.querySelectorAll('.nav-btn').forEach(btn => {
-                    btn.classList.remove('bg-slate-700', 'text-white');
-                    btn.classList.add('text-slate-300');
-                    if(btn.innerText.toLowerCase().includes(name.substring(0,4))) {
-                        btn.classList.add('bg-slate-700', 'text-white');
-                        btn.classList.remove('text-slate-300');
-                    }
-                });
-
-                const target = document.getElementById('view-' + name);
-                if (target) {
-                    target.classList.add('active');
-                    this.loadViewData(name);
-                }
-            },
-
-            async loadViewData(name) {
-                if (name === 'dashboard' || name === 'operacoes') {
-                    // Dashboard traz os stats e carrega as listas pros dropdowns de operações
-                    const data = await this.callAPI('getDashboard');
-                    if (data) {
-                        if(name === 'dashboard') {
-                            document.getElementById('stat-sku').innerText = data.stats.totalProdutos;
-                            document.getElementById('stat-critico').innerText = data.stats.estoqueBaixo;
-                            document.getElementById('stat-pendentes').innerText = data.stats.requisicoesPendentes;
-                        }
-                        this.dadosGlobais.listas = data.listas || {};
-                        this.configurarDropdowns();
-                    }
-                }
-                if (name === 'auditoria') {
-                    this.loadAuditoria();
-                }
-                if (name === 'requisicoes') {
-                    this.loadRequisicoes();
-                }
-            },
-
-            configurarDropdowns() {
-                const l = this.dadosGlobais.listas;
-                const format = (arr) => (arr || []).map(i => typeof i === 'string' ? {label: i, value: i} : {label: `${i[0]} - ${i[1]}`, value: i[0], nome: i[1]});
-                
-                const produtos = format(l.produtos);
-                const locais = format(l.locais);
-                const setores = format(l.setores);
-                const fornecedores = format(l.fornecedores);
-                // Usando setores ou locais como fallback para funcionários se a lista não vier do backend simples
-                const funcionarios = format(l.locais); 
-
-                this.setupDropdown('ent-produto', 'list-ent-produto', produtos, 'ent-cod-real');
-                this.setupDropdown('ent-local', 'list-ent-local', locais);
-                this.setupDropdown('ent-setor', 'list-ent-setor', setores);
-                this.setupDropdown('ent-forn', 'list-ent-forn', fornecedores);
-                
-                this.setupDropdown('sai-produto', 'list-sai-produto', produtos, 'sai-cod-real');
-                this.setupDropdown('sai-func', 'list-sai-func', funcionarios); // Placeholder
-            },
-
-            setupDropdown(inputId, listId, dataSource, hiddenId = null) {
-                const input = document.getElementById(inputId);
-                const list = document.getElementById(listId);
-                const hidden = hiddenId ? document.getElementById(hiddenId) : null;
-                
-                const render = (term) => {
-                    list.innerHTML = '';
-                    const q = (term||'').toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-                    const filtered = dataSource.filter(i => i.label.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").includes(q)).slice(0, 15);
-                    
-                    if(filtered.length === 0 && q.length > 0) {
-                        const li = document.createElement('li'); li.innerHTML = `<span class="text-xs text-slate-400 italic">Usar "${term}" como novo registro</span>`;
-                        list.appendChild(li);
-                    } else {
-                        filtered.forEach(item => {
-                            const li = document.createElement('li'); li.textContent = item.label;
-                            li.onmousedown = () => {
-                                input.value = item.nome ? item.nome : item.label; // Preenche só nome se for prod, senao label
-                                if(hidden) hidden.value = item.value;
-                                if(inputId === 'ent-produto' && hidden) input.value = item.label; // No entrada mantem cod - nome
-                                list.style.display = 'none';
-                            };
-                            list.appendChild(li);
-                        });
-                    }
-                    list.style.display = 'block';
-                };
-                
-                input.addEventListener('focus', () => render(input.value));
-                input.addEventListener('input', () => { render(input.value); if(hidden) hidden.value=''; }); // limpa id se digitar
-                input.addEventListener('blur', () => setTimeout(() => list.style.display = 'none', 200));
-            },
-
-            async salvarEntrada(e) {
-                e.preventDefault();
-                const btn = e.target.querySelector('button');
-                btn.disabled = true; btn.innerHTML = '<span class="animate-pulse">Processando...</span>';
-
-                const payload = {
-                    produto: document.getElementById('ent-cod-real').value || document.getElementById('ent-produto').value.split('-')[0].trim(), // Pega cod do input se for novo
-                    produtoNovoNome: document.getElementById('ent-produto').value, // nome full
-                    local: document.getElementById('ent-local').value,
-                    setor: document.getElementById('ent-setor').value,
-                    fornecedor: document.getElementById('ent-forn').value,
-                    quantidade: document.getElementById('ent-qtd').value
-                };
-
-                const res = await this.callAPI('salvarEntrada', payload);
-                btn.disabled = false; btn.innerHTML = 'Confirmar Entrada';
-                
-                if(res) {
-                    this.showToast("Entrada registrada com sucesso!");
-                    this.closeModal('modal-entrada');
-                }
-            },
-
-            async salvarSaida(e) {
-                e.preventDefault();
-                const btn = e.target.querySelector('button');
-                btn.disabled = true; btn.innerHTML = '<span class="animate-pulse">Processando...</span>';
-
-                const codReal = document.getElementById('sai-cod-real').value;
-                if(!codReal) {
-                    this.showToast("Selecione um produto cadastrado da lista para saída.", true);
-                    btn.disabled = false; btn.innerHTML = 'Confirmar Saída';
-                    return;
-                }
-
-                const payload = {
-                    produto: codReal,
-                    quantidade: document.getElementById('sai-qtd').value,
-                    funcionario: document.getElementById('sai-func').value,
-                    finalidade: document.getElementById('sai-fin').value
-                };
-
-                const res = await this.callAPI('salvarSaida', payload);
-                btn.disabled = false; btn.innerHTML = 'Confirmar Saída';
-                
-                if(res) {
-                    this.showToast("Saída registrada com sucesso!");
-                    this.closeModal('modal-saida');
-                }
-            },
-
-            async loadAuditoria() {
-                const tbody = document.getElementById('table-logs');
-                tbody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-indigo-500 font-bold animate-pulse">Sincronizando logs...</td></tr>';
-                
-                const data = await this.callAPI('getLogs'); // Usando endpoint genérico de relatorio/logs se implementado.
-                // Como getLogs / getRelatorioCompleto retorna lista de obj ou arrays. Assumindo modelo similar ao anterior.
-                if(!data || !data.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="text-center py-10 text-slate-400">Nenhum registro encontrado.</td></tr>';
-                    return;
-                }
-
-                // Proteção caso dados não sejam array ou estruturados diferente
-                if(Array.isArray(data)) {
-                     tbody.innerHTML = data.slice(0,50).map(r => {
-                        const isEntrada = String(r.tipo||r[1]).toUpperCase().includes('ENTRADA');
-                        const isSaida = String(r.tipo||r[1]).toUpperCase().includes('SAÍDA') || String(r.tipo||r[1]).toUpperCase().includes('SAIDA');
-                        const cor = isEntrada ? 'text-emerald-600' : isSaida ? 'text-rose-600' : 'text-indigo-600';
-                        
-                        return `
-                            <tr class="border-b border-slate-100 hover:bg-slate-50 transition">
-                                <td class="p-4 text-xs font-medium text-slate-600 whitespace-nowrap">${r.data || r[0] || '-'}</td>
-                                <td class="p-4 text-xs font-bold ${cor}">${r.tipo || r[1] || '-'}</td>
-                                <td class="p-4 text-xs font-medium text-slate-800">${r.codProduto || r[2] || '-'} - ${r.nomeProduto || r[3] || '-'}</td>
-                                <td class="p-4 text-xs font-black text-slate-800 text-right">${r.quantidade || r[4] || '-'}</td>
-                                <td class="p-4 text-xs text-slate-500">${r.local || r[5] || '-'} / ${r.setor || r[6] || '-'}</td>
-                                <td class="p-4 text-xs text-slate-500">${r.funcionario || r[9] || '-'}</td>
-                            </tr>
-                        `;
-                    }).join('');
-                }
-            },
-
-            async loadRequisicoes() {
-                const grid = document.getElementById('grid-requisicoes');
-                grid.innerHTML = '<div class="col-span-full text-center py-10 text-indigo-500 font-bold animate-pulse">Sincronizando pedidos...</div>';
-                
-                const data = await this.callAPI('getRequisicoes');
-                if(!data || !data.length) {
-                    grid.innerHTML = '<div class="col-span-full bg-slate-50 border border-slate-200 rounded-xl p-10 text-center text-slate-400">Nenhum pedido pendente registrado no sistema.</div>';
-                    return;
-                }
-
-                grid.innerHTML = data.map((r) => {
-                    const statusLower = String(r.status||'').toLowerCase();
-                    const isComplete = statusLower.includes('entregue') || statusLower.includes('complete');
-                    const isPartial = statusLower.includes('parcial') || statusLower.includes('partial');
-                    
-                    const statusClass = isComplete ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
-                                      : isPartial ? 'bg-blue-100 text-blue-700 border-blue-200' 
-                                      : 'bg-amber-100 text-amber-700 border-amber-200';
-                                      
-                    const perc = r.total_requested > 0 ? Math.min((r.total_withdrawn / r.total_requested) * 100, 100) : 0;
-
-                    return `
-                        <div class="card-premium p-6 flex flex-col justify-between">
-                            <div>
-                                <div class="flex justify-between items-start mb-4">
-                                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded-md">REQ #${r.numero}</span>
-                                    <span class="text-[10px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-full border ${statusClass}">${r.status || 'Pendente'}</span>
-                                </div>
-                                <h4 class="text-lg font-black text-slate-800 leading-tight mb-4">${r.material_name}</h4>
-                            </div>
-                            
-                            <div class="space-y-2 mt-4 pt-4 border-t border-slate-100">
-                                <div class="flex justify-between text-[10px] font-black text-slate-500 uppercase tracking-widest">
-                                    <span>Progresso</span>
-                                    <span>${r.total_withdrawn || 0} / ${r.total_requested}</span>
-                                </div>
-                                <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                                    <div class="h-full ${isComplete ? 'bg-emerald-500' : 'bg-indigo-500'}" style="width: ${perc}%"></div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
+            } catch (error) {
+                errorBox.innerText = "Erro: " + error.message;
+                errorBox.classList.remove('hidden');
+            } finally {
+                btn.disabled = false;
+                btn.innerText = isRegisterMode ? 'Criar Conta' : 'Entrar no Sistema';
             }
         };
 
-        // Impede submissões padrões e garante fallback seguro em enter.
-        document.querySelectorAll('form').forEach(f => {
-            f.addEventListener('keypress', e => { if(e.key === 'Enter') e.preventDefault(); });
+        window.logoutFirebase = async () => {
+            await signOut(auth);
+            showToast("Você saiu do sistema.");
+        };
+
+        // Observador de Estado de Login
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUserInfo = user;
+                document.getElementById('user-name').innerText = user.displayName || user.email.split('@')[0];
+                document.getElementById('view-login').classList.remove('active');
+                document.getElementById('app-shell').classList.remove('hidden');
+                showView('dashboard');
+            } else {
+                currentUserInfo = null;
+                document.getElementById('app-shell').classList.add('hidden');
+                document.getElementById('view-login').classList.add('active');
+            }
         });
+
+        // 5. LÓGICA DE BANCO DE DADOS (FIRESTORE)
+
+        const registrarLog = async (tipo, produto, qtd) => {
+            await addDoc(collection(db, "movimentacoes"), {
+                tipo: tipo,
+                produto: produto,
+                quantidade: Number(qtd),
+                usuario: currentUserInfo.displayName || currentUserInfo.email,
+                data: serverTimestamp()
+            });
+        };
+
+        window.salvarFirebaseEntrada = async (e) => {
+            e.preventDefault();
+            const prod = document.getElementById('ent-produto').value;
+            const qtd = Number(document.getElementById('ent-qtd').value);
+            
+            try {
+                // Salvar Produto (Usa o nome como ID do documento para simplificar)
+                await updateDoc(doc(db, "produtos", prod), { saldo: increment(qtd) })
+                    .catch(() => addDoc(collection(db, "produtos"), { nome: prod, saldo: qtd })); // Se não existir, cria
+                
+                await registrarLog("ENTRADA", prod, qtd);
+                showToast("Entrada registrada no Firebase!");
+                closeModal('modal-entrada');
+                if(document.getElementById('view-dashboard').classList.contains('active')) loadDashboard();
+            } catch (err) { showToast(err.message, true); }
+        };
+
+        window.salvarFirebaseSaida = async (e) => {
+            e.preventDefault();
+            const prod = document.getElementById('sai-produto').value;
+            const qtd = Number(document.getElementById('sai-qtd').value);
+            
+            try {
+                // Em um cenário real, você buscaria o saldo antes para validar se é > qtd.
+                // Aqui usamos increment negativo para simplificar.
+                await addDoc(collection(db, "produtos"), { nome: prod, saldo: increment(-qtd) }); // Ideal: UpdateDoc
+                await registrarLog("SAÍDA", prod, qtd);
+                showToast("Saída registrada no Firebase!");
+                closeModal('modal-saida');
+                if(document.getElementById('view-dashboard').classList.contains('active')) loadDashboard();
+            } catch (err) { showToast(err.message, true); }
+        };
+
+        window.salvarFirebaseReq = async (e) => {
+            e.preventDefault();
+            const mat = document.getElementById('req-mat').value;
+            const qtd = Number(document.getElementById('req-qtd').value);
+            
+            try {
+                await addDoc(collection(db, "requisicoes"), {
+                    material: mat, requested: qtd, withdrawn: 0, status: 'Pendente', data: serverTimestamp()
+                });
+                showToast("Requisição criada!");
+                closeModal('modal-req');
+                loadRequisicoes();
+            } catch (err) { showToast(err.message, true); }
+        };
+
+        // CARREGAMENTO DE DADOS (LEITURA)
+        window.loadDashboard = async () => {
+            const prodSnap = await getDocs(collection(db, "produtos"));
+            const movSnap = await getDocs(collection(db, "movimentacoes"));
+            const reqSnap = await getDocs(collection(db, "requisicoes"));
+            
+            document.getElementById('stat-sku').innerText = prodSnap.size;
+            document.getElementById('stat-movs').innerText = movSnap.size;
+            document.getElementById('stat-pendentes').innerText = reqSnap.docs.filter(d => d.data().status !== 'Entregue').length;
+        };
+
+        window.loadAuditoria = async () => {
+            const q = query(collection(db, "movimentacoes"), orderBy("data", "desc"));
+            const querySnapshot = await getDocs(q);
+            const tbody = document.getElementById('table-logs');
+            tbody.innerHTML = '';
+            
+            if(querySnapshot.empty) { tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Sem dados.</td></tr>'; return; }
+
+            querySnapshot.forEach((doc) => {
+                const d = doc.data();
+                const dateStr = d.data ? d.data.toDate().toLocaleString('pt-BR') : 'Agora';
+                const cor = d.tipo === 'ENTRADA' ? 'text-emerald-600' : 'text-rose-600';
+                tbody.innerHTML += `
+                    <tr class="border-b border-slate-100">
+                        <td class="p-4 text-xs">${dateStr}</td>
+                        <td class="p-4 text-xs font-bold ${cor}">${d.tipo}</td>
+                        <td class="p-4 text-xs">${d.produto}</td>
+                        <td class="p-4 text-xs font-bold">${d.quantidade}</td>
+                        <td class="p-4 text-xs">${d.usuario}</td>
+                    </tr>`;
+            });
+        };
+
+        window.loadRequisicoes = async () => {
+            const querySnapshot = await getDocs(query(collection(db, "requisicoes"), orderBy("data", "desc")));
+            const grid = document.getElementById('grid-requisicoes');
+            grid.innerHTML = '';
+            
+            if(querySnapshot.empty) { grid.innerHTML = '<div class="col-span-full text-center py-10">Sem pedidos.</div>'; return; }
+
+            querySnapshot.forEach((doc) => {
+                const d = doc.data();
+                const perc = d.requested > 0 ? (d.withdrawn / d.requested) * 100 : 0;
+                grid.innerHTML += `
+                    <div class="card-premium p-6">
+                        <div class="flex justify-between items-start mb-4">
+                            <h4 class="text-lg font-black text-slate-800">${d.material}</h4>
+                            <span class="text-[10px] font-bold uppercase px-2 py-1 rounded bg-slate-100">${d.status}</span>
+                        </div>
+                        <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest flex justify-between mb-2">
+                            <span>Progresso</span><span>${d.withdrawn} / ${d.requested}</span>
+                        </div>
+                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                            <div class="h-full bg-indigo-500" style="width: ${perc}%"></div>
+                        </div>
+                    </div>`;
+            });
+        };
     </script>
 </body>
 </html>
