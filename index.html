@@ -23,8 +23,8 @@
         .view-container.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         
-        .input-nexa { width: 100%; padding: 0.85rem 1rem; border-radius: 1rem; border: 1px solid #e2e8f0; outline: none; transition: all 0.2s; font-size: 0.875rem; }
-        .input-nexa:focus { border-color: var(--nexa-accent); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
+        .input-nexa { width: 100%; padding: 0.85rem 1rem; border-radius: 1rem; border: 1px solid #e2e8f0; outline: none; transition: all 0.2s; font-size: 0.875rem; background: #f8fafc; }
+        .input-nexa:focus { border-color: var(--nexa-accent); background: white; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); }
         
         .dropdown-list { max-height: 200px; overflow-y: auto; position: absolute; width: 100%; z-index: 50; background: white; border-radius: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; display: none; margin-top: 4px; }
         .dropdown-list li { padding: 0.75rem 1rem; cursor: pointer; font-size: 0.875rem; border-bottom: 1px solid #f1f5f9; }
@@ -32,15 +32,15 @@
         
         .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,0.6); backdrop-filter: blur(4px); z-index: 100; display: none; align-items: center; justify-content: center; padding: 1rem; }
         .modal-overlay.active { display: flex; }
+        
         #toast-container { position: fixed; bottom: 1.5rem; right: 1.5rem; z-index: 9999; display: flex; flex-direction: column; gap: 0.5rem; pointer-events: none; }
-        .toast { background: white; border-left: 4px solid #6366f1; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); animation: slideInRight 0.3s ease-out forwards; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.875rem; color: #1e293b; }
+        .toast { background: white; border-left: 4px solid #10b981; padding: 1rem 1.5rem; border-radius: 0.5rem; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.2); animation: slideInRight 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.875rem; color: #1e293b; }
         .toast.error { border-left-color: #ef4444; }
-        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes slideInRight { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <!-- TELA DE LOGIN -->
     <div id="view-login" class="view-container active flex items-center justify-center min-h-screen bg-nexa-dark p-6 relative overflow-hidden">
         <div class="absolute -top-40 -left-40 w-96 h-96 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl pointer-events-none"></div>
@@ -56,188 +56,243 @@
 
             <form onsubmit="handleAuth(event)" class="space-y-4">
                 <div id="register-fields" class="hidden space-y-4">
-                    <input type="text" id="reg-nome" class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="Nome Completo">
-                    <input type="text" id="reg-setor" class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="Setor (Ex: Almoxarifado)">
+                    <input type="text" id="reg-nome" class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400 focus:bg-white/10 transition-all" placeholder="Nome Completo">
                 </div>
                 
-                <input type="email" id="login-email" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="E-mail de acesso">
-                <input type="password" id="login-pass" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400" placeholder="Senha">
+                <input type="email" id="login-email" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400 focus:bg-white/10 transition-all" placeholder="E-mail corporativo">
+                <input type="password" id="login-pass" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none placeholder-slate-500 focus:border-indigo-400 focus:bg-white/10 transition-all" placeholder="Senha de acesso">
                 
                 <div id="login-error" class="hidden text-rose-400 text-xs font-bold text-center bg-rose-500/10 py-3 rounded-xl border border-rose-500/20"></div>
                 
-                <button type="submit" id="btn-auth-submit" class="w-full btn-gradient text-white py-5 rounded-2xl font-black text-lg shadow-xl uppercase tracking-wider">
+                <button type="submit" id="btn-auth-submit" class="w-full btn-gradient text-white py-5 rounded-2xl font-black text-lg shadow-xl uppercase tracking-wider mt-2">
                     Entrar no Sistema
                 </button>
                 
                 <p class="text-center text-slate-400 text-xs mt-6">
                     <span id="auth-switch-text">Ainda não tem conta?</span>
-                    <a href="javascript:void(0)" onclick="toggleAuthMode()" id="auth-switch-link" class="text-indigo-400 font-bold ml-1 hover:underline">Cadastre-se</a>
+                    <a href="javascript:void(0)" onclick="toggleAuthMode()" id="auth-switch-link" class="text-indigo-400 font-bold ml-1 hover:text-indigo-300 transition-colors">Cadastre-se</a>
                 </p>
             </form>
         </div>
     </div>
 
-    <!-- ESTRUTURA PRINCIPAL (SHELL) -->
-    <div id="app-shell" class="hidden min-h-screen flex flex-col">
-        <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-lg">
+    <div id="app-shell" class="hidden min-h-screen flex flex-col bg-slate-50">
+        <header class="bg-slate-900 border-b border-slate-800 sticky top-0 z-40 px-6 py-4 flex justify-between items-center shadow-xl">
             <div class="flex items-center gap-8">
                 <div class="flex items-center gap-3">
-                    <div class="w-8 h-8 btn-gradient rounded-lg flex items-center justify-center text-white shadow-md">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+                    <div class="w-10 h-10 btn-gradient rounded-xl flex items-center justify-center text-white shadow-lg">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
                     </div>
-                    <h1 class="text-lg font-black italic tracking-tighter uppercase text-white leading-none">NEXA <span class="text-indigo-400">STOCK</span></h1>
+                    <div>
+                        <h1 class="text-lg font-black italic tracking-tighter uppercase text-white leading-none">NEXA <span class="text-indigo-400">STOCK</span></h1>
+                        <p class="text-[9px] text-slate-400 uppercase tracking-widest font-bold mt-1">Gestão de Estoque</p>
+                    </div>
                 </div>
-                <nav class="hidden md:flex gap-1 bg-slate-800 p-1 rounded-xl">
-                    <button onclick="showView('dashboard')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Dashboard</button>
-                    <button onclick="showView('operacoes')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Operações</button>
-                    <button onclick="showView('auditoria')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Auditoria</button>
-                    <button onclick="showView('requisicoes')" class="nav-btn px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition">Requisições</button>
+                
+                <nav class="hidden md:flex gap-1 bg-slate-800/50 p-1.5 rounded-xl border border-slate-700">
+                    <button onclick="showView('dashboard')" class="nav-btn px-5 py-2.5 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition-all">Painel</button>
+                    <button onclick="showView('operacoes')" class="nav-btn px-5 py-2.5 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition-all">Operações</button>
+                    <button onclick="showView('auditoria')" class="nav-btn px-5 py-2.5 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition-all">Auditoria</button>
+                    <button onclick="showView('requisicoes')" class="nav-btn px-5 py-2.5 rounded-lg text-xs font-bold uppercase text-slate-300 hover:bg-slate-700 hover:text-white transition-all">Requisições</button>
                 </nav>
             </div>
-            <div class="flex items-center gap-4">
-                <div class="text-right border-r border-slate-700 pr-4">
-                    <p id="user-name" class="text-xs font-bold text-white">Carregando...</p>
-                    <p class="text-[9px] text-emerald-400 font-black uppercase tracking-widest">Online</p>
+            <div class="flex items-center gap-5">
+                <div class="text-right border-r border-slate-700 pr-5 hidden sm:block">
+                    <p id="user-name" class="text-sm font-bold text-white">Carregando...</p>
+                    <p class="text-[10px] text-emerald-400 font-black uppercase tracking-widest mt-0.5">Online</p>
                 </div>
-                <button onclick="logoutFirebase()" class="p-2 text-rose-400 hover:bg-rose-500/20 rounded-xl transition" title="Sair">
+                <button onclick="logoutFirebase()" class="p-2.5 text-rose-400 hover:bg-rose-500 hover:text-white rounded-xl transition-colors bg-rose-500/10" title="Sair do Sistema">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
                 </button>
             </div>
         </header>
 
-        <!-- Navegação Mobile -->
-        <div class="md:hidden bg-slate-800 border-b border-slate-700 flex overflow-x-auto p-2 gap-2 sticky top-[72px] z-30">
-            <button onclick="showView('dashboard')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Dash</button>
-            <button onclick="showView('operacoes')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Operações</button>
-            <button onclick="showView('auditoria')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Auditoria</button>
-            <button onclick="showView('requisicoes')" class="flex-shrink-0 px-4 py-2 rounded-lg text-xs font-bold uppercase text-slate-300 bg-slate-700/50">Pedidos</button>
+        <div class="md:hidden bg-slate-900 border-b border-slate-800 flex overflow-x-auto p-3 gap-2 sticky top-[72px] z-30 shadow-md">
+            <button onclick="showView('dashboard')" class="flex-shrink-0 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-300 bg-slate-800 border border-slate-700">Painel</button>
+            <button onclick="showView('operacoes')" class="flex-shrink-0 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-300 bg-slate-800 border border-slate-700">Operações</button>
+            <button onclick="showView('auditoria')" class="flex-shrink-0 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-300 bg-slate-800 border border-slate-700">Auditoria</button>
+            <button onclick="showView('requisicoes')" class="flex-shrink-0 px-4 py-2.5 rounded-lg text-[10px] font-black uppercase tracking-wider text-slate-300 bg-slate-800 border border-slate-700">Pedidos</button>
         </div>
 
-        <main class="flex-1 w-full max-w-7xl mx-auto p-6 md:p-10">
+        <main class="flex-1 w-full max-w-7xl mx-auto p-6 md:p-10 relative">
             
-            <!-- DASHBOARD -->
             <div id="view-dashboard" class="view-container">
-                <div class="mb-8">
+                <div class="mb-10">
                     <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Central de <span class="text-indigo-600">Controle</span></h2>
+                    <p class="text-slate-500 text-sm font-medium mt-1">Visão geral do sistema em tempo real.</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="card-premium p-8 border-l-4 border-indigo-500">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total SKU Ativos</p>
-                        <span id="stat-sku" class="text-5xl font-black text-slate-800 tracking-tighter">0</span>
+                    <div class="card-premium p-8 border-l-4 border-indigo-500 relative overflow-hidden">
+                        <div class="absolute -right-6 -top-6 text-indigo-50 opacity-50"><svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor"><path d="M20 7h-4V4c0-1.1-.9-2-2-2h-4c-1.1 0-2 .9-2 2v3H4c-1.1 0-2 .9-2 2v11c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zM10 4h4v3h-4V4z"/></svg></div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 relative z-10">Total Produtos Ativos</p>
+                        <span id="stat-sku" class="text-5xl font-black text-slate-800 tracking-tighter relative z-10">0</span>
                     </div>
-                    <div class="card-premium p-8 border-l-4 border-rose-500">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Movimentações Realizadas</p>
-                        <span id="stat-movs" class="text-5xl font-black text-rose-600 tracking-tighter">0</span>
+                    <div class="card-premium p-8 border-l-4 border-emerald-500 relative overflow-hidden">
+                        <div class="absolute -right-6 -top-6 text-emerald-50 opacity-50"><svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor"><path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6z"/></svg></div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 relative z-10">Total Movimentações</p>
+                        <span id="stat-movs" class="text-5xl font-black text-emerald-600 tracking-tighter relative z-10">0</span>
                     </div>
-                    <div class="card-premium p-8 border-l-4 border-amber-500">
-                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Pedidos Ativos</p>
-                        <span id="stat-pendentes" class="text-5xl font-black text-amber-500 tracking-tighter">0</span>
+                    <div class="card-premium p-8 border-l-4 border-amber-500 relative overflow-hidden">
+                        <div class="absolute -right-6 -top-6 text-amber-50 opacity-50"><svg width="120" height="120" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-9 14l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/></svg></div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 relative z-10">Pedidos Pendentes</p>
+                        <span id="stat-pendentes" class="text-5xl font-black text-amber-500 tracking-tighter relative z-10">0</span>
                     </div>
                 </div>
             </div>
 
-            <!-- OPERAÇÕES -->
             <div id="view-operacoes" class="view-container">
-                <div class="mb-8"><h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Ações de <span class="text-indigo-600">Estoque</span></h2></div>
+                <div class="mb-10">
+                    <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Ações de <span class="text-indigo-600">Estoque</span></h2>
+                    <p class="text-slate-500 text-sm font-medium mt-1">Gerencie a entrada e saída de produtos.</p>
+                </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div class="card-premium p-10 cursor-pointer hover:border-emerald-500 group flex items-center gap-8" onclick="openModal('modal-entrada')">
-                        <div class="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+                    <div class="card-premium p-10 cursor-pointer hover:border-emerald-500 group flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-8" onclick="openModal('modal-entrada')">
+                        <div class="w-24 h-24 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500 group-hover:text-white transition-all shadow-inner group-hover:shadow-emerald-200">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
                         </div>
-                        <div><h3 class="text-2xl font-black text-slate-800">Registrar Entrada</h3><p class="text-sm text-slate-500 mt-2">Adicionar produtos.</p></div>
+                        <div class="pt-2">
+                            <h3 class="text-2xl font-black text-slate-800">Registrar Entrada</h3>
+                            <p class="text-sm text-slate-500 mt-3 font-medium leading-relaxed">Adicione novos produtos ou atualize saldos no sistema central.</p>
+                        </div>
                     </div>
-                    <div class="card-premium p-10 cursor-pointer hover:border-rose-500 group flex items-center gap-8" onclick="openModal('modal-saida')">
-                        <div class="w-20 h-20 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center flex-shrink-0 group-hover:bg-rose-500 group-hover:text-white transition-colors">
-                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+                    <div class="card-premium p-10 cursor-pointer hover:border-rose-500 group flex flex-col sm:flex-row items-center sm:items-start text-center sm:text-left gap-8" onclick="openModal('modal-saida')">
+                        <div class="w-24 h-24 bg-rose-50 text-rose-600 rounded-3xl flex items-center justify-center flex-shrink-0 group-hover:bg-rose-500 group-hover:text-white transition-all shadow-inner group-hover:shadow-rose-200">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
                         </div>
-                        <div><h3 class="text-2xl font-black text-slate-800">Registrar Saída</h3><p class="text-sm text-slate-500 mt-2">Dar baixa em materiais.</p></div>
+                        <div class="pt-2">
+                            <h3 class="text-2xl font-black text-slate-800">Registrar Saída</h3>
+                            <p class="text-sm text-slate-500 mt-3 font-medium leading-relaxed">Dê baixa em materiais consumidos e associe a um setor.</p>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- AUDITORIA -->
             <div id="view-auditoria" class="view-container">
-                 <div class="mb-8 flex justify-between items-end">
-                    <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Auditoria de <span class="text-indigo-600">Logs</span></h2>
-                    <button onclick="loadAuditoria()" class="bg-white border border-slate-200 px-4 py-2 rounded-lg text-xs font-bold hover:bg-slate-50">Atualizar</button>
+                 <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Auditoria de <span class="text-indigo-600">Logs</span></h2>
+                        <p class="text-slate-500 text-sm font-medium mt-1">Rastreamento inalterável de dados.</p>
+                    </div>
+                    <button onclick="loadAuditoria()" class="bg-white border border-slate-200 px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-slate-50 flex items-center gap-2 shadow-sm text-slate-600 transition-colors">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+                        Atualizar Dados
+                    </button>
                  </div>
-                 <div class="card-premium overflow-hidden overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead class="bg-slate-50 border-b border-slate-200">
-                            <tr>
-                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Data</th>
-                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Tipo</th>
-                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Produto</th>
-                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Qtd</th>
-                                <th class="p-4 text-[10px] font-black uppercase text-slate-400">Usuário</th>
-                            </tr>
-                        </thead>
-                        <tbody id="table-logs"></tbody>
-                    </table>
+                 <div class="card-premium overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse min-w-[800px]">
+                            <thead class="bg-slate-50 border-b border-slate-200">
+                                <tr>
+                                    <th class="p-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Data</th>
+                                    <th class="p-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Tipo</th>
+                                    <th class="p-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Produto</th>
+                                    <th class="p-5 text-[10px] font-black uppercase tracking-widest text-slate-400 text-right">Qtd</th>
+                                    <th class="p-5 text-[10px] font-black uppercase tracking-widest text-slate-400">Usuário</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-logs" class="divide-y divide-slate-100">
+                                <tr><td colspan="5" class="p-10 text-center text-slate-400 animate-pulse">Carregando auditoria...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                  </div>
             </div>
 
-            <!-- REQUISIÇÕES -->
             <div id="view-requisicoes" class="view-container">
-                 <div class="mb-8 flex justify-between items-end">
-                    <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Gestão de <span class="text-indigo-600">Pedidos</span></h2>
-                    <button onclick="openModal('modal-req')" class="bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold hover:bg-indigo-700">+ Novo Pedido</button>
+                 <div class="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
+                    <div>
+                        <h2 class="text-3xl font-black text-slate-900 tracking-tight uppercase italic">Gestão de <span class="text-indigo-600">Pedidos</span></h2>
+                        <p class="text-slate-500 text-sm font-medium mt-1">Controle de suprimentos pendentes.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="loadRequisicoes()" class="bg-white border border-slate-200 px-4 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors" title="Atualizar">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 2v6h-6M3 12a9 9 0 0 1 15-6.7L21 8M3 22v-6h6M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+                        </button>
+                        <button onclick="openModal('modal-req')" class="bg-indigo-600 text-white px-5 py-2.5 rounded-xl text-xs font-bold hover:bg-indigo-700 shadow-lg shadow-indigo-200 transition-all flex items-center gap-2">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            Nova Requisição
+                        </button>
+                    </div>
                  </div>
-                 <div id="grid-requisicoes" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+                 <div id="grid-requisicoes" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                     <!-- Conteúdo injetado via JS -->
+                 </div>
             </div>
         </main>
     </div>
 
-    <!-- MODAIS OPERAÇÕES -->
+    <!-- Modal Entrada -->
     <div id="modal-entrada" class="modal-overlay">
-        <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-8 relative">
-            <button onclick="closeModal('modal-entrada')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
-            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-6">📥 Entrada</h2>
-            <form id="form-entrada" onsubmit="salvarFirebaseEntrada(event)" class="space-y-4">
-                <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nome do Produto</label><input type="text" id="ent-produto" class="input-nexa" required></div>
-                <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Quantidade</label><input type="number" id="ent-qtd" class="input-nexa font-mono font-bold" required></div>
-                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-4 rounded-xl font-bold uppercase tracking-widest mt-6">Confirmar</button>
+        <div class="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl p-10 relative">
+            <button onclick="closeModal('modal-entrada')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-3xl font-light leading-none">&times;</button>
+            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-8">📥 Entrada</h2>
+            <form id="form-entrada" onsubmit="salvarFirebaseEntrada(event)" class="space-y-5">
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1 ml-1">Nome do Produto</label>
+                    <input type="text" id="ent-produto" class="input-nexa" placeholder="Ex: Cimento CP II" required>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1 ml-1">Quantidade Inserida</label>
+                    <input type="number" id="ent-qtd" class="input-nexa font-mono font-bold text-emerald-600 text-lg" placeholder="0" min="1" required>
+                </div>
+                <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-emerald-200 mt-6 transition-transform active:scale-95">Confirmar Entrada</button>
             </form>
         </div>
     </div>
 
+    <!-- Modal Saída -->
     <div id="modal-saida" class="modal-overlay">
-        <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-8 relative">
-            <button onclick="closeModal('modal-saida')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
-            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-6">📤 Saída</h2>
-            <form id="form-saida" onsubmit="salvarFirebaseSaida(event)" class="space-y-4">
-                <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nome do Produto Cadastrado</label><input type="text" id="sai-produto" class="input-nexa border-rose-200 focus:border-rose-500" required></div>
-                <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Qtd Retirada</label><input type="number" id="sai-qtd" class="input-nexa border-rose-200 focus:border-rose-500 font-mono font-bold text-rose-600" required></div>
-                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white py-4 rounded-xl font-bold uppercase tracking-widest mt-6">Confirmar</button>
+        <div class="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl p-10 relative">
+            <button onclick="closeModal('modal-saida')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-3xl font-light leading-none">&times;</button>
+            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-8">📤 Saída</h2>
+            <form id="form-saida" onsubmit="salvarFirebaseSaida(event)" class="space-y-5">
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1 ml-1">Produto Existente</label>
+                    <input type="text" id="sai-produto" class="input-nexa border-rose-200 focus:border-rose-500 focus:ring-rose-100" placeholder="Digite o nome exato..." required>
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1 ml-1">Quantidade Retirada</label>
+                    <input type="number" id="sai-qtd" class="input-nexa border-rose-200 focus:border-rose-500 font-mono font-bold text-rose-600 text-lg" placeholder="0" min="1" required>
+                </div>
+                <button type="submit" class="w-full bg-rose-600 hover:bg-rose-700 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-rose-200 mt-6 transition-transform active:scale-95">Confirmar Baixa</button>
             </form>
         </div>
     </div>
 
+    <!-- Modal Nova Requisição -->
     <div id="modal-req" class="modal-overlay">
-        <div class="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-8 relative">
-            <button onclick="closeModal('modal-req')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-2xl leading-none">&times;</button>
-            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-6">📋 Nova Requisição</h2>
-            <form id="form-req" onsubmit="salvarFirebaseReq(event)" class="space-y-4">
-                <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Material</label><input type="text" id="req-mat" class="input-nexa" required></div>
-                <div><label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Qtd Solicitada</label><input type="number" id="req-qtd" class="input-nexa font-mono font-bold" required></div>
-                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-4 rounded-xl font-bold uppercase tracking-widest mt-6">Confirmar</button>
+        <div class="w-full max-w-lg bg-white rounded-[2rem] shadow-2xl p-10 relative">
+            <button onclick="closeModal('modal-req')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-700 text-3xl font-light leading-none">&times;</button>
+            <h2 class="text-2xl font-black text-slate-800 uppercase italic mb-8">📋 Nova Requisição</h2>
+            <form id="form-req" onsubmit="salvarFirebaseReq(event)" class="space-y-5">
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1 ml-1">Material Desejado</label>
+                    <input type="text" id="req-mat" class="input-nexa" placeholder="Nome do material..." required>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1 ml-1">Setor / O.S.</label>
+                        <input type="text" id="req-setor" class="input-nexa" placeholder="Destino..." required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1 ml-1">Qtd Solicitada</label>
+                        <input type="number" id="req-qtd" class="input-nexa font-mono font-bold" placeholder="0" min="1" required>
+                    </div>
+                </div>
+                <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-5 rounded-2xl font-black text-lg shadow-xl shadow-indigo-200 mt-6 transition-transform active:scale-95">Criar Pedido</button>
             </form>
         </div>
     </div>
 
-    <!-- TOASTS -->
+    <!-- Toast Notifications Container -->
     <div id="toast-container"></div>
 
-    <!-- ========================================== -->
-    <!-- FIREBASE SDK & LÓGICA DO APLICATIVO -->
-    <!-- ========================================== -->
     <script type="module">
-        // 1. IMPORTAÇÃO DO SDK V10
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, query, orderBy, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, addDoc, updateDoc, doc, setDoc, getDoc, query, orderBy, serverTimestamp, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // 2. CONFIGURAÇÃO (COLE AS CHAVES DO SEU PROJETO FIREBASE AQUI)
+        // CREDENCIAIS DO USUÁRIO
         const firebaseConfig = {
             apiKey: "AIzaSyA4RvrOh5EU6OXj1zbNB1hGwWDj9VNG-T4",
             authDomain: "nexa-stock.firebaseapp.com",
@@ -248,21 +303,20 @@
             appId: "1:343344768621:web:db46a3c2a353ff65964164"
         };
 
-        // 3. INICIALIZAÇÃO
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // VARIÁVEIS GLOBAIS DE INTERFACE
         let isRegisterMode = false;
         let currentUserInfo = null;
 
-        // FUNÇÕES DE INTERFACE UI
         window.showToast = (msg, isError = false) => {
             const container = document.getElementById('toast-container');
             const toast = document.createElement('div');
             toast.className = `toast ${isError ? 'error' : ''}`;
-            toast.innerHTML = `<span>${msg}</span>`;
+            toast.innerHTML = `
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="${isError ? 'M18 6L6 18M6 6l12 12' : 'M20 6L9 17l-5-5'}"/></svg>
+                <span>${msg}</span>`;
             container.appendChild(toast);
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         };
@@ -270,7 +324,8 @@
         window.openModal = (id) => document.getElementById(id).classList.add('active');
         window.closeModal = (id) => { 
             document.getElementById(id).classList.remove('active'); 
-            document.querySelector(`#${id} form`).reset(); 
+            const form = document.querySelector(`#${id} form`);
+            if(form) form.reset(); 
         };
 
         window.toggleAuthMode = () => {
@@ -278,9 +333,10 @@
             document.getElementById('register-fields').classList.toggle('hidden');
             document.getElementById('reg-nome').required = isRegisterMode;
             document.getElementById('btn-auth-submit').innerText = isRegisterMode ? 'Criar Conta' : 'Entrar no Sistema';
-            document.getElementById('login-subtitle').innerText = isRegisterMode ? 'Novo Usuário' : 'Gestão de Estoque';
+            document.getElementById('login-subtitle').innerText = isRegisterMode ? 'Novo Cadastro' : 'Gestão de Estoque';
             document.getElementById('auth-switch-text').innerText = isRegisterMode ? 'Já tem conta?' : 'Ainda não tem conta?';
             document.getElementById('auth-switch-link').innerText = isRegisterMode ? 'Faça login' : 'Cadastre-se';
+            document.getElementById('login-error').classList.add('hidden');
         };
 
         window.showView = (name) => {
@@ -293,12 +349,12 @@
             });
             document.getElementById('view-' + name).classList.add('active');
             
+            // Recarrega dados dependendo da tela
             if(name === 'dashboard') loadDashboard();
             if(name === 'auditoria') loadAuditoria();
             if(name === 'requisicoes') loadRequisicoes();
         };
 
-        // 4. LÓGICA DE AUTENTICAÇÃO (FIREBASE AUTH)
         window.handleAuth = async (e) => {
             e.preventDefault();
             const email = document.getElementById('login-email').value;
@@ -311,20 +367,20 @@
             try {
                 if (isRegisterMode) {
                     const nome = document.getElementById('reg-nome').value;
-                    const userCredential = await createUserWithEmailAndPassword(auth, email, pass);
-                    await updateProfile(userCredential.user, { displayName: nome });
+                    const userCred = await createUserWithEmailAndPassword(auth, email, pass);
+                    await updateProfile(userCred.user, { displayName: nome });
                     showToast("Conta criada com sucesso!");
                 } else {
                     await signInWithEmailAndPassword(auth, email, pass);
-                    showToast("Login efetuado!");
+                    showToast("Bem-vindo(a) de volta!");
                 }
             } catch (error) {
-                // TRADUÇÃO DE ERROS DO FIREBASE PARA PORTUGUÊS
-                let msg = error.message;
-                if (error.code === 'auth/invalid-credential') msg = "E-mail ou senha incorretos. Se for o 1º acesso, crie uma conta.";
+                let msg = "Erro na autenticação.";
+                if (error.code === 'auth/invalid-credential') msg = "E-mail ou senha incorretos. Se for o 1º acesso, clique em Cadastre-se abaixo.";
                 else if (error.code === 'auth/email-already-in-use') msg = "Este e-mail já possui cadastro.";
-                else if (error.code === 'auth/weak-password') msg = "A senha deve ter pelo menos 6 caracteres.";
+                else if (error.code === 'auth/weak-password') msg = "A senha deve ter no mínimo 6 caracteres.";
                 else if (error.code === 'auth/invalid-email') msg = "Formato de e-mail inválido.";
+                else if (error.message) msg = error.message;
                 
                 errorBox.innerText = msg;
                 errorBox.classList.remove('hidden');
@@ -339,22 +395,32 @@
             showToast("Você saiu do sistema.");
         };
 
-        // Observador de Estado de Login
+        // Controla o estado global (Logado vs Deslogado)
         onAuthStateChanged(auth, (user) => {
+            const viewLogin = document.getElementById('view-login');
+            const appShell = document.getElementById('app-shell');
+            
             if (user) {
                 currentUserInfo = user;
                 document.getElementById('user-name').innerText = user.displayName || user.email.split('@')[0];
-                document.getElementById('view-login').classList.remove('active');
-                document.getElementById('app-shell').classList.remove('hidden');
+                
+                // Oculta o login garantindo que remova classes de display nativas
+                viewLogin.classList.remove('flex', 'active');
+                viewLogin.classList.add('hidden');
+                
+                appShell.classList.remove('hidden');
+                appShell.classList.add('flex');
                 showView('dashboard');
             } else {
                 currentUserInfo = null;
-                document.getElementById('app-shell').classList.add('hidden');
-                document.getElementById('view-login').classList.add('active');
+                appShell.classList.add('hidden');
+                appShell.classList.remove('flex');
+                
+                // Retorna para a tela de login
+                viewLogin.classList.remove('hidden');
+                viewLogin.classList.add('flex', 'active');
             }
         });
-
-        // 5. LÓGICA DE BANCO DE DADOS (FIRESTORE)
 
         const registrarLog = async (tipo, produto, qtd) => {
             await addDoc(collection(db, "movimentacoes"), {
@@ -368,111 +434,189 @@
 
         window.salvarFirebaseEntrada = async (e) => {
             e.preventDefault();
-            const prod = document.getElementById('ent-produto').value;
+            const prod = document.getElementById('ent-produto').value.trim();
             const qtd = Number(document.getElementById('ent-qtd').value);
-            
+            if(!prod || qtd <= 0) return;
+
             try {
-                // Salvar Produto (Usa o nome como ID do documento para simplificar)
-                await updateDoc(doc(db, "produtos", prod), { saldo: increment(qtd) })
-                    .catch(() => addDoc(collection(db, "produtos"), { nome: prod, saldo: qtd })); // Se não existir, cria
+                // Tenta atualizar saldo. Se não existir o doc, cria com setDoc.
+                const docRef = doc(db, "produtos", prod);
+                const docSnap = await getDoc(docRef);
+
+                if(docSnap.exists()) {
+                    await updateDoc(docRef, { saldo: increment(qtd) });
+                } else {
+                    await setDoc(docRef, { nome: prod, saldo: qtd });
+                }
                 
                 await registrarLog("ENTRADA", prod, qtd);
-                showToast("Entrada registrada no Firebase!");
+                showToast("Entrada registrada com sucesso!");
                 closeModal('modal-entrada');
                 if(document.getElementById('view-dashboard').classList.contains('active')) loadDashboard();
-            } catch (err) { showToast(err.message, true); }
+            } catch (err) { 
+                showToast("Erro: " + err.message, true); 
+            }
         };
 
         window.salvarFirebaseSaida = async (e) => {
             e.preventDefault();
-            const prod = document.getElementById('sai-produto').value;
+            const prod = document.getElementById('sai-produto').value.trim();
             const qtd = Number(document.getElementById('sai-qtd').value);
-            
+            if(!prod || qtd <= 0) return;
+
             try {
-                // Em um cenário real, você buscaria o saldo antes para validar se é > qtd.
-                // Aqui usamos increment negativo para simplificar.
-                await addDoc(collection(db, "produtos"), { nome: prod, saldo: increment(-qtd) }); // Ideal: UpdateDoc
+                const docRef = doc(db, "produtos", prod);
+                const docSnap = await getDoc(docRef);
+
+                if(!docSnap.exists()) {
+                    showToast("Erro: Produto não encontrado no estoque.", true);
+                    return;
+                }
+
+                const saldoAtual = docSnap.data().saldo || 0;
+                if(qtd > saldoAtual) {
+                    showToast(`Saldo insuficiente! (Atual: ${saldoAtual})`, true);
+                    return;
+                }
+
+                await updateDoc(docRef, { saldo: increment(-qtd) });
                 await registrarLog("SAÍDA", prod, qtd);
-                showToast("Saída registrada no Firebase!");
+                
+                showToast("Saída registrada com sucesso!");
                 closeModal('modal-saida');
                 if(document.getElementById('view-dashboard').classList.contains('active')) loadDashboard();
-            } catch (err) { showToast(err.message, true); }
+            } catch (err) { 
+                showToast("Erro: " + err.message, true); 
+            }
         };
 
         window.salvarFirebaseReq = async (e) => {
             e.preventDefault();
             const mat = document.getElementById('req-mat').value;
+            const setor = document.getElementById('req-setor').value;
             const qtd = Number(document.getElementById('req-qtd').value);
             
             try {
                 await addDoc(collection(db, "requisicoes"), {
-                    material: mat, requested: qtd, withdrawn: 0, status: 'Pendente', data: serverTimestamp()
+                    material: mat, 
+                    setor: setor,
+                    requested: qtd, 
+                    withdrawn: 0, 
+                    status: 'Pendente', 
+                    data: serverTimestamp()
                 });
                 showToast("Requisição criada!");
                 closeModal('modal-req');
-                loadRequisicoes();
-            } catch (err) { showToast(err.message, true); }
+                if(document.getElementById('view-requisicoes').classList.contains('active')) loadRequisicoes();
+            } catch (err) { 
+                showToast("Erro: " + err.message, true); 
+            }
         };
 
-        // CARREGAMENTO DE DADOS (LEITURA)
         window.loadDashboard = async () => {
-            const prodSnap = await getDocs(collection(db, "produtos"));
-            const movSnap = await getDocs(collection(db, "movimentacoes"));
-            const reqSnap = await getDocs(collection(db, "requisicoes"));
-            
-            document.getElementById('stat-sku').innerText = prodSnap.size;
-            document.getElementById('stat-movs').innerText = movSnap.size;
-            document.getElementById('stat-pendentes').innerText = reqSnap.docs.filter(d => d.data().status !== 'Entregue').length;
+            try {
+                const prodSnap = await getDocs(collection(db, "produtos"));
+                const movSnap = await getDocs(collection(db, "movimentacoes"));
+                const reqSnap = await getDocs(collection(db, "requisicoes"));
+                
+                document.getElementById('stat-sku').innerText = prodSnap.size;
+                document.getElementById('stat-movs').innerText = movSnap.size;
+                
+                const pendentes = reqSnap.docs.filter(d => d.data().status !== 'Entregue').length;
+                document.getElementById('stat-pendentes').innerText = pendentes;
+            } catch (error) {
+                console.error("Erro ao carregar Dashboard:", error);
+                if (error.message.includes("permission") || error.code === 'permission-denied') {
+                    showToast("Seu banco de dados está bloqueado. Altere as regras do Firestore.", true);
+                }
+            }
         };
 
         window.loadAuditoria = async () => {
-            const q = query(collection(db, "movimentacoes"), orderBy("data", "desc"));
-            const querySnapshot = await getDocs(q);
             const tbody = document.getElementById('table-logs');
-            tbody.innerHTML = '';
+            tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-400 animate-pulse">Sincronizando registros...</td></tr>';
             
-            if(querySnapshot.empty) { tbody.innerHTML = '<tr><td colspan="5" class="p-4 text-center">Sem dados.</td></tr>'; return; }
+            try {
+                const q = query(collection(db, "movimentacoes"), orderBy("data", "desc"));
+                const querySnapshot = await getDocs(q);
+                tbody.innerHTML = '';
+                
+                if(querySnapshot.empty) { 
+                    tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-slate-500 font-medium">Nenhum log encontrado.</td></tr>'; 
+                    return; 
+                }
 
-            querySnapshot.forEach((doc) => {
-                const d = doc.data();
-                const dateStr = d.data ? d.data.toDate().toLocaleString('pt-BR') : 'Agora';
-                const cor = d.tipo === 'ENTRADA' ? 'text-emerald-600' : 'text-rose-600';
-                tbody.innerHTML += `
-                    <tr class="border-b border-slate-100">
-                        <td class="p-4 text-xs">${dateStr}</td>
-                        <td class="p-4 text-xs font-bold ${cor}">${d.tipo}</td>
-                        <td class="p-4 text-xs">${d.produto}</td>
-                        <td class="p-4 text-xs font-bold">${d.quantidade}</td>
-                        <td class="p-4 text-xs">${d.usuario}</td>
-                    </tr>`;
-            });
+                querySnapshot.forEach((doc) => {
+                    const d = doc.data();
+                    const dateStr = d.data ? d.data.toDate().toLocaleString('pt-BR') : 'Recente';
+                    const isEntrada = d.tipo === 'ENTRADA';
+                    const corBg = isEntrada ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200';
+                    
+                    tbody.innerHTML += `
+                        <tr class="hover:bg-slate-50 transition-colors">
+                            <td class="p-5 text-sm text-slate-500">${dateStr}</td>
+                            <td class="p-5"><span class="px-2.5 py-1 text-[10px] font-black uppercase rounded border ${corBg}">${d.tipo}</span></td>
+                            <td class="p-5 text-sm font-bold text-slate-800">${d.produto}</td>
+                            <td class="p-5 text-sm font-bold text-slate-600 text-right">${d.quantidade}</td>
+                            <td class="p-5 text-sm text-slate-500">${d.usuario}</td>
+                        </tr>`;
+                });
+            } catch(e) {
+                tbody.innerHTML = '<tr><td colspan="5" class="p-10 text-center text-rose-500 font-bold">Erro ao buscar auditoria.</td></tr>';
+            }
         };
 
         window.loadRequisicoes = async () => {
-            const querySnapshot = await getDocs(query(collection(db, "requisicoes"), orderBy("data", "desc")));
             const grid = document.getElementById('grid-requisicoes');
-            grid.innerHTML = '';
+            grid.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 animate-pulse">Consultando pedidos...</div>';
             
-            if(querySnapshot.empty) { grid.innerHTML = '<div class="col-span-full text-center py-10">Sem pedidos.</div>'; return; }
+            try {
+                const querySnapshot = await getDocs(query(collection(db, "requisicoes"), orderBy("data", "desc")));
+                grid.innerHTML = '';
+                
+                if(querySnapshot.empty) { 
+                    grid.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                        <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mb-4 text-slate-400"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg></div>
+                        <h3 class="text-lg font-bold text-slate-800">Tudo limpo!</h3>
+                        <p class="text-slate-500 text-sm">Não há pedidos pendentes no momento.</p>
+                    </div>`; 
+                    return; 
+                }
 
-            querySnapshot.forEach((doc) => {
-                const d = doc.data();
-                const perc = d.requested > 0 ? (d.withdrawn / d.requested) * 100 : 0;
-                grid.innerHTML += `
-                    <div class="card-premium p-6">
-                        <div class="flex justify-between items-start mb-4">
-                            <h4 class="text-lg font-black text-slate-800">${d.material}</h4>
-                            <span class="text-[10px] font-bold uppercase px-2 py-1 rounded bg-slate-100">${d.status}</span>
-                        </div>
-                        <div class="text-[10px] font-black text-slate-500 uppercase tracking-widest flex justify-between mb-2">
-                            <span>Progresso</span><span>${d.withdrawn} / ${d.requested}</span>
-                        </div>
-                        <div class="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                            <div class="h-full bg-indigo-500" style="width: ${perc}%"></div>
-                        </div>
-                    </div>`;
-            });
+                querySnapshot.forEach((doc) => {
+                    const d = doc.data();
+                    const perc = d.requested > 0 ? (d.withdrawn / d.requested) * 100 : 0;
+                    
+                    let statusClass = "bg-amber-100 text-amber-700 border-amber-200";
+                    if(d.status === 'Entregue') statusClass = "bg-emerald-100 text-emerald-700 border-emerald-200";
+                    else if(d.withdrawn > 0) statusClass = "bg-blue-100 text-blue-700 border-blue-200";
+
+                    grid.innerHTML += `
+                        <div class="card-premium p-6 hover:border-indigo-200 transition-colors">
+                            <div class="flex justify-between items-start mb-4">
+                                <div>
+                                    <h4 class="text-lg font-black text-slate-800 leading-tight">${d.material}</h4>
+                                    <p class="text-xs text-slate-500 font-medium mt-1">O.S. / Setor: ${d.setor || '-'}</p>
+                                </div>
+                                <span class="text-[10px] font-black uppercase px-2.5 py-1 rounded border ${statusClass}">${d.status}</span>
+                            </div>
+                            <div class="text-[10px] font-black text-slate-400 uppercase tracking-widest flex justify-between mb-2">
+                                <span>Progresso ${Math.round(perc)}%</span><span>${d.withdrawn} de ${d.requested}</span>
+                            </div>
+                            <div class="w-full bg-slate-100 h-2.5 rounded-full overflow-hidden">
+                                <div class="h-full bg-indigo-500 transition-all duration-700" style="width: ${perc}%"></div>
+                            </div>
+                        </div>`;
+                });
+            } catch (e) {
+                grid.innerHTML = '<div class="col-span-full text-center py-10 text-rose-500 font-bold">Erro ao buscar pedidos.</div>';
+            }
         };
+
+        window.salvarFirebaseReqBaixa = async (id, qtdEntregue) => {
+            // Lógica pronta para expansão futura (Baixa parcial via Modal)
+        }
     </script>
 </body>
 </html>
