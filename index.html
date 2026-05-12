@@ -340,13 +340,22 @@
                         body: JSON.stringify({ action, payload }),
                         headers: { 'Content-Type': 'text/plain;charset=utf-8' } // text/plain evita block de CORS em redirecionamento no GAS
                     });
-                    const res = await response.json();
+                    
+                    let res;
+                    try {
+                        res = await response.json();
+                    } catch (parseError) {
+                        throw new Error("API desatualizada. Atualize a Implantação no Google Apps Script para 'Nova Versão'.");
+                    }
+
                     if (!res.sucesso) throw new Error(res.erro || "Falha desconhecida na API.");
                     return res.data;
                 } catch (err) {
                     console.error("API Error:", err);
                     this.showToast(err.message, true);
-                    return null;
+                    
+                    // Repassa o erro para ser mostrado no formulário
+                    throw err; 
                 }
             },
 
@@ -357,6 +366,9 @@
                 const title = document.getElementById('login-subtitle');
                 const link = document.getElementById('auth-switch-link');
                 const text = document.getElementById('auth-switch-text');
+                const errorBox = document.getElementById('login-error');
+                
+                errorBox.classList.add('hidden');
 
                 if (this.isRegisterMode) {
                     regFields.classList.remove('hidden');
@@ -380,10 +392,12 @@
                 const u = document.getElementById('login-user').value;
                 const p = document.getElementById('login-pass').value;
                 const btn = document.getElementById('btn-auth-submit');
+                const errorBox = document.getElementById('login-error');
                 const originalText = btn.innerHTML;
                 
                 btn.disabled = true;
                 btn.innerHTML = '<span class="animate-pulse">Processando...</span>';
+                errorBox.classList.add('hidden');
 
                 try {
                     if (this.isRegisterMode) {
@@ -404,6 +418,10 @@
                             this.showView('dashboard');
                         }
                     }
+                } catch (err) {
+                    // Agora o erro aparece escrito na tela de login
+                    errorBox.innerText = err.message || "Erro de comunicação com o servidor.";
+                    errorBox.classList.remove('hidden');
                 } finally {
                     btn.disabled = false;
                     btn.innerHTML = originalText;
