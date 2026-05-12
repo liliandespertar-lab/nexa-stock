@@ -79,7 +79,7 @@
                 </div>
             </div>
             
-            <!-- Menu de Módulos (Atualizado com Movimentações e Requisições) -->
+            <!-- Menu de Módulos -->
             <nav class="flex items-center gap-1 sm:gap-2 bg-slate-800/50 p-1.5 rounded-xl border border-white/5 overflow-x-auto max-w-full">
                 <button onclick="changeView('dashboard')" id="nav-dashboard" class="nav-item active">Dashboard</button>
                 <button onclick="changeView('operacoes')" id="nav-operacoes" class="nav-item">Operações</button>
@@ -155,7 +155,33 @@
                     <h2 class="text-2xl font-black text-slate-800 tracking-tight">Movimentações e Logs</h2>
                     <p class="text-sm text-slate-500 font-medium mt-1">Histórico completo de entradas e saídas do sistema.</p>
                 </div>
-                <button onclick="carregarMovimentacoes()" class="text-sm font-bold text-indigo-600 bg-indigo-50 px-4 py-2 rounded-xl hover:bg-indigo-100 transition">Atualizar Dados</button>
+            </div>
+
+            <!-- Painel de Filtros -->
+            <div class="bg-white border border-slate-200 rounded-[1.5rem] p-6 shadow-sm mb-6">
+                <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-4">Filtros de Pesquisa</h3>
+                <div class="flex flex-col md:flex-row gap-4 items-end">
+                    <div class="relative flex-[2]">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Produto (Máx 12 Caract.)</label>
+                        <input type="text" id="filtro-mov-prod" maxlength="12" class="input-nexa w-full" placeholder="Buscar por código ou nome..." autocomplete="off">
+                        <ul id="list-filtro-mov-prod" class="dropdown-nexa"></ul>
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Data Inicial</label>
+                        <input type="date" id="filtro-mov-ini" class="input-nexa w-full">
+                    </div>
+                    <div class="flex-1">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Data Final</label>
+                        <input type="date" id="filtro-mov-fim" class="input-nexa w-full">
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="limparFiltrosMov()" class="bg-slate-100 text-slate-600 px-5 py-3.5 rounded-xl font-bold text-sm hover:bg-slate-200 transition">Limpar</button>
+                        <button onclick="carregarMovimentacoes()" class="bg-indigo-600 text-white px-6 py-3.5 rounded-xl font-bold text-sm shadow-md hover:bg-indigo-700 transition flex items-center gap-2">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                            Buscar
+                        </button>
+                    </div>
+                </div>
             </div>
 
             <div class="bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-sm">
@@ -175,7 +201,7 @@
                             </tr>
                         </thead>
                         <tbody id="grid-movimentacoes">
-                            <tr><td colspan="9" class="text-center py-10 text-slate-400 font-medium">Carregando histórico...</td></tr>
+                            <tr><td colspan="9" class="text-center py-10 text-slate-400 font-medium">Utilize os filtros acima e clique em "Buscar" para listar as movimentações.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -403,7 +429,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, addDoc, deleteDoc, increment, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, addDoc, deleteDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         // CREDENCIAIS FIREBASE
         const firebaseConfig = {
@@ -441,7 +467,11 @@
             document.getElementById(`view-${viewId}`).classList.add('active');
             document.getElementById(`nav-${viewId}`).classList.add('active');
 
-            if(viewId === 'movimentacoes') carregarMovimentacoes();
+            if(viewId === 'movimentacoes') {
+                // Ao abrir a aba de movimentações, inicia em branco e pede pra usar os filtros
+                document.getElementById('grid-movimentacoes').innerHTML = '<tr><td colspan="9" class="text-center py-10 text-slate-400 font-medium">Utilize os filtros acima e clique em "Buscar" para listar as movimentações.</td></tr>';
+                window.bancoMovimentacoes = [];
+            }
             if(viewId === 'requisicoes') carregarRequisicoes();
             if(viewId === 'dashboard' || viewId === 'operacoes') carregarProdutos();
         };
@@ -507,6 +537,7 @@
                 document.getElementById('kpi-produtos').innerText = total;
                 document.getElementById('kpi-criticos').innerText = criticos;
                 
+                // Contagem total de movimentações pro Dashboard
                 const movsSnap = await getDocs(collection(db, "movimentacoes"));
                 document.getElementById('kpi-movs').innerText = movsSnap.size;
             } catch (e) {
@@ -514,25 +545,26 @@
             }
         }
 
-        // Setup Dropdowns Operações
-        function setupDropdown(inputId, listId, isSaida = false) {
+        // Setup Dropdowns Dinâmicos (Entrada, Saída e Filtro de Movimentações)
+        function setupDropdown(inputId, listId, mode = 'entrada') {
             const input = document.getElementById(inputId);
             const list = document.getElementById(listId);
             const render = () => {
-                const val = input.value.toLowerCase();
+                // A regra de restrição aos 12 primeiros caracteres é aplicada diretamente no valor pesquisado
+                const val = input.value.substring(0, 12).toLowerCase(); 
                 list.innerHTML = '';
                 const filtered = window.bancoProdutos.filter(p => 
                     (p.nome && p.nome.toLowerCase().includes(val)) || (p.id && p.id.toLowerCase().includes(val))
                 ).slice(0, 15);
                 
-                if (filtered.length === 0 && !isSaida) { list.style.display = 'none'; return; }
+                if (filtered.length === 0 && mode !== 'entrada') { list.style.display = 'none'; return; }
                 
                 filtered.forEach(p => {
                     const li = document.createElement('li');
                     li.className = "px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-slate-50 text-sm text-slate-700";
                     li.innerHTML = `<span class="font-bold text-indigo-600">${p.id}</span> <br> <span class="text-xs font-medium">${p.nome}</span>`;
                     li.onmousedown = () => {
-                        if (isSaida) {
+                        if (mode === 'saida') {
                             document.getElementById('sai-busca').value = p.nome;
                             document.getElementById('sai-cod').value = p.id;
                             document.getElementById('sai-atual').value = p.saldo || 0;
@@ -540,12 +572,15 @@
                             document.getElementById('sai-info-setor').innerText = p.setor || 'N/A';
                             document.getElementById('sai-info-min').innerText = p.estoqueMinimo || '0';
                             document.getElementById('sai-info').classList.remove('hidden');
-                        } else {
+                        } else if (mode === 'entrada') {
                             document.getElementById('ent-nome').value = p.nome;
                             document.getElementById('ent-cod').value = p.id;
                             document.getElementById('ent-setor').value = p.setor || '';
                             document.getElementById('ent-forn').value = p.fornecedor || '';
                             document.getElementById('ent-min').value = p.estoqueMinimo || 0;
+                        } else if (mode === 'filtro') {
+                            // Ao selecionar, preenche o campo de busca de forma resumida
+                            input.value = p.nome;
                         }
                         list.style.display = 'none';
                     };
@@ -558,8 +593,9 @@
             input.addEventListener('blur', () => setTimeout(() => list.style.display = 'none', 200));
         }
 
-        setupDropdown('ent-nome', 'list-ent-nome', false);
-        setupDropdown('sai-busca', 'list-sai-busca', true);
+        setupDropdown('ent-nome', 'list-ent-nome', 'entrada');
+        setupDropdown('sai-busca', 'list-sai-busca', 'saida');
+        setupDropdown('filtro-mov-prod', 'list-filtro-mov-prod', 'filtro'); // Inicializa dropdown do filtro
 
         // Operações Salvar
         document.getElementById('form-entrada').addEventListener('submit', async (e) => {
@@ -641,26 +677,70 @@
             }
         });
 
+        // ================= BUSCA DE MOVIMENTAÇÕES (FILTRO EM MEMÓRIA) =================
         window.carregarMovimentacoes = async () => {
             const grid = document.getElementById('grid-movimentacoes');
-            grid.innerHTML = '<tr><td colspan="9" class="text-center py-10 text-slate-400 font-medium animate-pulse">Buscando registros...</td></tr>';
+            grid.innerHTML = '<tr><td colspan="9" class="text-center py-10 text-slate-400 font-medium animate-pulse">Buscando e filtrando registros...</td></tr>';
             try {
-                const q = query(collection(db, "movimentacoes"), orderBy("data", "desc"), limit(100));
-                const snap = await getDocs(q);
-                grid.innerHTML = '';
+                // Coleta de Dados do Banco e Filtros em Memória
+                const snap = await getDocs(collection(db, "movimentacoes"));
                 window.bancoMovimentacoes = [];
                 
-                if (snap.empty) {
-                    grid.innerHTML = '<tr><td colspan="9" class="text-center py-10 text-slate-400">Nenhum registro encontrado.</td></tr>';
+                // Coleta e aplica a regra de filtro restrito aos 12 chars
+                let prodFiltro = document.getElementById('filtro-mov-prod').value.trim().toLowerCase().substring(0, 12);
+                let dataIniStr = document.getElementById('filtro-mov-ini').value;
+                let dataFimStr = document.getElementById('filtro-mov-fim').value;
+
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    d.id = doc.id;
+                    let isValid = true;
+
+                    // 1. Filtragem de Produto (Até 12 chars no nome ou código)
+                    if (prodFiltro) {
+                        const nome = (d.produto_nome || '').toLowerCase();
+                        const id = (d.produto_id || d.produto || '').toLowerCase();
+                        if (!nome.includes(prodFiltro) && !id.includes(prodFiltro)) {
+                            isValid = false;
+                        }
+                    }
+
+                    // 2. Filtragem por Data Retroativa
+                    if (isValid && d.data && d.data.toDate) {
+                        const movDate = d.data.toDate();
+                        movDate.setHours(0, 0, 0, 0); // Zera as horas para comparar só o dia
+                        
+                        if (dataIniStr) {
+                            const dIni = new Date(dataIniStr + 'T00:00:00');
+                            if (movDate < dIni) isValid = false;
+                        }
+                        if (dataFimStr) {
+                            const dFim = new Date(dataFimStr + 'T00:00:00');
+                            if (movDate > dFim) isValid = false;
+                        }
+                    }
+
+                    if (isValid) {
+                        window.bancoMovimentacoes.push(d);
+                    }
+                });
+
+                // Ordenação na memória (Data mais recente primeiro)
+                window.bancoMovimentacoes.sort((a, b) => {
+                    const dateA = a.data && a.data.toDate ? a.data.toDate() : new Date(0);
+                    const dateB = b.data && b.data.toDate ? b.data.toDate() : new Date(0);
+                    return dateB - dateA;
+                });
+                
+                grid.innerHTML = '';
+                
+                if (window.bancoMovimentacoes.length === 0) {
+                    grid.innerHTML = '<tr><td colspan="9" class="text-center py-10 text-slate-400">Nenhum registro encontrado para os filtros selecionados.</td></tr>';
                     return;
                 }
 
                 let idx = 0;
-                snap.forEach(doc => {
-                    const d = doc.data();
-                    d.id = doc.id;
-                    window.bancoMovimentacoes.push(d);
-
+                window.bancoMovimentacoes.forEach(d => {
                     const dt = d.data && d.data.toDate ? d.data.toDate().toLocaleString('pt-BR') : 'Data inválida';
                     const tipoCor = d.tipo === 'ENTRADA' ? 'text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-md' : 'text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded-md';
                     
@@ -688,18 +768,24 @@
             }
         };
 
+        window.limparFiltrosMov = () => {
+            document.getElementById('filtro-mov-prod').value = '';
+            document.getElementById('filtro-mov-ini').value = '';
+            document.getElementById('filtro-mov-fim').value = '';
+            document.getElementById('grid-movimentacoes').innerHTML = '<tr><td colspan="9" class="text-center py-10 text-slate-400 font-medium">Filtros limpos. Utilize os campos acima e clique em "Buscar".</td></tr>';
+            window.bancoMovimentacoes = [];
+        };
+
         window.carregarRequisicoes = async () => {
             const container = document.getElementById('grid-requisicoes');
             container.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 font-bold uppercase tracking-widest animate-pulse">Buscando requisições...</div>';
             document.getElementById('empty-req').classList.add('hidden');
             try {
-                // Não usando orderBy aqui pra simplificar sem index, caso o usuário não tenha criado um no Firestore
                 const snap = await getDocs(collection(db, "requisicoes"));
                 window.bancoRequisicoes = [];
                 snap.forEach(doc => {
                     window.bancoRequisicoes.push({ id: doc.id, ...doc.data() });
                 });
-                // Sorteia localmente para evitar erro de Index no Firebase
                 window.bancoRequisicoes.sort((a,b) => new Date(b.dataPedido) - new Date(a.dataPedido));
                 renderizarRequisicoes();
             } catch (e) {
@@ -838,7 +924,6 @@
 
         // Excluir Requisição
         window.excluirReq = async (id) => {
-            // Usa confirmacao visual leve do navegador (já que SweetAlert ou complexos não foram inclusos pra não pesar)
             if(confirm("Deseja realmente excluir esta requisição permanentemente?")) {
                 try {
                     await deleteDoc(doc(db, 'requisicoes', id));
@@ -887,7 +972,6 @@
             const novaFin = document.getElementById('edit-mov-fin').value.trim();
 
             try {
-                // 1. Compensar Saldo do Produto se a quantidade for alterada
                 const diff = novaQtd - qtdAntiga;
                 if (diff !== 0 && prodId) {
                     const prodRef = doc(db, 'produtos', prodId);
@@ -902,14 +986,12 @@
                             novoSaldo = saldoAtual - diff;
                         }
                         
-                        // Segurança anti-negativos
                         if (novoSaldo < 0) throw new Error(`A alteração deixaria o saldo negativo (${novoSaldo}).`);
                         
                         await updateDoc(prodRef, { saldo: novoSaldo });
                     }
                 }
 
-                // 2. Atualizar o documento da Movimentação (Histórico)
                 const payloadMov = {
                     quantidade: novaQtd,
                     finalidade: novaFin,
@@ -929,7 +1011,7 @@
                 showToast('Lançamento atualizado com sucesso!');
                 fecharModal('modal-edit-mov');
                 carregarMovimentacoes();
-                carregarProdutos(); // atualiza KPI superior
+                carregarProdutos(); 
             } catch (err) {
                 showToast('Erro: ' + err.message, true);
             } finally {
