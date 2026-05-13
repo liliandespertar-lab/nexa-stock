@@ -159,6 +159,11 @@
             </nav>
 
             <div class="flex items-center gap-4">
+                <!-- BOTÃO MÁGICO DE CONVERSÃO SAAS (Aparecerá apenas se houver dados órfãos) -->
+                <button id="btn-migrar-saas" onclick="converterDadosParaSaaS()" class="hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-2 rounded-xl font-black text-xs shadow-lg animate-pulse hover:scale-105 transition-transform">
+                    🚀 CONVERTER PARA SaaS
+                </button>
+
                 <div class="text-right border-r border-white/10 pr-4 hidden sm:block">
                     <p class="text-xs font-bold text-white" id="user-display">Carregando...</p>
                     <p class="text-[9px] text-emerald-400 font-black uppercase tracking-widest">Online</p>
@@ -766,7 +771,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, addDoc, deleteDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, addDoc, deleteDoc, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA4RvrOh5EU6OXj1zbNB1hGwWDj9VNG-T4",
@@ -781,6 +786,9 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
         const db = getFirestore(app);
+
+        // VARIÁVEL GLOBAL PARA ISOLAMENTO MULTI-EMPRESAS (SAAS)
+        window.userEmpresa = null;
 
         window.bancoProdutos = [];
         window.bancoRequisicoes = [];
@@ -844,17 +852,65 @@
                     const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
                     if (userDoc.exists()) {
                         const uData = userDoc.data();
+                        window.userEmpresa = uData.empresa; // Define o Tenant/Empresa
                         displayTxt = `${uData.nome} (${uData.empresa})`;
+                        
+                        // Verifica se ainda existem dados na raiz para exibir o botão mágico de resgate
+                        const snapRaiz = await getDocs(collection(db, "produtos"));
+                        if(!snapRaiz.empty) document.getElementById('btn-migrar-saas').classList.remove('hidden');
                     }
                 } catch(e) { console.log('Erro ao buscar dados do usuário', e); }
 
                 document.getElementById('user-display').innerText = displayTxt;
-                carregarProdutos(); 
+                if(window.userEmpresa) carregarProdutos(); 
             } else {
                 document.getElementById('screen-login').style.display = 'flex';
                 document.getElementById('screen-app').style.display = 'none';
             }
         });
+
+        // ==========================================
+        // FUNÇÃO DE RESGATE (MIGRAÇÃO DE DADOS RAIZ PARA A EMPRESA ATUAL)
+        // ==========================================
+        window.converterDadosParaSaaS = async () => {
+            if(!confirm(`ATENÇÃO: Você está prestes a converter o banco de dados para o modelo Multi-Empresas (SaaS).\n\nIsso moverá todos os produtos e movimentações soltos no sistema diretamente para a pasta isolada da sua empresa: "${window.userEmpresa}".\n\nDeseja continuar?`)) return;
+            
+            const btn = document.getElementById('btn-migrar-saas');
+            btn.innerText = 'CONVERTENDO... AGUARDE';
+            btn.disabled = true;
+
+            try {
+                const moverColecao = async (nomeColecao) => {
+                    const snap = await getDocs(collection(db, nomeColecao));
+                    let batch = writeBatch(db);
+                    let cont = 0;
+                    
+                    snap.forEach((d) => {
+                        // Copia para a subcoleção da empresa
+                        batch.set(doc(db, "empresas", window.userEmpresa, nomeColecao, d.id), d.data());
+                        // Deleta da raiz pública
+                        batch.delete(doc(db, nomeColecao, d.id));
+                        cont += 2;
+                        
+                        // Limite do Firestore por batch é 500 operações
+                        if(cont >= 400) { batch.commit(); batch = writeBatch(db); cont = 0; }
+                    });
+                    if(cont > 0) await batch.commit();
+                };
+
+                await moverColecao("produtos");
+                await moverColecao("movimentacoes");
+                await moverColecao("requisicoes");
+
+                alert('SUCESSO! O sistema agora é um SaaS isolado. Seus dados estão seguros na pasta da sua empresa.');
+                btn.classList.add('hidden');
+                carregarProdutos();
+            } catch (err) {
+                alert('Erro durante conversão: ' + err.message);
+                btn.innerText = '🚀 TENTAR NOVAMENTE';
+                btn.disabled = false;
+            }
+        };
 
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -924,8 +980,10 @@
         };
 
         async function carregarProdutos() {
+            if(!window.userEmpresa) return;
             try {
-                const snap = await getDocs(collection(db, "produtos"));
+                // ISOLAMENTO: Lê apenas da subcoleção da empresa logada
+                const snap = await getDocs(collection(db, "empresas", window.userEmpresa, "produtos"));
                 window.bancoProdutos = [];
                 let total = 0, criticos = 0, semCodigo = 0;
                 
@@ -984,12 +1042,12 @@
                 document.getElementById('kpi-duplicados').innerText = duplicados;
                 document.getElementById('kpi-semcod').innerText = semCodigo;
                 
-                const reqSnap = await getDocs(collection(db, "requisicoes"));
+                const reqSnap = await getDocs(collection(db, "empresas", window.userEmpresa, "requisicoes"));
                 let reqPendentes = 0;
                 reqSnap.forEach(d => { if(d.data().status !== 'Entregue') reqPendentes++; });
                 document.getElementById('kpi-reqs').innerText = reqPendentes;
 
-                const movsSnap = await getDocs(collection(db, "movimentacoes"));
+                const movsSnap = await getDocs(collection(db, "empresas", window.userEmpresa, "movimentacoes"));
                 document.getElementById('kpi-movs').innerText = movsSnap.size;
 
             } catch (e) {
@@ -1119,7 +1177,7 @@
         window.excluirProduto = async (id, nome) => {
             if(confirm(`ATENÇÃO: Deseja realmente EXCLUIR O PRODUTO "${id} - ${nome}" do seu cadastro?\nIsso apagará o produto do sistema, mas as movimentações passadas ficarão mantidas no histórico.`)) {
                 try {
-                    await deleteDoc(doc(db, 'produtos', id));
+                    await deleteDoc(doc(db, "empresas", window.userEmpresa, 'produtos', id));
                     showToast('Produto excluído com sucesso!');
                     fecharModal('modal-sem-codigos');
                     fecharModal('modal-duplicados');
@@ -1169,7 +1227,7 @@
             };
 
             try {
-                await updateDoc(doc(db, 'produtos', id), payload);
+                await updateDoc(doc(db, "empresas", window.userEmpresa, 'produtos', id), payload);
                 showToast('Produto atualizado com sucesso!');
                 fecharModal('modal-edit-prod');
                 await carregarProdutos();
@@ -1320,7 +1378,7 @@
 
             try {
                 const idSeguro = cod.replace(/\//g, '-').replace(/\\/g, '-');
-                const prodRef = doc(db, 'produtos', idSeguro);
+                const prodRef = doc(db, "empresas", window.userEmpresa, 'produtos', idSeguro);
                 const snap = await getDoc(prodRef);
 
                 if (snap.exists()) {
@@ -1329,7 +1387,7 @@
                     await setDoc(prodRef, { nome: nome, local: local, setor: setor, fornecedor: forn, estoqueMinimo: min, unidade: un, saldoUsado: usadas, saldo: qtd });
                 }
 
-                await addDoc(collection(db, 'movimentacoes'), {
+                await addDoc(collection(db, "empresas", window.userEmpresa, 'movimentacoes'), {
                     tipo: 'ENTRADA', produto_id: idSeguro, produto_nome: nome,
                     quantidade: qtd, local: local, setor: setor, fornecedor: forn, observacao: obs,
                     data: dataInc ? new Date(dataInc + 'T12:00:00') : new Date(),
@@ -1357,7 +1415,7 @@
             btn.innerText = 'PROCESSANDO...'; btn.disabled = true;
 
             try {
-                const prodRef = doc(db, 'produtos', cod);
+                const prodRef = doc(db, "empresas", window.userEmpresa, 'produtos', cod);
                 const snap = await getDoc(prodRef);
                 
                 if (!snap.exists()) throw new Error("Produto não encontrado.");
@@ -1366,7 +1424,7 @@
 
                 await updateDoc(prodRef, { saldo: increment(-qtd) });
 
-                await addDoc(collection(db, 'movimentacoes'), {
+                await addDoc(collection(db, "empresas", window.userEmpresa, 'movimentacoes'), {
                     tipo: 'SAÍDA', produto_id: cod, produto_nome: snap.data().nome,
                     quantidade: qtd, local: snap.data().local || '-', setor: snap.data().setor || '-', fornecedor: '-',
                     observacao: document.getElementById('sai-obs').value.trim(),
@@ -1392,7 +1450,7 @@
             document.getElementById('print-date').innerText = 'Gerado em: ' + new Date().toLocaleString('pt-BR');
 
             try {
-                const snap = await getDocs(collection(db, "movimentacoes"));
+                const snap = await getDocs(collection(db, "empresas", window.userEmpresa, "movimentacoes"));
                 window.bancoMovimentacoes = [];
                 
                 let prodFiltro = document.getElementById('filtro-mov-prod').value.trim();
@@ -1493,7 +1551,7 @@
             container.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 font-bold uppercase tracking-widest animate-pulse">Buscando requisições...</div>';
             document.getElementById('empty-req').classList.add('hidden');
             try {
-                const snap = await getDocs(collection(db, "requisicoes"));
+                const snap = await getDocs(collection(db, "empresas", window.userEmpresa, "requisicoes"));
                 window.bancoRequisicoes = [];
                 snap.forEach(doc => { window.bancoRequisicoes.push({ id: doc.id, ...doc.data() }); });
                 window.bancoRequisicoes.sort((a,b) => new Date(b.dataPedido) - new Date(a.dataPedido));
@@ -1577,7 +1635,7 @@
             };
 
             try {
-                await addDoc(collection(db, 'requisicoes'), payload);
+                await addDoc(collection(db, "empresas", window.userEmpresa, 'requisicoes'), payload);
                 showToast('Requisição criada com sucesso!');
                 fecharModal('modal-nova-req');
                 carregarRequisicoes();
@@ -1625,7 +1683,7 @@
             const novoStatus = novoEntregue >= totalReq ? 'Entregue' : 'Parcial';
 
             try {
-                const prodRef = doc(db, 'produtos', codProduto);
+                const prodRef = doc(db, "empresas", window.userEmpresa, 'produtos', codProduto);
                 const snap = await getDoc(prodRef);
                 if (!snap.exists()) throw new Error("Produto não encontrado no estoque.");
                 const saldoAtual = snap.data().saldo || 0;
@@ -1633,7 +1691,7 @@
 
                 await updateDoc(prodRef, { saldo: increment(-qtdEntrega) });
 
-                await addDoc(collection(db, 'movimentacoes'), {
+                await addDoc(collection(db, "empresas", window.userEmpresa, 'movimentacoes'), {
                     tipo: 'SAÍDA', produto_id: codProduto, produto_nome: nomeProd,
                     quantidade: qtdEntrega, local: snap.data().local || '-', setor: snap.data().setor || '-', fornecedor: '-',
                     observacao: 'Baixa de Requisição', usuario_retirou: document.getElementById('baixa-req-solicitante').value || 'Sistema',
@@ -1641,7 +1699,7 @@
                     data: new Date(), usuario_sistema: auth.currentUser.email
                 });
 
-                await updateDoc(doc(db, 'requisicoes', idReq), {
+                await updateDoc(doc(db, "empresas", window.userEmpresa, 'requisicoes', idReq), {
                     total_withdrawn: novoEntregue,
                     status: novoStatus
                 });
@@ -1660,7 +1718,7 @@
         window.excluirReq = async (id) => {
             if(confirm("Deseja realmente excluir esta requisição permanentemente?")) {
                 try {
-                    await deleteDoc(doc(db, 'requisicoes', id));
+                    await deleteDoc(doc(db, "empresas", window.userEmpresa, 'requisicoes', id));
                     showToast('Requisição apagada!');
                     carregarRequisicoes();
                 } catch (err) {
@@ -1714,7 +1772,7 @@
             try {
                 const diff = novaQtd - qtdAntiga;
                 if (diff !== 0 && prodId) {
-                    const prodRef = doc(db, 'produtos', prodId);
+                    const prodRef = doc(db, "empresas", window.userEmpresa, 'produtos', prodId);
                     const snap = await getDoc(prodRef);
                     if (snap.exists()) {
                         let saldoAtual = snap.data().saldo || 0;
@@ -1736,7 +1794,7 @@
                 if (tipo === 'ENTRADA') payloadMov.usuario_sistema = novoUser;
                 else payloadMov.usuario_retirou = novoUser;
 
-                await updateDoc(doc(db, 'movimentacoes', id), payloadMov);
+                await updateDoc(doc(db, "empresas", window.userEmpresa, 'movimentacoes', id), payloadMov);
 
                 showToast('Lançamento atualizado!');
                 fecharModal('modal-edit-mov');
@@ -1753,7 +1811,7 @@
             if(!confirm('ATENÇÃO: Deseja EXCLUIR ESTE LANÇAMENTO? O estoque será recalculado automaticamente.')) return;
             try {
                 if(idProd) {
-                    const prodRef = doc(db, 'produtos', idProd);
+                    const prodRef = doc(db, "empresas", window.userEmpresa, 'produtos', idProd);
                     const snap = await getDoc(prodRef);
                     if(snap.exists()) {
                         let saldoAtual = snap.data().saldo || 0;
@@ -1761,7 +1819,7 @@
                         await updateDoc(prodRef, { saldo: novoSaldo });
                     }
                 }
-                await deleteDoc(doc(db, 'movimentacoes', idMov));
+                await deleteDoc(doc(db, "empresas", window.userEmpresa, 'movimentacoes', idMov));
                 showToast('Lançamento excluído!');
                 carregarMovimentacoes();
                 carregarProdutos();
