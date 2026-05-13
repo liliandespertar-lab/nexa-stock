@@ -862,6 +862,34 @@
             window.bancoMovimentacoes = [];
         };
 
+        document.getElementById('form-nova-req').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-req');
+            btn.innerText = 'SALVANDO...'; btn.disabled = true;
+
+            const payload = {
+                numero: document.getElementById('req-num').value.trim(),
+                dataPedido: document.getElementById('req-dat').value,
+                material_name: document.getElementById('req-mat').value.trim(),
+                setor: document.getElementById('req-set').value.trim(),
+                total_requested: Number(document.getElementById('req-qtd').value),
+                total_withdrawn: 0,
+                status: 'Pendente',
+                usuario_sistema: auth.currentUser.email
+            };
+
+            try {
+                await addDoc(collection(db, 'requisicoes'), payload);
+                showToast('Requisição criada com sucesso!');
+                fecharModal('modal-nova-req');
+                carregarRequisicoes();
+            } catch (err) {
+                showToast('Erro ao salvar: ' + err.message, true);
+            } finally {
+                btn.innerText = 'SALVAR REQUISIÇÃO'; btn.disabled = false;
+            }
+        });
+
         window.carregarRequisicoes = async () => {
             const container = document.getElementById('grid-requisicoes');
             container.innerHTML = '<div class="col-span-full text-center py-10 text-slate-400 font-bold uppercase tracking-widest animate-pulse">Buscando requisições...</div>';
