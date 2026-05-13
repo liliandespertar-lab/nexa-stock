@@ -760,7 +760,8 @@
                     const codStr = (p.id || '').trim().toLowerCase();
                     const nomeStr = (p.nome || '').trim().toLowerCase();
                     
-                    const isSemCod = !codStr || codStr === '-' || codStr.includes('...');
+                    // LÓGICA ATUALIZADA: Considera sem código se for vazio, '-', tiver '...' ou se o código for igual ao nome
+                    const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || codStr === nomeStr;
                     
                     if (isSemCod) {
                         semCodigo++;
@@ -770,11 +771,20 @@
                     }
                 });
 
+                // ORDENAR PRODUTOS EM ORDEM ALFABÉTICA GLOBALMENTE
+                window.bancoProdutos.sort((a, b) => {
+                    const nA = (a.nome || '').toLowerCase();
+                    const nB = (b.nome || '').toLowerCase();
+                    return nA.localeCompare(nB);
+                });
+
                 let duplicados = 0;
                 window.bancoProdutos.forEach(p => {
                     const codStr = (p.id || '').trim().toLowerCase();
                     const nomeStr = (p.nome || '').trim().toLowerCase();
-                    const isSemCod = !codStr || codStr === '-' || codStr === '...';
+                    
+                    // LÓGICA ATUALIZADA TAMBÉM NA CONTAGEM DE DUPLICADOS
+                    const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || codStr === nomeStr;
                     
                     if (!isSemCod) {
                         if ((contagemCodigos[codStr] > 1) || (contagemNomes[nomeStr] > 1)) {
@@ -1103,7 +1113,9 @@
                     window.bancoProdutos.forEach(p => {
                         const c = (p.id || '').trim().toLowerCase();
                         const n = (p.nome || '').trim().toLowerCase();
-                        const isSemCod = !c || c === '-' || c === '...';
+                        
+                        // LÓGICA ATUALIZADA PARA IDENTIFICAR OS SEM CÓDIGO AQUI TAMBÉM
+                        const isSemCod = !c || c === '-' || c.includes('...') || c === n;
                         
                         if(!isSemCod) {
                             if(c) mapCodigos[c] = (mapCodigos[c] || 0) + 1;
@@ -1119,7 +1131,9 @@
 
                     const pid = (d.produto_id || '').trim().toLowerCase();
                     const pnome = (d.produto_nome || d.produto || '').trim().toLowerCase();
-                    const isSemCod = !pid || pid === '-' || pid.includes('...');
+                    
+                    // LÓGICA ATUALIZADA NAS MOVIMENTAÇÕES
+                    const isSemCod = !pid || pid === '-' || pid.includes('...') || pid === pnome;
 
                     if (window.filtroEspecialMov === 'duplicados') {
                         if (isSemCod) {
@@ -1150,7 +1164,15 @@
                     if (isValid) window.bancoMovimentacoes.push(d);
                 });
 
+                // ORDENAÇÃO: ORDEM ALFABÉTICA DO PRODUTO, DEPOIS PELA DATA
                 window.bancoMovimentacoes.sort((a, b) => {
+                    const nomeA = (a.produto_nome || a.produto || '').toLowerCase();
+                    const nomeB = (b.produto_nome || b.produto || '').toLowerCase();
+                    
+                    if (nomeA < nomeB) return -1;
+                    if (nomeA > nomeB) return 1;
+                    
+                    // Se o nome do produto for igual, organiza pela data (mais recente no topo)
                     const dateA = a.data && a.data.toDate ? a.data.toDate() : new Date(0);
                     const dateB = b.data && b.data.toDate ? b.data.toDate() : new Date(0);
                     return dateB - dateA;
