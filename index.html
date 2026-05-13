@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEXA STOCK | Gestão de Estoque</title>
     
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+    <link rel="icon" href="https://firebasestorage.googleapis.com/v0/b/nexa-stock.firebasestorage.app/o/IMAGEM%20ICONE.png?alt=media">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     
@@ -76,6 +76,9 @@
         <div class="w-full max-w-md relative z-10">
             <div class="glass-login p-10 rounded-[2.5rem] shadow-2xl relative">
                 <div class="text-center mb-8">
+                    <!-- LOGO TELA DE LOGIN -->
+                    <img src="https://firebasestorage.googleapis.com/v0/b/nexa-stock.firebasestorage.app/o/IMAGEM%20ICONE.png?alt=media" alt="Logo Sistema" class="h-16 mx-auto mb-4 object-contain">
+                    
                     <h1 class="text-3xl font-black text-white tracking-tighter italic uppercase">NEXA <span class="text-indigo-400">STOCK</span></h1>
                     <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.4em] mt-2">Gestão de Estoque</p>
                 </div>
@@ -90,11 +93,18 @@
                 </form>
             </div>
         </div>
+        
+        <!-- Créditos Podhium Digital (Tela de Login) -->
+        <div class="absolute bottom-8 w-full text-center">
+            <p class="text-[10px] text-slate-400/60 font-black uppercase tracking-[0.3em]">Desenvolvido por <span class="text-indigo-400">Podhium Digital</span></p>
+        </div>
     </div>
 
     <div id="screen-app" class="flex-1 flex flex-col w-full h-full" style="display: none;">
         <header class="header-nexa text-white px-6 py-4 flex flex-col md:flex-row justify-between items-center shadow-lg sticky top-0 z-40 gap-4">
             <div class="flex items-center gap-4">
+                <!-- LOGO CABEÇALHO -->
+                <img src="https://firebasestorage.googleapis.com/v0/b/nexa-stock.firebasestorage.app/o/IMAGEM%20ICONE.png?alt=media" alt="Logo" class="h-8 object-contain">
                 <div>
                     <h1 class="text-xl font-black italic tracking-tighter leading-none uppercase">NEXA <span class="text-indigo-400">STOCK</span></h1>
                     <p class="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 mt-1">Gestão de Estoque</p>
@@ -321,6 +331,11 @@
                 <p class="text-slate-500 mt-2 font-medium">Não encontramos nenhum pedido registrado ou na busca.</p>
             </div>
         </main>
+        
+        <!-- Créditos Podhium Digital (Rodapé Interno do ERP) -->
+        <footer class="mt-auto py-6 text-center border-t border-slate-200 print:hidden bg-slate-50">
+            <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">Desenvolvido por <span class="text-indigo-600">Podhium Digital</span></p>
+        </footer>
     </div>
 
     <div id="modal-entrada" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4 print:hidden">
