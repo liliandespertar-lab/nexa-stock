@@ -162,8 +162,8 @@
                 <h3 class="text-xs font-black text-slate-800 uppercase tracking-widest mb-4">Filtros de Pesquisa</h3>
                 <div class="flex flex-col md:flex-row gap-4 items-end">
                     <div class="relative flex-[2]">
-                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Produto (Máx 12 Caract.)</label>
-                        <input type="text" id="filtro-mov-prod" maxlength="12" class="input-nexa w-full" placeholder="Buscar por código ou nome..." autocomplete="off">
+                        <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Produto</label>
+                        <input type="text" id="filtro-mov-prod" class="input-nexa w-full" placeholder="Buscar por código ou nome..." autocomplete="off">
                         <ul id="list-filtro-mov-prod" class="dropdown-nexa"></ul>
                     </div>
                     <div class="flex-1">
@@ -550,8 +550,7 @@
             const input = document.getElementById(inputId);
             const list = document.getElementById(listId);
             const render = () => {
-                // A regra de restrição aos 12 primeiros caracteres é aplicada diretamente no valor pesquisado
-                const val = input.value.substring(0, 12).toLowerCase(); 
+                const val = input.value.toLowerCase(); 
                 list.innerHTML = '';
                 const filtered = window.bancoProdutos.filter(p => 
                     (p.nome && p.nome.toLowerCase().includes(val)) || (p.id && p.id.toLowerCase().includes(val))
@@ -686,8 +685,8 @@
                 const snap = await getDocs(collection(db, "movimentacoes"));
                 window.bancoMovimentacoes = [];
                 
-                // Coleta e aplica a regra de filtro restrito aos 12 chars
-                let prodFiltro = document.getElementById('filtro-mov-prod').value.trim().toLowerCase().substring(0, 12);
+                // Coleta e aplica a regra de filtro
+                let prodFiltro = document.getElementById('filtro-mov-prod').value.trim().toLowerCase();
                 let dataIniStr = document.getElementById('filtro-mov-ini').value;
                 let dataFimStr = document.getElementById('filtro-mov-fim').value;
 
@@ -696,7 +695,7 @@
                     d.id = doc.id;
                     let isValid = true;
 
-                    // 1. Filtragem de Produto (Até 12 chars no nome ou código)
+                    // 1. Filtragem de Produto
                     if (prodFiltro) {
                         const nome = (d.produto_nome || '').toLowerCase();
                         const id = (d.produto_id || d.produto || '').toLowerCase();
