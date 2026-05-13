@@ -79,7 +79,7 @@
         <p class="font-bold tracking-widest uppercase text-xs text-indigo-200">Verificando Autenticação...</p>
     </div>
 
-    <!-- TELA DE LOGIN LIMPA E SEGURA (SÓ LOGIN) -->
+    <!-- TELA DE LOGIN -->
     <div id="screen-login" class="fixed inset-0 z-50 bg-nexa items-center justify-center p-6 flex-col print:hidden" style="display: none;">
         <div class="w-full max-w-md relative z-10">
             <div class="glass-login p-10 rounded-[2.5rem] shadow-2xl relative">
@@ -109,7 +109,7 @@
     <div id="screen-app" class="flex-1 flex flex-col w-full h-full" style="display: none;">
         <header class="header-nexa text-white px-6 py-4 flex flex-col md:flex-row justify-between items-center shadow-lg sticky top-0 z-40 gap-4">
             <div class="flex items-center gap-4">
-                <img src="https://firebasestorage.googleapis.com/v0/b/nexa-stock.firebasestorage.app/o/IMAGEM%20ICONE.png?alt=media&token=abe10eba-74c6-4e82-83d2-7fb0e25ddd3f" alt="Logo" class="h-12 object-contain">
+                <img src="https://firebasestorage.googleapis.com/v0/b/nexa-stock.firebasestorage.app/o/IMAGEM%20ICONE.png?alt=media&token=abe10eba-74c6-4e82-83d2-7fb0e25ddd3f" alt="Logo" class="h-12 object-contain bg-white/10 p-1 rounded-lg">
                 <div>
                     <h1 class="text-xl font-black italic tracking-tighter leading-none uppercase">NEXA <span class="text-indigo-400">STOCK</span></h1>
                     <p class="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 mt-1">Gestão de Estoque</p>
@@ -134,6 +134,10 @@
                 <button id="btn-migrar-saas" onclick="converterDadosParaSaaS()" class="hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-2 rounded-xl font-black text-xs shadow-lg animate-pulse hover:scale-105 transition-transform">
                     🚀 CONVERTER PARA SaaS
                 </button>
+
+                <!-- SELETOR DE EMPRESA MASTER -->
+                <select id="master-empresa-select" class="hidden bg-slate-800 text-indigo-300 font-bold border border-slate-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-indigo-500 cursor-pointer" title="Trocar Base de Dados da Empresa">
+                </select>
 
                 <div class="text-right border-r border-white/10 pr-4 hidden sm:block">
                     <p class="text-xs font-bold text-white" id="user-display">Carregando...</p>
@@ -538,7 +542,7 @@
                     </div>
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Finalidade</label>
-                        <input type="text" id="sai-fin" class="input-nexa" placeholder="Ex: Manutenção" required>
+                        <input type="text" id="sai-fin" class="input-nexa" placeholder="Ex: Obra A" required>
                     </div>
                 </div>
                 <div class="mt-2">
@@ -807,6 +811,7 @@
         </div>
     </div>
 
+    <!-- MODAL ALTERAR SENHA PESSOAL -->
     <div id="modal-alterar-senha" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4 print:hidden">
         <div class="glass-form w-full max-w-md p-8 animate-slide relative">
             <button onclick="fecharModal('modal-alterar-senha')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
@@ -846,16 +851,16 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // APP SECUNDÁRIO PARA CRIAÇÃO DE USUÁRIOS (Evita deslogar o admin)
+        // APP SECUNDÁRIO PARA CRIAÇÃO DE USUÁRIOS (Evita deslogar o admin atual)
         const app2 = initializeApp(firebaseConfig, "SecondaryApp");
         const auth2 = getAuth(app2);
 
         window.userEmpresa = null;
+        window.userNivel = null;
         window.bancoProdutos = [];
         window.bancoRequisicoes = [];
         window.bancoMovimentacoes = [];
         window.filtroEspecialMov = null; 
-        window.userNivel = null; // Armazena o nível para uso global
 
         const normalizar = (str) => {
             if (!str) return '';
@@ -874,7 +879,9 @@
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
             
-            document.getElementById(`view-${viewId}`).classList.add('active');
+            const targetView = document.getElementById(`view-${viewId}`);
+            if(targetView) targetView.classList.add('active');
+            
             const navBtn = document.getElementById(`nav-${viewId}`);
             if (navBtn) navBtn.classList.add('active');
 
@@ -903,7 +910,7 @@
                         }
 
                         window.userEmpresa = uData.empresa; 
-                        window.userNivel = uData.nivel; // Salva o nível
+                        window.userNivel = uData.nivel;
 
                         document.getElementById('user-display').innerText = `${uData.nome} (${uData.empresa})`;
                         document.getElementById('user-role').innerText = uData.nivel;
@@ -912,12 +919,40 @@
                         if(uData.nivel === 'Administrador' || uData.nivel === 'Master') {
                             document.getElementById('nav-usuarios').classList.remove('hidden');
                             
-                            // Se for Master, libera campos especiais de SaaS
+                            // SE FOR MASTER: Habilita funcionalidades Globais (SaaS)
                             if(uData.nivel === 'Master') {
                                 document.getElementById('opt-master').classList.remove('hidden');
                                 document.getElementById('campo-empresa-master').classList.remove('hidden');
                                 document.getElementById('col-empresa').classList.remove('hidden');
                                 document.getElementById('cad-user-empresa').required = true;
+
+                                // Mostrar e popular o Seletor de Empresas do Header
+                                const selectEmpresa = document.getElementById('master-empresa-select');
+                                selectEmpresa.classList.remove('hidden');
+                                
+                                const snapUsers = await getDocs(collection(db, "usuarios"));
+                                const empresasSet = new Set();
+                                snapUsers.forEach(d => {
+                                    if(d.data().empresa) empresasSet.add(d.data().empresa);
+                                });
+                                empresasSet.add(uData.empresa); // Garante a própria empresa na lista
+
+                                selectEmpresa.innerHTML = '';
+                                Array.from(empresasSet).sort().forEach(emp => {
+                                    const opt = document.createElement('option');
+                                    opt.value = emp;
+                                    opt.textContent = `🏢 ${emp}`;
+                                    if(emp === window.userEmpresa) opt.selected = true;
+                                    selectEmpresa.appendChild(opt);
+                                });
+
+                                // Ação ao trocar de empresa no dropdown
+                                selectEmpresa.onchange = (e) => {
+                                    window.userEmpresa = e.target.value;
+                                    document.getElementById('user-display').innerText = `${uData.nome} (${window.userEmpresa})`;
+                                    changeView('dashboard');
+                                    showToast(`Acessando a base de: ${window.userEmpresa}`);
+                                };
                             }
                         } else {
                             document.getElementById('nav-usuarios').classList.add('hidden');
@@ -926,15 +961,15 @@
                         document.getElementById('screen-login').style.display = 'none';
                         document.getElementById('screen-app').style.display = 'flex';
                         
-                        // Verifica se ainda existem dados órfãos na raiz (Botão SaaS)
-                        if(uData.nivel === 'Administrador') {
+                        // Garante que SEMPRE abrirá no Dashboard e carregará os dados
+                        changeView('dashboard');
+                        
+                        // Verifica se ainda existem dados órfãos na raiz (Botão Migrar SaaS)
+                        if(uData.nivel === 'Administrador' || uData.nivel === 'Master') {
                             const snapRaiz = await getDocs(collection(db, "produtos"));
                             if(!snapRaiz.empty) document.getElementById('btn-migrar-saas').classList.remove('hidden');
                         }
-                        
-                        carregarProdutos(); 
                     } else {
-                        // Usuário apagado do banco de dados manualmente pelo Admin
                         showToast('Conta não encontrada ou excluída.', true);
                         signOut(auth);
                     }
@@ -961,7 +996,6 @@
                 
                 snap.forEach(doc => {
                     const d = doc.data();
-                    // Se for Master vê todos, se for Admin vê só da sua empresa
                     if((window.userNivel === 'Master' || d.empresa === window.userEmpresa) && d.status !== 'Inativo') {
                         encontrou = true;
                         const tr = document.createElement('tr');
@@ -993,7 +1027,7 @@
                 console.error("Erro ao carregar usuários:", error);
                 grid.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-rose-500">Erro ao carregar equipe.</td></tr>';
             }
-        } // Fechamento da função carregarTabelaUsuarios adicionado aqui
+        }
 
         document.getElementById('form-novo-user').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -1025,7 +1059,6 @@
                     dataCadastro: new Date()
                 });
                 
-                // Desloga a instância secundária e limpa o form
                 await signOut(auth2);
                 document.getElementById('form-novo-user').reset();
                 showToast('Acesso criado com sucesso! O funcionário já pode fazer login.');
@@ -1033,7 +1066,7 @@
                 
             } catch (err) {
                 let msg = 'Erro ao criar conta.';
-                if (err.code === 'auth/email-already-in-use') msg = 'Este e-mail já possui cadastro no sistema.';
+                if (err.code === 'auth/email-already-in-use') msg = 'Este e-mail já possui cadastro no sistema. Remova a credencial no console do Firebase para recadastrar.';
                 if (err.code === 'auth/weak-password') msg = 'A senha deve ter no mínimo 6 caracteres.';
                 showToast(msg, true);
             } finally {
@@ -1045,9 +1078,8 @@
             if(uid === auth.currentUser.uid) {
                 showToast('Você não pode excluir a si mesmo.', true); return;
             }
-            if(confirm(`ATENÇÃO: Deseja REVOGAR O ACESSO de "${nome}"?\nEle não conseguirá mais entrar no sistema.`)) {
+            if(confirm(`ATENÇÃO: Deseja REVOGAR O ACESSO de "${nome}"?\nLembre-se de deletar o e-mail no console do Firebase Authentication depois.`)) {
                 try {
-                    // Nós mudamos o status ou deletamos o documento. Deletar é mais limpo.
                     await deleteDoc(doc(db, 'usuarios', uid));
                     showToast('Acesso revogado com sucesso!');
                     carregarTabelaUsuarios();
@@ -1077,7 +1109,6 @@
                 showToast('Senha atualizada com sucesso! Use a nova senha no próximo login.');
                 fecharModal('modal-alterar-senha');
             } catch (err) {
-                // Por segurança, o Firebase exige que o usuário tenha feito login recentemente para trocar a senha.
                 if (err.code === 'auth/requires-recent-login') {
                     showToast('Por segurança, saia do sistema, faça login novamente e tente alterar a senha logo em seguida.', true);
                 } else {
@@ -1227,7 +1258,6 @@
             }
         }
 
-        // ====== RESTANTE DOS CÓDIGOS ORIGINAIS (Dashboards, Movimentações, etc) ======
         window.abrirModalCriticos = () => {
             const listBody = document.getElementById('list-criticos-body');
             listBody.innerHTML = '';
