@@ -393,16 +393,30 @@
         <div class="glass-form w-full max-w-sm p-8 animate-slide text-center relative">
             <button onclick="fecharModal('modal-baixa-req')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-2xl font-light">&times;</button>
             <h2 class="text-xl font-black text-slate-800 uppercase tracking-tighter mb-2">📥 Entregar Material</h2>
-            <p id="baixa-req-nome" class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">---</p>
-            <div class="bg-indigo-50 p-6 rounded-2xl mb-6">
+            <p id="baixa-req-nome" class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">---</p>
+            
+            <div class="relative mb-4 text-left">
+                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Vincular Produto (Baixa de Estoque)</label>
+                <input type="text" id="baixa-req-busca" class="input-nexa border-indigo-200 focus:border-indigo-500" placeholder="Buscar no estoque..." autocomplete="off">
+                <ul id="list-baixa-req-busca" class="dropdown-nexa"></ul>
+                <input type="hidden" id="baixa-req-prod-cod">
+                <input type="hidden" id="baixa-req-prod-nome">
+                <input type="hidden" id="baixa-req-prod-local">
+                <input type="hidden" id="baixa-req-prod-setor">
+                <p id="baixa-req-saldo-atual" class="text-[10px] font-bold text-indigo-600 mt-1 uppercase hidden">Saldo atual: <span id="span-req-saldo"></span></p>
+            </div>
+
+            <div class="bg-indigo-50 p-4 rounded-2xl mb-4">
                 <span class="text-[10px] font-black text-indigo-400 uppercase block mb-1">Restante em aberto</span>
-                <span id="baixa-req-restante" class="text-4xl font-black text-indigo-600 tracking-tighter">0</span>
+                <span id="baixa-req-restante" class="text-3xl font-black text-indigo-600 tracking-tighter">0</span>
             </div>
             <input type="hidden" id="baixa-req-id">
+            <input type="hidden" id="baixa-req-num">
             <input type="hidden" id="baixa-req-total">
             <input type="hidden" id="baixa-req-entregue">
+            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1 text-left">Qtd a Entregar (Parcial/Total)</label>
             <input type="number" id="baixa-qtd" class="input-nexa text-center text-2xl font-black mb-6" placeholder="0" min="1">
-            <button onclick="processarBaixaReq()" id="btn-proc-baixa" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-black text-sm shadow-lg shadow-emerald-200 hover:bg-emerald-700">CONFIRMAR ENTREGA</button>
+            <button onclick="processarBaixaReq()" id="btn-proc-baixa" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-black text-sm shadow-lg shadow-emerald-200 hover:bg-emerald-700">CONFIRMAR ENTREGA E BAIXA</button>
         </div>
     </div>
 
@@ -634,6 +648,14 @@
                             document.getElementById('ent-setor').value = p.setor || '';
                             document.getElementById('ent-forn').value = p.fornecedor || '';
                             document.getElementById('ent-min').value = p.estoqueMinimo || 0;
+                        } else if (mode === 'baixa-req') {
+                            input.value = p.nome;
+                            document.getElementById('baixa-req-prod-cod').value = p.id;
+                            document.getElementById('baixa-req-prod-nome').value = p.nome;
+                            document.getElementById('baixa-req-prod-local').value = p.local || '';
+                            document.getElementById('baixa-req-prod-setor').value = p.setor || '';
+                            document.getElementById('span-req-saldo').innerText = p.saldo || 0;
+                            document.getElementById('baixa-req-saldo-atual').classList.remove('hidden');
                         } else if (mode === 'filtro') {
                             input.value = p.nome;
                         }
@@ -651,6 +673,7 @@
         setupDropdown('ent-nome', 'list-ent-nome', 'entrada');
         setupDropdown('sai-busca', 'list-sai-busca', 'saida');
         setupDropdown('filtro-mov-prod', 'list-filtro-mov-prod', 'filtro');
+        setupDropdown('baixa-req-busca', 'list-baixa-req-busca', 'baixa-req');
 
         document.getElementById('form-entrada').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -898,7 +921,7 @@
                             <p class="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wider">${r.setor} • ${r.dataPedido}</p>
                         </div>
                         <div class="flex gap-2">
-                            ${r.status !== 'Entregue' ? `<button onclick="abrirModalBaixaReq('${r.id}', '${r.material_name}', ${reqTotal}, ${reqWithdrawn})" class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Entregar Material"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>` : ''}
+                            ${r.status !== 'Entregue' ? `<button onclick="abrirModalBaixaReq('${r.id}', '${r.material_name}', ${reqTotal}, ${reqWithdrawn}, '${r.numero}')" class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Entregar Material"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>` : ''}
                             <button onclick="excluirReq('${r.id}')" class="p-2.5 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-sm" title="Excluir Requisição"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                         </div>
                     </div>
@@ -915,71 +938,92 @@
             }).join('');
         }
 
-        document.getElementById('form-nova-req').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-salvar-req');
-            btn.innerText = 'SALVANDO...'; btn.disabled = true;
-
-            const payload = {
-                numero: document.getElementById('req-num').value,
-                dataPedido: document.getElementById('req-dat').value,
-                material_name: document.getElementById('req-mat').value,
-                setor: document.getElementById('req-set').value,
-                total_requested: Number(document.getElementById('req-qtd').value),
-                total_withdrawn: 0,
-                status: 'Pendente'
-            };
-
-            try {
-                await addDoc(collection(db, 'requisicoes'), payload);
-                showToast('Requisição criada com sucesso!');
-                fecharModal('modal-nova-req');
-                carregarRequisicoes();
-            } catch (err) {
-                showToast('Erro: ' + err.message, true);
-            } finally {
-                btn.innerText = 'SALVAR REQUISIÇÃO'; btn.disabled = false;
-            }
-        });
-
-        window.abrirModalBaixaReq = (id, nome, total, entregue) => {
+        window.abrirModalBaixaReq = (id, nome, total, entregue, num) => {
             const restante = total - entregue;
             document.getElementById('baixa-req-id').value = id;
+            document.getElementById('baixa-req-num').value = num || '';
             document.getElementById('baixa-req-total').value = total;
             document.getElementById('baixa-req-entregue').value = entregue;
             document.getElementById('baixa-req-nome').innerText = nome;
             document.getElementById('baixa-req-restante').innerText = restante;
             document.getElementById('baixa-qtd').value = restante;
+            
+            // Limpa o campo de busca de produto do estoque
+            document.getElementById('baixa-req-busca').value = '';
+            document.getElementById('baixa-req-prod-cod').value = '';
+            document.getElementById('baixa-req-saldo-atual').classList.add('hidden');
+            
             abrirModal('modal-baixa-req');
         };
 
         window.processarBaixaReq = async () => {
             const id = document.getElementById('baixa-req-id').value;
+            const numReq = document.getElementById('baixa-req-num').value;
             const qtdEntrega = Number(document.getElementById('baixa-qtd').value);
             const total = Number(document.getElementById('baixa-req-total').value);
             const jaEntregue = Number(document.getElementById('baixa-req-entregue').value);
             
-            if(qtdEntrega <= 0) return;
+            const prodCod = document.getElementById('baixa-req-prod-cod').value;
+            const prodNome = document.getElementById('baixa-req-prod-nome').value;
+            const prodLocal = document.getElementById('baixa-req-prod-local').value;
+            const prodSetor = document.getElementById('baixa-req-prod-setor').value;
+            
+            if(qtdEntrega <= 0) return showToast('Quantidade deve ser maior que zero!', true);
+            if(!prodCod) return showToast('Por favor, vincule um produto do estoque para dar baixa!', true);
 
             const btn = document.getElementById('btn-proc-baixa');
             btn.innerText = 'PROCESSANDO...'; btn.disabled = true;
 
-            const novoEntregue = jaEntregue + qtdEntrega;
-            const novoStatus = novoEntregue >= total ? 'Entregue' : 'Parcial';
-
             try {
-                await updateDoc(doc(db, 'requisicoes', id), {
+                // 1. Validar se tem saldo suficiente
+                const prodRef = doc(db, 'produtos', prodCod);
+                const prodSnap = await getDoc(prodRef);
+                
+                if (!prodSnap.exists()) throw new Error("Produto não encontrado.");
+                const saldoAtual = prodSnap.data().saldo || 0;
+                if (qtdEntrega > saldoAtual) throw new Error(`Saldo insuficiente! Estoque: ${saldoAtual}`);
+
+                const novoEntregue = jaEntregue + qtdEntrega;
+                const novoStatus = novoEntregue >= total ? 'Entregue' : 'Parcial';
+
+                let batch = writeBatch(db);
+
+                // 2. Atualizar status e total da requisição
+                batch.update(doc(db, 'requisicoes', id), {
                     total_withdrawn: novoEntregue,
                     status: novoStatus
                 });
+
+                // 3. Dar baixa no saldo do produto
+                batch.update(prodRef, { saldo: increment(-qtdEntrega) });
+
+                // 4. Registrar no histórico de movimentações (Saída)
+                const movRef = doc(collection(db, 'movimentacoes'));
+                batch.set(movRef, {
+                    tipo: 'SAÍDA',
+                    produto_id: prodCod,
+                    produto_nome: prodNome,
+                    quantidade: qtdEntrega,
+                    local: prodLocal || '-',
+                    setor: prodSetor || '-',
+                    fornecedor: '-',
+                    finalidade: `Atendimento Req #${numReq}`,
+                    observacao: `Baixa via módulo de Requisições`,
+                    usuario_retirou: 'Requisitante',
+                    usuario_sistema: auth.currentUser.email,
+                    data: new Date()
+                });
                 
-                showToast('Entrega registrada com sucesso!');
+                await batch.commit();
+                
+                showToast('Entrega e baixa de estoque realizadas com sucesso!');
                 fecharModal('modal-baixa-req');
                 carregarRequisicoes();
+                carregarProdutos(); // Atualiza dashboard
             } catch (err) {
                 showToast('Erro: ' + err.message, true);
             } finally {
-                btn.innerText = 'CONFIRMAR ENTREGA'; btn.disabled = false;
+                btn.innerText = 'CONFIRMAR ENTREGA E BAIXA'; btn.disabled = false;
             }
         };
 
