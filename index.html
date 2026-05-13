@@ -584,6 +584,73 @@
         </div>
     </div>
 
+    <!-- MODAL EDITAR LANÇAMENTO (MOVIMENTAÇÃO) -->
+    <div id="modal-edit-mov" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4 print:hidden">
+        <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
+            <button onclick="fecharModal('modal-edit-mov')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
+            <div class="mb-6">
+                <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">✏️ Editar Lançamento</h2>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Ajuste os dados e o estoque será recalculado</p>
+            </div>
+            <form id="form-edit-mov" class="space-y-4">
+                <input type="hidden" id="edit-mov-id">
+                <input type="hidden" id="edit-mov-tipo">
+                <input type="hidden" id="edit-mov-prod-id">
+                <input type="hidden" id="edit-mov-qtd-antiga">
+                
+                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-4 flex justify-between items-center">
+                    <div>
+                        <span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto</span>
+                        <span id="edit-mov-prod-nome" class="font-bold text-slate-800 text-sm">--</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo</span>
+                        <span id="edit-mov-tipo-display" class="font-bold text-sm">--</span>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Local</label>
+                        <input type="text" id="edit-mov-local" class="input-nexa">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Setor</label>
+                        <input type="text" id="edit-mov-setor" class="input-nexa">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Fornecedor</label>
+                        <input type="text" id="edit-mov-forn" class="input-nexa">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Quantidade</label>
+                        <input type="number" id="edit-mov-qtd" class="input-nexa font-black text-indigo-600 text-xl" min="1" required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Responsável / Usuário</label>
+                        <input type="text" id="edit-mov-user" class="input-nexa" required>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mt-2">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Finalidade</label>
+                        <input type="text" id="edit-mov-fin" class="input-nexa">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Observações</label>
+                        <input type="text" id="edit-mov-obs" class="input-nexa">
+                    </div>
+                </div>
+                
+                <button type="submit" id="btn-salvar-edit-mov" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm mt-4 shadow-lg hover:bg-indigo-700 transition">SALVAR E RECALCULAR</button>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
@@ -693,7 +760,7 @@
                     const codStr = (p.id || '').trim().toLowerCase();
                     const nomeStr = (p.nome || '').trim().toLowerCase();
                     
-                    const isSemCod = !codStr || codStr === '-' || codStr === '...';
+                    const isSemCod = !codStr || codStr === '-' || codStr.includes('...');
                     
                     if (isSemCod) {
                         semCodigo++;
@@ -1052,7 +1119,7 @@
 
                     const pid = (d.produto_id || '').trim().toLowerCase();
                     const pnome = (d.produto_nome || d.produto || '').trim().toLowerCase();
-                    const isSemCod = !pid || pid === '-' || pid === '...';
+                    const isSemCod = !pid || pid === '-' || pid.includes('...');
 
                     if (window.filtroEspecialMov === 'duplicados') {
                         if (isSemCod) {
@@ -1121,8 +1188,14 @@
                         <td class="text-xs">${d.usuario_retirou || d.usuario || d.usuario_sistema || '-'}</td>
                         <td class="text-xs truncate max-w-[120px]" title="${finTexto}">${finTexto}</td>
                         <td class="text-xs truncate max-w-[120px]" title="${obsTexto}">${obsTexto}</td>
-                        <td class="text-right print:hidden">
-                            <button onclick="excluirProduto('${d.produto_id}', '${(d.produto_nome || '').replace(/'/g, "\\'")}')" class="text-rose-500 hover:text-rose-700 p-2 bg-rose-50 hover:bg-rose-100 rounded-lg transition" title="Excluir Cadastro do Produto">
+                        <td class="text-right print:hidden flex justify-end gap-1">
+                            <button onclick="abrirModalEditMov('${d.id}')" class="text-indigo-500 hover:text-indigo-700 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition" title="Editar Lançamento">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button onclick="excluirMovimentacao('${d.id}', '${d.produto_id}', ${d.quantidade}, '${d.tipo}')" class="text-amber-500 hover:text-amber-700 p-1.5 bg-amber-50 hover:bg-amber-100 rounded-lg transition" title="Excluir Lançamento">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
+                            </button>
+                            <button onclick="excluirProduto('${d.produto_id}', '${(d.produto_nome || '').replace(/'/g, "\\'")}')" class="text-rose-500 hover:text-rose-700 p-1.5 bg-rose-50 hover:bg-rose-100 rounded-lg transition" title="Excluir Cadastro do Produto">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             </button>
                         </td>
@@ -1312,6 +1385,108 @@
                 } catch (err) {
                     showToast('Erro ao apagar.', true);
                 }
+            }
+        };
+
+        // ================= EDITAR E EXCLUIR MOVIMENTAÇÕES =================
+        window.abrirModalEditMov = (id) => {
+            const m = window.bancoMovimentacoes.find(x => x.id === id);
+            if(!m) return;
+            document.getElementById('edit-mov-id').value = m.id;
+            document.getElementById('edit-mov-tipo').value = m.tipo;
+            document.getElementById('edit-mov-prod-id').value = m.produto_id || m.produto;
+            document.getElementById('edit-mov-qtd-antiga').value = m.quantidade;
+            
+            document.getElementById('edit-mov-qtd').value = m.quantidade;
+            document.getElementById('edit-mov-local').value = m.local || '';
+            document.getElementById('edit-mov-setor').value = m.setor || '';
+            document.getElementById('edit-mov-forn').value = m.fornecedor || '';
+            document.getElementById('edit-mov-user').value = m.usuario_retirou || m.usuario || m.usuario_sistema || '';
+            document.getElementById('edit-mov-fin').value = m.finalidade || '';
+            document.getElementById('edit-mov-obs').value = m.observacao || m.obs || '';
+            
+            document.getElementById('edit-mov-prod-nome').innerText = `${m.produto_id || m.produto} - ${m.produto_nome || ''}`;
+            const tipoEl = document.getElementById('edit-mov-tipo-display');
+            tipoEl.innerText = m.tipo;
+            tipoEl.className = m.tipo === 'ENTRADA' ? 'font-bold text-sm text-emerald-600' : 'font-bold text-sm text-rose-600';
+            
+            abrirModal('modal-edit-mov');
+        };
+
+        document.getElementById('form-edit-mov').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-edit-mov');
+            btn.innerText = 'SALVANDO...'; btn.disabled = true;
+
+            const id = document.getElementById('edit-mov-id').value;
+            const tipo = document.getElementById('edit-mov-tipo').value;
+            const prodId = document.getElementById('edit-mov-prod-id').value;
+            const qtdAntiga = Number(document.getElementById('edit-mov-qtd-antiga').value);
+            
+            const novaQtd = Number(document.getElementById('edit-mov-qtd').value);
+            const novoLocal = document.getElementById('edit-mov-local').value.trim();
+            const novoSetor = document.getElementById('edit-mov-setor').value.trim();
+            const novoForn = document.getElementById('edit-mov-forn').value.trim();
+            const novoUser = document.getElementById('edit-mov-user').value.trim();
+            const novaFin = document.getElementById('edit-mov-fin').value.trim();
+            const novaObs = document.getElementById('edit-mov-obs').value.trim();
+
+            try {
+                const diff = novaQtd - qtdAntiga;
+                if (diff !== 0 && prodId) {
+                    const prodRef = doc(db, 'produtos', prodId);
+                    const snap = await getDoc(prodRef);
+                    if (snap.exists()) {
+                        let saldoAtual = snap.data().saldo || 0;
+                        let novoSaldo = tipo === 'ENTRADA' ? saldoAtual + diff : saldoAtual - diff;
+                        if (novoSaldo < 0) throw new Error(`A alteração deixaria o saldo negativo (${novoSaldo}).`);
+                        await updateDoc(prodRef, { saldo: novoSaldo });
+                    }
+                }
+
+                const payloadMov = {
+                    quantidade: novaQtd,
+                    local: novoLocal,
+                    setor: novoSetor,
+                    fornecedor: novoForn,
+                    finalidade: novaFin,
+                    observacao: novaObs
+                };
+                
+                if (tipo === 'ENTRADA') payloadMov.usuario_sistema = novoUser;
+                else payloadMov.usuario_retirou = novoUser;
+
+                await updateDoc(doc(db, 'movimentacoes', id), payloadMov);
+
+                showToast('Lançamento atualizado!');
+                fecharModal('modal-edit-mov');
+                carregarMovimentacoes();
+                carregarProdutos(); 
+            } catch (err) {
+                showToast('Erro: ' + err.message, true);
+            } finally {
+                btn.innerText = 'SALVAR E RECALCULAR'; btn.disabled = false;
+            }
+        });
+
+        window.excluirMovimentacao = async (idMov, idProd, qtd, tipo) => {
+            if(!confirm('ATENÇÃO: Deseja EXCLUIR ESTE LANÇAMENTO? O estoque será recalculado automaticamente.')) return;
+            try {
+                if(idProd) {
+                    const prodRef = doc(db, 'produtos', idProd);
+                    const snap = await getDoc(prodRef);
+                    if(snap.exists()) {
+                        let saldoAtual = snap.data().saldo || 0;
+                        let novoSaldo = tipo === 'ENTRADA' ? saldoAtual - qtd : saldoAtual + qtd;
+                        await updateDoc(prodRef, { saldo: novoSaldo });
+                    }
+                }
+                await deleteDoc(doc(db, 'movimentacoes', idMov));
+                showToast('Lançamento excluído!');
+                carregarMovimentacoes();
+                carregarProdutos();
+            } catch(e) {
+                showToast('Erro ao excluir lançamento.', true);
             }
         };
 
