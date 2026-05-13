@@ -49,14 +49,13 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- TELA DE LOADING INICIAL -->
-    <div id="screen-loading" class="fixed inset-0 z-[60] flex items-center justify-center bg-nexa flex-col">
-        <div class="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-        <p class="text-white font-bold tracking-widest uppercase text-xs">Verificando Autenticação...</p>
+    <!-- Loading Inicial Global -->
+    <div id="screen-loading" class="fixed inset-0 z-[60] bg-nexa flex flex-col items-center justify-center text-white">
+        <svg class="animate-spin h-10 w-10 text-indigo-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+        <p class="font-bold tracking-widest uppercase text-xs text-indigo-200">Verificando Autenticação...</p>
     </div>
 
-    <!-- TELA DE LOGIN -->
-    <div id="screen-login" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-nexa overflow-hidden flex-col">
+    <div id="screen-login" class="fixed inset-0 z-50 bg-nexa items-center justify-center p-6 flex-col" style="display: none;">
         <div class="w-full max-w-md relative z-10">
             <div class="glass-login p-10 rounded-[2.5rem] shadow-2xl relative">
                 <div class="text-center mb-8">
@@ -76,8 +75,7 @@
         </div>
     </div>
 
-    <!-- APP PRINCIPAL -->
-    <div id="screen-app" class="hidden flex-1 flex-col w-full h-full">
+    <div id="screen-app" class="flex-1 flex flex-col w-full h-full" style="display: none;">
         <!-- Header & Navbar -->
         <header class="header-nexa text-white px-6 py-4 flex flex-col md:flex-row justify-between items-center shadow-lg sticky top-0 z-40 gap-4">
             <div class="flex items-center gap-4">
@@ -87,7 +85,6 @@
                 </div>
             </div>
             
-            <!-- Menu de Módulos -->
             <nav class="flex items-center gap-1 sm:gap-2 bg-slate-800/50 p-1.5 rounded-xl border border-white/5 overflow-x-auto max-w-full">
                 <button onclick="changeView('dashboard')" id="nav-dashboard" class="nav-item active">Dashboard</button>
                 <button onclick="changeView('operacoes')" id="nav-operacoes" class="nav-item">Operações</button>
@@ -106,28 +103,53 @@
             </div>
         </header>
 
-        <main id="view-dashboard" class="view-section active flex-1 max-w-6xl mx-auto w-full p-8 space-y-8">
+        <!-- DASHBOARD -->
+        <main id="view-dashboard" class="view-section active flex-1 max-w-7xl mx-auto w-full p-8 space-y-8">
             <div class="mb-4">
                 <h2 class="text-2xl font-black text-slate-800 tracking-tight">Visão Geral</h2>
                 <p class="text-sm text-slate-500 font-medium mt-1">Indicadores de desempenho do estoque.</p>
             </div>
             
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div class="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-indigo-500 transition-colors">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total SKU Ativos</span>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- A) Total Cadastrados (Não clicável) -->
+                <div class="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm flex flex-col cursor-default">
+                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Produtos Cadastrados</span>
                     <span id="kpi-produtos" class="text-5xl font-black text-slate-800 tracking-tighter mt-auto">--</span>
                 </div>
-                <div class="bg-white border border-rose-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-rose-500 transition-colors">
-                    <span class="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">Alerta de Estoque (Mínimo)</span>
-                    <span id="kpi-criticos" class="text-5xl font-black text-rose-600 tracking-tighter mt-auto">--</span>
+                <!-- B) Alerta Mínimo (Clicável) -->
+                <div onclick="abrirModalCriticos()" class="bg-white border border-rose-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-rose-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                    <div class="absolute right-0 top-0 h-full w-2 bg-rose-500 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
+                    <span class="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">Alerta de Estoque Mínimo</span>
+                    <span id="kpi-criticos" class="text-5xl font-black text-rose-600 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
                 </div>
-                <div class="bg-white border border-emerald-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-emerald-500 transition-colors">
+                <!-- C) Total Movimentações (Clicável) -->
+                <div onclick="changeView('movimentacoes'); carregarMovimentacoes()" class="bg-white border border-emerald-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-emerald-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                    <div class="absolute right-0 top-0 h-full w-2 bg-emerald-500 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
                     <span class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Total de Movimentações</span>
-                    <span id="kpi-movs" class="text-5xl font-black text-emerald-600 tracking-tighter mt-auto">--</span>
+                    <span id="kpi-movs" class="text-5xl font-black text-emerald-600 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
+                </div>
+                <!-- D) Requisições Pendentes (Clicável) -->
+                <div onclick="changeView('requisicoes')" class="bg-white border border-amber-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-amber-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                    <div class="absolute right-0 top-0 h-full w-2 bg-amber-500 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
+                    <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Req. Pendentes / Atraso</span>
+                    <span id="kpi-reqs" class="text-5xl font-black text-amber-600 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
+                </div>
+                <!-- E) Duplicados (Clicável) -->
+                <div onclick="verMovEsp('duplicados')" class="bg-white border border-purple-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-purple-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                    <div class="absolute right-0 top-0 h-full w-2 bg-purple-500 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
+                    <span class="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-1">Produtos em Duplicidade</span>
+                    <span id="kpi-duplicados" class="text-5xl font-black text-purple-600 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
+                </div>
+                <!-- F) Sem Código (Clicável) -->
+                <div onclick="verMovEsp('sem_codigo')" class="bg-white border border-slate-300 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-slate-800 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                    <div class="absolute right-0 top-0 h-full w-2 bg-slate-800 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
+                    <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Produtos Sem Código</span>
+                    <span id="kpi-semcod" class="text-5xl font-black text-slate-800 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
                 </div>
             </div>
         </main>
 
+        <!-- OPERAÇÕES -->
         <main id="view-operacoes" class="view-section flex-1 max-w-6xl mx-auto w-full p-8 space-y-8">
             <div class="mb-4">
                 <h2 class="text-2xl font-black text-slate-800 tracking-tight">Painel Operacional</h2>
@@ -157,6 +179,7 @@
             </div>
         </main>
 
+        <!-- MOVIMENTAÇÕES -->
         <main id="view-movimentacoes" class="view-section flex-1 max-w-[1400px] mx-auto w-full p-8 space-y-6">
             <div class="flex justify-between items-end mb-4">
                 <div>
@@ -192,6 +215,28 @@
                 </div>
             </div>
 
+            <!-- INFO EM DESTAQUE DO PRODUTO SELECIONADO -->
+            <div id="info-produto-selecionado" class="hidden bg-indigo-50 border border-indigo-100 rounded-[1.5rem] p-6 mb-6 justify-between items-center animate-slide shadow-sm">
+                <div>
+                    <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Produto Selecionado</p>
+                    <p id="info-prod-nome" class="font-black text-indigo-900 text-xl tracking-tight">--</p>
+                </div>
+                <div class="flex gap-8 text-right">
+                    <div>
+                        <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Código</p>
+                        <p id="info-prod-cod" class="font-bold text-slate-700 text-lg">--</p>
+                    </div>
+                    <div class="pl-8 border-l border-indigo-200/60">
+                        <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Saldo Atual</p>
+                        <p id="info-prod-saldo" class="font-black text-indigo-600 text-2xl leading-none">--</p>
+                    </div>
+                    <div class="pl-8 border-l border-indigo-200/60">
+                        <p class="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">Estoque Mín</p>
+                        <p id="info-prod-min" class="font-black text-rose-500 text-2xl leading-none">--</p>
+                    </div>
+                </div>
+            </div>
+
             <div class="bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-sm">
                 <div class="overflow-x-auto">
                     <table class="table-nexa w-full">
@@ -219,6 +264,7 @@
             </div>
         </main>
 
+        <!-- REQUISIÇÕES -->
         <main id="view-requisicoes" class="view-section flex-1 max-w-6xl mx-auto w-full p-8 space-y-8">
             <div class="flex justify-between items-end mb-4">
                 <div>
@@ -235,7 +281,7 @@
                 <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none">
                     <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
                 </div>
-                <input type="text" id="search-req" placeholder="Pesquisar por material, setor ou número..." 
+                <input type="text" id="search-req" placeholder="Pesquisar por material, setor, solicitante ou número..." 
                     class="w-full pl-14 pr-6 py-4 bg-white border border-slate-200 rounded-2xl shadow-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 outline-none transition-all text-sm font-medium">
             </div>
 
@@ -251,6 +297,8 @@
         </main>
     </div>
 
+    <!-- ===================== MODAIS ===================== -->
+
     <!-- MODAL ENTRADA -->
     <div id="modal-entrada" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4">
         <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
@@ -262,8 +310,8 @@
             
             <form id="form-entrada" class="space-y-4">
                 <div class="relative">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nome do Produto <span class="font-normal text-emerald-600 normal-case">(Selecione da lista ou cadastre novo)</span></label>
-                    <input type="text" id="ent-nome" class="input-nexa border-emerald-200 focus:border-emerald-500" placeholder="Busque ou digite o nome do novo produto..." autocomplete="off" required>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nome do Produto <span class="font-normal text-emerald-600 normal-case">(Selecione ou cadastre novo)</span></label>
+                    <input type="text" id="ent-nome" class="input-nexa border-emerald-200 focus:border-emerald-500" placeholder="Busque ou digite o nome..." autocomplete="off" required>
                     <ul id="list-ent-nome" class="dropdown-nexa"></ul>
                 </div>
 
@@ -296,7 +344,7 @@
                     </div>
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Observações</label>
-                        <input type="text" id="ent-obs" class="input-nexa" placeholder="Ex: NF 1234, Lote XPTO...">
+                        <input type="text" id="ent-obs" class="input-nexa" placeholder="Ex: NF 1234, Lote...">
                     </div>
                 </div>
 
@@ -306,8 +354,8 @@
                         <input type="number" id="ent-qtd" class="input-nexa font-black text-emerald-600 text-xl" placeholder="0" min="1" required>
                     </div>
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Estoque Mínimo (Alerta)</label>
-                        <input type="number" id="ent-min" class="input-nexa font-black text-amber-500 text-xl" placeholder="Ex: 10" min="0" required>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Estoque Mínimo</label>
+                        <input type="number" id="ent-min" class="input-nexa font-black text-amber-500 text-xl" placeholder="0" min="0" required>
                     </div>
                 </div>
                 <button type="submit" id="btn-salvar-ent" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-black text-sm mt-4 shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition active:scale-95">CONFIRMAR E SALVAR ENTRADA</button>
@@ -326,8 +374,8 @@
 
             <form id="form-saida" class="space-y-4">
                 <div class="relative">
-                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Buscar Produto <span class="font-normal text-rose-500 normal-case">(Obrigatório Existir)</span></label>
-                    <input type="text" id="sai-busca" class="input-nexa border-rose-200 focus:border-rose-500" placeholder="Digite nome ou código do produto..." autocomplete="off" required>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Buscar Produto</label>
+                    <input type="text" id="sai-busca" class="input-nexa border-rose-200 focus:border-rose-500" placeholder="Digite nome ou código..." autocomplete="off" required>
                     <ul id="list-sai-busca" class="dropdown-nexa"></ul>
                     <input type="hidden" id="sai-cod">
                 </div>
@@ -341,11 +389,11 @@
                     </div>
                     <div class="grid grid-cols-2 gap-4 items-center">
                         <div>
-                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Saldo Atual Em Estoque</label>
+                            <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Saldo Atual</label>
                             <input type="number" id="sai-atual" class="input-nexa bg-slate-200 text-slate-600 font-black cursor-not-allowed text-xl" disabled>
                         </div>
                         <div>
-                            <label class="text-[10px] font-black text-rose-500 uppercase tracking-widest block mb-1">Qtd a Retirar (Saída)</label>
+                            <label class="text-[10px] font-black text-rose-500 uppercase tracking-widest block mb-1">Qtd a Retirar</label>
                             <input type="number" id="sai-qtd" class="input-nexa border-rose-300 font-black text-rose-600 text-xl focus:border-rose-500" placeholder="0" min="1" required>
                         </div>
                     </div>
@@ -358,7 +406,7 @@
                     </div>
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Finalidade</label>
-                        <input type="text" id="sai-fin" class="input-nexa" placeholder="Ex: Manutenção Máquina A" required>
+                        <input type="text" id="sai-fin" class="input-nexa" placeholder="Ex: Manutenção" required>
                     </div>
                 </div>
                 <div class="mt-2">
@@ -371,119 +419,98 @@
         </div>
     </div>
 
-    <!-- MODAL REQUISIÇÃO -->
+    <!-- MODAL NOVA REQUISIÇÃO (COM NOVOS CAMPOS) -->
     <div id="modal-nova-req" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4">
-        <div class="glass-form w-full max-w-lg p-8 animate-slide relative">
+        <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
             <button onclick="fecharModal('modal-nova-req')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
             <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-6">📝 Criar Requisição</h2>
             <form id="form-nova-req" class="space-y-4">
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
                     <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Nº Pedido</label><input id="req-num" class="input-nexa" required></div>
-                    <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Data</label><input type="date" id="req-dat" class="input-nexa" required></div>
+                    <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Data Pedido</label><input type="date" id="req-dat" class="input-nexa" required></div>
+                    <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Prev. Entrega</label><input type="date" id="req-prev" class="input-nexa" required></div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Solicitado Por</label><input id="req-sol" class="input-nexa" required></div>
+                    <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Autorizado Por</label><input id="req-aut" class="input-nexa"></div>
                 </div>
                 <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Material / Descrição</label><input id="req-mat" class="input-nexa" required></div>
-                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Setor Destino</label><input id="req-set" class="input-nexa" required></div>
-                <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Qtd Solicitada</label><input type="number" id="req-qtd" class="input-nexa" required min="1"></div>
-                <button type="submit" id="btn-salvar-req" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm mt-4 shadow-lg hover:bg-indigo-700 transition">SALVAR REQUISIÇÃO</button>
+                <div class="grid grid-cols-2 gap-4">
+                    <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Setor Destino</label><input id="req-set" class="input-nexa" required></div>
+                    <div><label class="text-[10px] font-black text-slate-400 uppercase mb-1 block">Qtd Solicitada</label><input type="number" id="req-qtd" class="input-nexa font-bold text-indigo-600" required min="1"></div>
+                </div>
+                <button type="submit" id="btn-salvar-req" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm mt-4 shadow-lg hover:bg-indigo-700 transition active:scale-95">SALVAR REQUISIÇÃO</button>
             </form>
         </div>
     </div>
 
+    <!-- MODAL BAIXA REQUISIÇÃO (COM ATALHO DE CADASTRO) -->
     <div id="modal-baixa-req" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4">
-        <div class="glass-form w-full max-w-sm p-8 animate-slide text-center relative">
-            <button onclick="fecharModal('modal-baixa-req')" class="absolute top-4 right-4 text-slate-400 hover:text-slate-800 text-2xl font-light">&times;</button>
-            <h2 class="text-xl font-black text-slate-800 uppercase tracking-tighter mb-2">📥 Entregar Material</h2>
-            <p id="baixa-req-nome" class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">---</p>
+        <div class="glass-form w-full max-w-lg p-8 animate-slide relative">
+            <button onclick="fecharModal('modal-baixa-req')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
+            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-2">📥 Entregar Material</h2>
+            <p id="baixa-req-nome" class="text-xs font-bold text-slate-500 uppercase tracking-widest mb-6">---</p>
             
-            <div class="relative mb-4 text-left">
-                <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Vincular Produto (Baixa de Estoque)</label>
-                <input type="text" id="baixa-req-busca" class="input-nexa border-indigo-200 focus:border-indigo-500" placeholder="Buscar no estoque..." autocomplete="off">
-                <ul id="list-baixa-req-busca" class="dropdown-nexa"></ul>
-                <input type="hidden" id="baixa-req-prod-cod">
-                <input type="hidden" id="baixa-req-prod-nome">
-                <input type="hidden" id="baixa-req-prod-local">
-                <input type="hidden" id="baixa-req-prod-setor">
-                <p id="baixa-req-saldo-atual" class="text-[10px] font-bold text-indigo-600 mt-1 uppercase hidden">Saldo atual: <span id="span-req-saldo"></span></p>
-            </div>
-
-            <div class="bg-indigo-50 p-4 rounded-2xl mb-4">
-                <span class="text-[10px] font-black text-indigo-400 uppercase block mb-1">Restante em aberto</span>
-                <span id="baixa-req-restante" class="text-3xl font-black text-indigo-600 tracking-tighter">0</span>
-            </div>
-            <input type="hidden" id="baixa-req-id">
-            <input type="hidden" id="baixa-req-num">
-            <input type="hidden" id="baixa-req-total">
-            <input type="hidden" id="baixa-req-entregue">
-            <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1 text-left">Qtd a Entregar (Parcial/Total)</label>
-            <input type="number" id="baixa-qtd" class="input-nexa text-center text-2xl font-black mb-6" placeholder="0" min="1">
-            <button onclick="processarBaixaReq()" id="btn-proc-baixa" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-black text-sm shadow-lg shadow-emerald-200 hover:bg-emerald-700">CONFIRMAR ENTREGA E BAIXA</button>
-        </div>
-    </div>
-
-    <!-- Modal de Edição de Movimentação -->
-    <div id="modal-edit-mov" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4">
-        <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
-            <button onclick="fecharModal('modal-edit-mov')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
-            <div class="mb-6">
-                <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">✏️ Editar Registro</h2>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Ajuste de log e recálculo automático de estoque</p>
-            </div>
-            <form id="form-edit-mov" class="space-y-4">
-                <input type="hidden" id="edit-mov-id">
-                <input type="hidden" id="edit-mov-tipo">
-                <input type="hidden" id="edit-mov-prod-id">
-                <input type="hidden" id="edit-mov-qtd-antiga">
+            <form id="form-baixa-req" class="space-y-4">
+                <input type="hidden" id="baixa-req-id">
+                <input type="hidden" id="baixa-req-total">
+                <input type="hidden" id="baixa-req-entregue">
+                <input type="hidden" id="baixa-req-finalidade">
+                <input type="hidden" id="baixa-req-solicitante">
                 
-                <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 mb-4 flex justify-between items-center">
+                <div class="bg-indigo-50 p-4 rounded-2xl flex justify-between items-center border border-indigo-100">
                     <div>
-                        <span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Produto</span>
-                        <span id="edit-mov-prod-nome" class="font-bold text-slate-800 text-sm">--</span>
+                        <span class="text-[10px] font-black text-indigo-400 uppercase block mb-1">Restante em aberto</span>
+                        <span id="baixa-req-restante" class="text-3xl font-black text-indigo-600 tracking-tighter">0</span>
                     </div>
                     <div class="text-right">
-                        <span class="block text-[10px] font-black text-slate-400 uppercase tracking-widest">Tipo</span>
-                        <span id="edit-mov-tipo-display" class="font-bold text-sm">--</span>
+                        <label class="text-[10px] font-black text-slate-500 uppercase block mb-1">Qtd Entregue Agora</label>
+                        <input type="number" id="baixa-qtd" class="input-nexa text-center text-xl font-black w-24 py-2" required min="1">
                     </div>
                 </div>
 
-                <div class="grid grid-cols-3 gap-4">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Local</label>
-                        <input type="text" id="edit-mov-local" class="input-nexa">
+                <div class="relative mt-4">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Qual produto será consumido? <span class="text-rose-500 normal-case">(Obrigatório)</span></label>
+                    <div class="flex gap-2">
+                        <input type="text" id="baixa-req-busca" class="input-nexa flex-1 border-indigo-200 focus:border-indigo-500" placeholder="Busque no estoque..." autocomplete="off" required>
+                        <button type="button" onclick="fecharModal('modal-baixa-req'); abrirModal('modal-entrada');" class="bg-emerald-100 text-emerald-700 px-4 rounded-xl font-bold text-xs hover:bg-emerald-200 transition shrink-0">
+                            + Cadastrar Novo
+                        </button>
                     </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Setor</label>
-                        <input type="text" id="edit-mov-setor" class="input-nexa" required>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Fornecedor</label>
-                        <input type="text" id="edit-mov-forn" class="input-nexa">
-                    </div>
+                    <ul id="list-baixa-req-busca" class="dropdown-nexa"></ul>
+                    <input type="hidden" id="baixa-req-prod-cod">
+                    <input type="hidden" id="baixa-req-prod-nome">
+                    <input type="hidden" id="baixa-req-prod-local">
+                    <input type="hidden" id="baixa-req-prod-setor">
                 </div>
-                
-                <div class="grid grid-cols-2 gap-4 mt-2">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nova Quantidade</label>
-                        <input type="number" id="edit-mov-qtd" class="input-nexa font-black text-indigo-600 text-xl" min="1" required>
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Responsável / Usuário</label>
-                        <input type="text" id="edit-mov-user" class="input-nexa" required>
-                    </div>
-                </div>
-                
-                <div class="grid grid-cols-2 gap-4 mt-2">
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Finalidade</label>
-                        <input type="text" id="edit-mov-fin" class="input-nexa">
-                    </div>
-                    <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Observações</label>
-                        <input type="text" id="edit-mov-obs" class="input-nexa">
-                    </div>
-                </div>
-                
-                <button type="submit" id="btn-salvar-edit-mov" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm mt-4 shadow-lg hover:bg-indigo-700 transition active:scale-95">SALVAR ALTERAÇÕES</button>
+
+                <p id="baixa-req-saldo-atual" class="hidden text-[10px] font-bold text-emerald-600 tracking-widest uppercase text-right">Em Estoque: <span id="span-req-saldo"></span></p>
+
+                <button type="submit" id="btn-proc-baixa" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-black text-sm mt-4 shadow-lg shadow-emerald-200 hover:bg-emerald-700 transition active:scale-95">CONFIRMAR E ABATER ESTOQUE</button>
             </form>
+        </div>
+    </div>
+
+    <!-- MODAL CRÍTICOS (DASHBOARD) -->
+    <div id="modal-criticos" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4">
+        <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
+            <button onclick="fecharModal('modal-criticos')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
+            <h2 class="text-2xl font-black text-rose-600 uppercase tracking-tighter mb-2">⚠️ Atenção: Estoque Mínimo</h2>
+            <p class="text-xs text-slate-500 font-medium mb-6">Produtos que estão com saldo igual ou inferior ao alerta de mínimo.</p>
+            
+            <div class="max-h-96 overflow-y-auto pr-2">
+                <table class="table-nexa w-full">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Produto</th>
+                            <th class="text-center">Min</th>
+                            <th class="text-center text-rose-600">Atual</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list-criticos-body"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 
@@ -492,7 +519,6 @@
         import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, addDoc, deleteDoc, increment } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
-        // CREDENCIAIS FIREBASE
         const firebaseConfig = {
             apiKey: "AIzaSyA4RvrOh5EU6OXj1zbNB1hGwWDj9VNG-T4",
             authDomain: "nexa-stock.firebaseapp.com",
@@ -510,8 +536,8 @@
         window.bancoProdutos = [];
         window.bancoRequisicoes = [];
         window.bancoMovimentacoes = [];
+        window.filtroEspecialMov = null; 
 
-        // UI Toast Helper
         window.showToast = (msg, isError = false) => {
             const t = document.createElement('div');
             t.className = `fixed bottom-5 right-5 p-4 rounded-xl shadow-2xl text-white font-bold text-sm z-[100] animate-slide ${isError ? 'bg-rose-500' : 'bg-emerald-500'}`;
@@ -528,38 +554,25 @@
             document.getElementById(`nav-${viewId}`).classList.add('active');
 
             if(viewId === 'movimentacoes') {
-                document.getElementById('grid-movimentacoes').innerHTML = '<tr><td colspan="12" class="text-center py-10 text-slate-400 font-medium">Utilize os filtros acima e clique em "Buscar" para listar as movimentações.</td></tr>';
-                window.bancoMovimentacoes = [];
+                if(!window.filtroEspecialMov) {
+                    document.getElementById('grid-movimentacoes').innerHTML = '<tr><td colspan="12" class="text-center py-10 text-slate-400 font-medium">Utilize os filtros acima e clique em "Buscar" para listar as movimentações.</td></tr>';
+                    window.bancoMovimentacoes = [];
+                }
             }
             if(viewId === 'requisicoes') carregarRequisicoes();
             if(viewId === 'dashboard' || viewId === 'operacoes') carregarProdutos();
         };
 
         onAuthStateChanged(auth, (user) => {
-            const loadingScreen = document.getElementById('screen-loading');
-            const loginScreen = document.getElementById('screen-login');
-            const appScreen = document.getElementById('screen-app');
-            
-            // Remove a tela de "Verificando..." da frente
-            if(loadingScreen) loadingScreen.classList.add('hidden');
-
+            document.getElementById('screen-loading').style.display = 'none';
             if (user) {
-                // Usuário está logado
-                loginScreen.classList.add('hidden');
-                loginScreen.classList.remove('flex');
-                
-                appScreen.classList.remove('hidden');
-                appScreen.classList.add('flex');
-                
+                document.getElementById('screen-login').style.display = 'none';
+                document.getElementById('screen-app').style.display = 'flex';
                 document.getElementById('user-display').innerText = user.email.split('@')[0];
                 carregarProdutos(); 
             } else {
-                // Ninguém logado (ou deslogou agora)
-                appScreen.classList.add('hidden');
-                appScreen.classList.remove('flex');
-                
-                loginScreen.classList.remove('hidden');
-                loginScreen.classList.add('flex');
+                document.getElementById('screen-login').style.display = 'flex';
+                document.getElementById('screen-app').style.display = 'none';
             }
         });
 
@@ -588,34 +601,86 @@
             const form = document.querySelector(`#${id} form`);
             if (form) form.reset();
             if(id === 'modal-saida') document.getElementById('sai-info').classList.add('hidden');
+            if(id === 'modal-baixa-req') document.getElementById('baixa-req-saldo-atual').classList.add('hidden');
         };
 
         async function carregarProdutos() {
             try {
                 const snap = await getDocs(collection(db, "produtos"));
                 window.bancoProdutos = [];
-                let total = 0, criticos = 0;
+                let total = 0, criticos = 0, duplicados = 0, semCodigo = 0;
                 
+                const contagemNomes = {};
+
                 snap.forEach(doc => {
                     const p = { id: doc.id, ...doc.data() };
                     window.bancoProdutos.push(p);
                     total++;
                     if ((p.saldo || 0) <= (p.estoqueMinimo || 0)) criticos++;
+                    
+                    const nomeStr = (p.nome || '').trim().toLowerCase();
+                    if(nomeStr) {
+                        contagemNomes[nomeStr] = (contagemNomes[nomeStr] || 0) + 1;
+                    }
+                    
+                    if(!p.id || p.id === '-' || p.id === p.nome || p.id.toLowerCase().includes('sem')) {
+                        semCodigo++;
+                    }
+                });
+
+                Object.values(contagemNomes).forEach(count => {
+                    if (count > 1) duplicados += count; 
                 });
 
                 document.getElementById('kpi-produtos').innerText = total;
                 document.getElementById('kpi-criticos').innerText = criticos;
+                document.getElementById('kpi-duplicados').innerText = duplicados;
+                document.getElementById('kpi-semcod').innerText = semCodigo;
                 
+                const reqSnap = await getDocs(collection(db, "requisicoes"));
+                let reqPendentes = 0;
+                reqSnap.forEach(d => { if(d.data().status !== 'Entregue') reqPendentes++; });
+                document.getElementById('kpi-reqs').innerText = reqPendentes;
+
                 const movsSnap = await getDocs(collection(db, "movimentacoes"));
                 document.getElementById('kpi-movs').innerText = movsSnap.size;
+
             } catch (e) {
-                console.error("Erro ao ler produtos", e);
+                console.error("Erro ao ler dados do Dashboard", e);
             }
         }
+
+        window.abrirModalCriticos = () => {
+            const listBody = document.getElementById('list-criticos-body');
+            listBody.innerHTML = '';
+            let encontrou = false;
+
+            window.bancoProdutos.forEach(p => {
+                const min = p.estoqueMinimo || 0;
+                const saldo = p.saldo || 0;
+                if (saldo <= min) {
+                    encontrou = true;
+                    listBody.innerHTML += `
+                        <tr>
+                            <td class="font-bold text-slate-700">${p.id}</td>
+                            <td>${p.nome}</td>
+                            <td class="text-center font-bold text-slate-500">${min}</td>
+                            <td class="text-center font-black text-rose-600 bg-rose-50">${saldo}</td>
+                        </tr>
+                    `;
+                }
+            });
+
+            if(!encontrou) {
+                listBody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400">Nenhum produto crítico.</td></tr>';
+            }
+            abrirModal('modal-criticos');
+        };
 
         function setupDropdown(inputId, listId, mode = 'entrada') {
             const input = document.getElementById(inputId);
             const list = document.getElementById(listId);
+            
             const render = () => {
                 const val = input.value.toLowerCase(); 
                 list.innerHTML = '';
@@ -629,20 +694,19 @@
                     const li = document.createElement('li');
                     li.className = "px-4 py-3 hover:bg-indigo-50 cursor-pointer border-b border-slate-50 text-sm text-slate-700";
                     li.innerHTML = `<span class="font-bold text-indigo-600">${p.id}</span> <br> <span class="text-xs font-medium">${p.nome}</span>`;
+                    
                     li.onmousedown = () => {
                         if (mode === 'saida') {
-                            document.getElementById('sai-busca').value = p.nome;
+                            input.value = p.nome;
                             document.getElementById('sai-cod').value = p.id;
                             document.getElementById('sai-atual').value = p.saldo || 0;
                             document.getElementById('sai-info-cod').innerText = p.id;
                             document.getElementById('sai-info-local').innerText = p.local || 'N/A';
                             document.getElementById('sai-info-setor').innerText = p.setor || 'N/A';
                             document.getElementById('sai-info-min').innerText = p.estoqueMinimo || '0';
-                            
-                            window._produto_selecionado = p;
                             document.getElementById('sai-info').classList.remove('hidden');
                         } else if (mode === 'entrada') {
-                            document.getElementById('ent-nome').value = p.nome;
+                            input.value = p.nome;
                             document.getElementById('ent-cod').value = p.id;
                             document.getElementById('ent-local').value = p.local || '';
                             document.getElementById('ent-setor').value = p.setor || '';
@@ -658,6 +722,12 @@
                             document.getElementById('baixa-req-saldo-atual').classList.remove('hidden');
                         } else if (mode === 'filtro') {
                             input.value = p.nome;
+                            document.getElementById('info-prod-nome').innerText = p.nome;
+                            document.getElementById('info-prod-cod').innerText = p.id;
+                            document.getElementById('info-prod-saldo').innerText = p.saldo !== undefined ? p.saldo : '0';
+                            document.getElementById('info-prod-min').innerText = p.estoqueMinimo !== undefined ? p.estoqueMinimo : '0';
+                            document.getElementById('info-produto-selecionado').classList.remove('hidden');
+                            document.getElementById('info-produto-selecionado').classList.add('flex');
                         }
                         list.style.display = 'none';
                     };
@@ -674,6 +744,32 @@
         setupDropdown('sai-busca', 'list-sai-busca', 'saida');
         setupDropdown('filtro-mov-prod', 'list-filtro-mov-prod', 'filtro');
         setupDropdown('baixa-req-busca', 'list-baixa-req-busca', 'baixa-req');
+
+        document.getElementById('filtro-mov-prod').addEventListener('input', (e) => {
+            if(e.target.value.trim() === '') {
+                const infoProd = document.getElementById('info-produto-selecionado');
+                if(infoProd) {
+                    infoProd.classList.add('hidden');
+                    infoProd.classList.remove('flex');
+                }
+            }
+        });
+
+        window.verMovEsp = (tipo) => {
+            window.filtroEspecialMov = tipo;
+            document.getElementById('filtro-mov-prod').value = '';
+            document.getElementById('filtro-mov-ini').value = '';
+            document.getElementById('filtro-mov-fim').value = '';
+            
+            const infoProd = document.getElementById('info-produto-selecionado');
+            if(infoProd) {
+                infoProd.classList.add('hidden');
+                infoProd.classList.remove('flex');
+            }
+            
+            changeView('movimentacoes');
+            carregarMovimentacoes();
+        };
 
         document.getElementById('form-entrada').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -739,18 +835,12 @@
                 await updateDoc(prodRef, { saldo: increment(-qtd) });
 
                 await addDoc(collection(db, 'movimentacoes'), {
-                    tipo: 'SAÍDA', 
-                    produto_id: cod, 
-                    produto_nome: snap.data().nome,
-                    quantidade: qtd, 
-                    local: snap.data().local || '-',
-                    setor: snap.data().setor || '-',
-                    fornecedor: '-',
+                    tipo: 'SAÍDA', produto_id: cod, produto_nome: snap.data().nome,
+                    quantidade: qtd, local: snap.data().local || '-', setor: snap.data().setor || '-', fornecedor: '-',
                     observacao: document.getElementById('sai-obs').value.trim(),
                     usuario_retirou: document.getElementById('sai-user').value.trim(),
                     finalidade: document.getElementById('sai-fin').value.trim(),
-                    data: new Date(),
-                    usuario_sistema: auth.currentUser.email
+                    data: new Date(), usuario_sistema: auth.currentUser.email
                 });
 
                 showToast('Saída realizada com sucesso!');
@@ -763,6 +853,21 @@
             }
         });
 
+        window.limparFiltrosMov = () => {
+            window.filtroEspecialMov = null;
+            document.getElementById('filtro-mov-prod').value = '';
+            document.getElementById('filtro-mov-ini').value = '';
+            document.getElementById('filtro-mov-fim').value = '';
+            document.getElementById('grid-movimentacoes').innerHTML = '<tr><td colspan="12" class="text-center py-10 text-slate-400 font-medium">Filtros limpos. Utilize os campos acima e clique em "Buscar".</td></tr>';
+            window.bancoMovimentacoes = [];
+            
+            const infoProd = document.getElementById('info-produto-selecionado');
+            if(infoProd) {
+                infoProd.classList.add('hidden');
+                infoProd.classList.remove('flex');
+            }
+        };
+
         window.carregarMovimentacoes = async () => {
             const grid = document.getElementById('grid-movimentacoes');
             grid.innerHTML = '<tr><td colspan="12" class="text-center py-10 text-slate-400 font-medium animate-pulse">Buscando e filtrando registros...</td></tr>';
@@ -773,37 +878,43 @@
                 let prodFiltro = document.getElementById('filtro-mov-prod').value.trim().toLowerCase();
                 let dataIniStr = document.getElementById('filtro-mov-ini').value;
                 let dataFimStr = document.getElementById('filtro-mov-fim').value;
+                
+                const mapNomes = {};
+                if (window.filtroEspecialMov === 'duplicados') {
+                    window.bancoProdutos.forEach(p => {
+                        const n = (p.nome || '').trim().toLowerCase();
+                        if(n) mapNomes[n] = (mapNomes[n] || 0) + 1;
+                    });
+                }
 
                 snap.forEach(doc => {
                     const d = doc.data();
                     d.id = doc.id;
                     let isValid = true;
 
-                    if (prodFiltro) {
-                        const nome = (d.produto_nome || '').toLowerCase();
-                        const id = (d.produto_id || d.produto || '').toLowerCase();
-                        if (!nome.includes(prodFiltro) && !id.includes(prodFiltro)) {
-                            isValid = false;
+                    if (window.filtroEspecialMov === 'duplicados') {
+                        const n = (d.produto_nome || '').trim().toLowerCase();
+                        if (!mapNomes[n] || mapNomes[n] <= 1) isValid = false;
+                    } else if (window.filtroEspecialMov === 'sem_codigo') {
+                        const pid = (d.produto_id || '').toLowerCase();
+                        if (pid && pid !== '-' && pid !== (d.produto_nome||'').toLowerCase() && !pid.includes('sem')) {
+                            isValid = false; 
+                        }
+                    } else {
+                        if (prodFiltro) {
+                            const nome = (d.produto_nome || '').toLowerCase();
+                            const id = (d.produto_id || d.produto || '').toLowerCase();
+                            if (!nome.includes(prodFiltro) && !id.includes(prodFiltro)) isValid = false;
+                        }
+                        if (isValid && d.data && d.data.toDate) {
+                            const movDate = d.data.toDate();
+                            movDate.setHours(0, 0, 0, 0); 
+                            if (dataIniStr) { const dIni = new Date(dataIniStr + 'T00:00:00'); if (movDate < dIni) isValid = false; }
+                            if (dataFimStr) { const dFim = new Date(dataFimStr + 'T00:00:00'); if (movDate > dFim) isValid = false; }
                         }
                     }
 
-                    if (isValid && d.data && d.data.toDate) {
-                        const movDate = d.data.toDate();
-                        movDate.setHours(0, 0, 0, 0); 
-                        
-                        if (dataIniStr) {
-                            const dIni = new Date(dataIniStr + 'T00:00:00');
-                            if (movDate < dIni) isValid = false;
-                        }
-                        if (dataFimStr) {
-                            const dFim = new Date(dataFimStr + 'T00:00:00');
-                            if (movDate > dFim) isValid = false;
-                        }
-                    }
-
-                    if (isValid) {
-                        window.bancoMovimentacoes.push(d);
-                    }
+                    if (isValid) window.bancoMovimentacoes.push(d);
                 });
 
                 window.bancoMovimentacoes.sort((a, b) => {
@@ -813,17 +924,19 @@
                 });
                 
                 grid.innerHTML = '';
-                
                 if (window.bancoMovimentacoes.length === 0) {
-                    grid.innerHTML = '<tr><td colspan="12" class="text-center py-10 text-slate-400">Nenhum registro encontrado para os filtros selecionados.</td></tr>';
+                    grid.innerHTML = '<tr><td colspan="12" class="text-center py-10 text-slate-400">Nenhum registro encontrado.</td></tr>';
                     return;
                 }
 
-                let idx = 0;
-                window.bancoMovimentacoes.forEach(d => {
+                window.bancoMovimentacoes.forEach((d) => {
                     const dt = d.data && d.data.toDate ? d.data.toDate().toLocaleString('pt-BR') : 'Data inválida';
                     const tipoCor = d.tipo === 'ENTRADA' ? 'text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-md' : 'text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded-md';
                     
+                    const pIndex = window.bancoProdutos.find(p => p.id === d.produto_id);
+                    const pSaldo = pIndex ? pIndex.saldo : '--';
+                    const pMin = pIndex ? pIndex.estoqueMinimo : '--';
+
                     const obsTexto = d.observacao || d.obs || '-';
                     const finTexto = d.finalidade || '-';
 
@@ -838,57 +951,16 @@
                         <td class="text-xs">${d.setor || '-'}</td>
                         <td class="text-xs">${d.fornecedor || '-'}</td>
                         <td class="text-xs">${d.usuario_retirou || d.usuario || d.usuario_sistema || '-'}</td>
-                        <td class="text-xs truncate max-w-[120px] cursor-help" title="${finTexto}">${finTexto}</td>
-                        <td class="text-xs truncate max-w-[120px] cursor-help" title="${obsTexto}">${obsTexto}</td>
-                        <td class="text-right">
-                            <button onclick="abrirModalEditMov(${idx})" class="text-indigo-500 hover:text-indigo-700 p-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition" title="Editar Lançamento">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            </button>
-                        </td>
+                        <td class="text-xs truncate max-w-[120px]" title="${finTexto}">${finTexto}</td>
+                        <td class="text-xs truncate max-w-[120px]" title="${obsTexto}">${obsTexto}</td>
+                        <td class="text-right"></td>
                     `;
                     grid.appendChild(tr);
-                    idx++;
                 });
             } catch (e) {
-                grid.innerHTML = `<tr><td colspan="12" class="text-center py-10 text-rose-500 font-bold">Erro ao carregar dados: ${e.message}</td></tr>`;
+                grid.innerHTML = `<tr><td colspan="12" class="text-center py-10 text-rose-500 font-bold">Erro: ${e.message}</td></tr>`;
             }
         };
-
-        window.limparFiltrosMov = () => {
-            document.getElementById('filtro-mov-prod').value = '';
-            document.getElementById('filtro-mov-ini').value = '';
-            document.getElementById('filtro-mov-fim').value = '';
-            document.getElementById('grid-movimentacoes').innerHTML = '<tr><td colspan="12" class="text-center py-10 text-slate-400 font-medium">Filtros limpos. Utilize os campos acima e clique em "Buscar".</td></tr>';
-            window.bancoMovimentacoes = [];
-        };
-
-        document.getElementById('form-nova-req').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-salvar-req');
-            btn.innerText = 'SALVANDO...'; btn.disabled = true;
-
-            const payload = {
-                numero: document.getElementById('req-num').value.trim(),
-                dataPedido: document.getElementById('req-dat').value,
-                material_name: document.getElementById('req-mat').value.trim(),
-                setor: document.getElementById('req-set').value.trim(),
-                total_requested: Number(document.getElementById('req-qtd').value),
-                total_withdrawn: 0,
-                status: 'Pendente',
-                usuario_sistema: auth.currentUser.email
-            };
-
-            try {
-                await addDoc(collection(db, 'requisicoes'), payload);
-                showToast('Requisição criada com sucesso!');
-                fecharModal('modal-nova-req');
-                carregarRequisicoes();
-            } catch (err) {
-                showToast('Erro ao salvar: ' + err.message, true);
-            } finally {
-                btn.innerText = 'SALVAR REQUISIÇÃO'; btn.disabled = false;
-            }
-        });
 
         window.carregarRequisicoes = async () => {
             const container = document.getElementById('grid-requisicoes');
@@ -897,13 +969,10 @@
             try {
                 const snap = await getDocs(collection(db, "requisicoes"));
                 window.bancoRequisicoes = [];
-                snap.forEach(doc => {
-                    window.bancoRequisicoes.push({ id: doc.id, ...doc.data() });
-                });
+                snap.forEach(doc => { window.bancoRequisicoes.push({ id: doc.id, ...doc.data() }); });
                 window.bancoRequisicoes.sort((a,b) => new Date(b.dataPedido) - new Date(a.dataPedido));
                 renderizarRequisicoes();
             } catch (e) {
-                console.error(e);
                 showToast('Erro ao carregar requisições', true);
             }
         };
@@ -917,15 +986,11 @@
             const lista = window.bancoRequisicoes.filter(r => 
                 String(r.numero).toLowerCase().includes(filtro) || 
                 String(r.material_name).toLowerCase().includes(filtro) || 
-                String(r.setor).toLowerCase().includes(filtro)
+                String(r.setor).toLowerCase().includes(filtro) ||
+                String(r.solicitante).toLowerCase().includes(filtro)
             );
 
-            if (!lista.length) { 
-                container.innerHTML = ''; 
-                document.getElementById('empty-req').classList.remove('hidden'); 
-                return; 
-            }
-            
+            if (!lista.length) { container.innerHTML = ''; document.getElementById('empty-req').classList.remove('hidden'); return; }
             document.getElementById('empty-req').classList.add('hidden');
 
             container.innerHTML = lista.map((r) => {
@@ -946,10 +1011,11 @@
                                 <span class="status-badge ${statusClass}">${r.status || 'Pendente'}</span>
                             </div>
                             <h3 class="text-xl font-black text-slate-800 tracking-tight leading-tight">${r.material_name}</h3>
-                            <p class="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wider">${r.setor} • ${r.dataPedido}</p>
+                            <p class="text-xs text-slate-500 font-bold mt-1 uppercase tracking-wider">${r.setor}</p>
+                            <p class="text-[10px] text-slate-400 mt-1">Sol: ${r.solicitante || '-'} | Aut: ${r.autorizador || '-'} | Prev: ${r.prev_entrega || '-'}</p>
                         </div>
                         <div class="flex gap-2">
-                            ${r.status !== 'Entregue' ? `<button onclick="abrirModalBaixaReq('${r.id}', '${r.material_name}', ${reqTotal}, ${reqWithdrawn}, '${r.numero}')" class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Entregar Material"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>` : ''}
+                            ${r.status !== 'Entregue' ? `<button onclick="abrirModalBaixaReq('${r.id}', '${r.material_name}', ${reqTotal}, ${reqWithdrawn}, '${r.setor}', '${r.solicitante}')" class="p-2.5 bg-emerald-50 text-emerald-600 rounded-xl hover:bg-emerald-600 hover:text-white transition-all shadow-sm" title="Entregar Material"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg></button>` : ''}
                             <button onclick="excluirReq('${r.id}')" class="p-2.5 bg-rose-50 text-rose-600 rounded-xl hover:bg-rose-600 hover:text-white transition-all shadow-sm" title="Excluir Requisição"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg></button>
                         </div>
                     </div>
@@ -966,94 +1032,104 @@
             }).join('');
         }
 
-        window.abrirModalBaixaReq = (id, nome, total, entregue, num) => {
+        document.getElementById('form-nova-req').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-req');
+            btn.innerText = 'SALVANDO...'; btn.disabled = true;
+
+            const payload = {
+                numero: document.getElementById('req-num').value,
+                dataPedido: document.getElementById('req-dat').value,
+                prev_entrega: document.getElementById('req-prev').value,
+                solicitante: document.getElementById('req-sol').value,
+                autorizador: document.getElementById('req-aut').value,
+                material_name: document.getElementById('req-mat').value,
+                setor: document.getElementById('req-set').value,
+                total_requested: Number(document.getElementById('req-qtd').value),
+                total_withdrawn: 0,
+                status: 'Pendente'
+            };
+
+            try {
+                await addDoc(collection(db, 'requisicoes'), payload);
+                showToast('Requisição criada com sucesso!');
+                fecharModal('modal-nova-req');
+                carregarRequisicoes();
+            } catch (err) {
+                showToast('Erro: ' + err.message, true);
+            } finally {
+                btn.innerText = 'SALVAR REQUISIÇÃO'; btn.disabled = false;
+            }
+        });
+
+        window.abrirModalBaixaReq = (id, nome, total, entregue, setor, solicitante) => {
             const restante = total - entregue;
             document.getElementById('baixa-req-id').value = id;
-            document.getElementById('baixa-req-num').value = num || '';
             document.getElementById('baixa-req-total').value = total;
             document.getElementById('baixa-req-entregue').value = entregue;
+            document.getElementById('baixa-req-finalidade').value = 'Req. ' + setor;
+            document.getElementById('baixa-req-solicitante').value = solicitante;
+            
             document.getElementById('baixa-req-nome').innerText = nome;
             document.getElementById('baixa-req-restante').innerText = restante;
             document.getElementById('baixa-qtd').value = restante;
-            
-            // Limpa o campo de busca de produto do estoque
             document.getElementById('baixa-req-busca').value = '';
             document.getElementById('baixa-req-prod-cod').value = '';
-            document.getElementById('baixa-req-saldo-atual').classList.add('hidden');
-            
             abrirModal('modal-baixa-req');
         };
 
-        window.processarBaixaReq = async () => {
-            const id = document.getElementById('baixa-req-id').value;
-            const numReq = document.getElementById('baixa-req-num').value;
+        document.getElementById('form-baixa-req').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const codProduto = document.getElementById('baixa-req-prod-cod').value;
             const qtdEntrega = Number(document.getElementById('baixa-qtd').value);
-            const total = Number(document.getElementById('baixa-req-total').value);
-            const jaEntregue = Number(document.getElementById('baixa-req-entregue').value);
-            
-            const prodCod = document.getElementById('baixa-req-prod-cod').value;
-            const prodNome = document.getElementById('baixa-req-prod-nome').value;
-            const prodLocal = document.getElementById('baixa-req-prod-local').value;
-            const prodSetor = document.getElementById('baixa-req-prod-setor').value;
-            
-            if(qtdEntrega <= 0) return showToast('Quantidade deve ser maior que zero!', true);
-            if(!prodCod) return showToast('Por favor, vincule um produto do estoque para dar baixa!', true);
+            const nomeProd = document.getElementById('baixa-req-prod-nome').value;
+
+            if(!codProduto) { showToast('Por favor, selecione qual produto será consumido do estoque.', true); return; }
+            if(qtdEntrega <= 0) return;
 
             const btn = document.getElementById('btn-proc-baixa');
             btn.innerText = 'PROCESSANDO...'; btn.disabled = true;
 
+            const idReq = document.getElementById('baixa-req-id').value;
+            const totalReq = Number(document.getElementById('baixa-req-total').value);
+            const jaEntregueReq = Number(document.getElementById('baixa-req-entregue').value);
+            
+            const novoEntregue = jaEntregueReq + qtdEntrega;
+            const novoStatus = novoEntregue >= totalReq ? 'Entregue' : 'Parcial';
+
             try {
-                // 1. Validar se tem saldo suficiente
-                const prodRef = doc(db, 'produtos', prodCod);
-                const prodSnap = await getDoc(prodRef);
-                
-                if (!prodSnap.exists()) throw new Error("Produto não encontrado.");
-                const saldoAtual = prodSnap.data().saldo || 0;
-                if (qtdEntrega > saldoAtual) throw new Error(`Saldo insuficiente! Estoque: ${saldoAtual}`);
+                const prodRef = doc(db, 'produtos', codProduto);
+                const snap = await getDoc(prodRef);
+                if (!snap.exists()) throw new Error("Produto não encontrado no estoque.");
+                const saldoAtual = snap.data().saldo || 0;
+                if (qtdEntrega > saldoAtual) throw new Error(`Saldo insuficiente! Só restam ${saldoAtual} unidades.`);
 
-                const novoEntregue = jaEntregue + qtdEntrega;
-                const novoStatus = novoEntregue >= total ? 'Entregue' : 'Parcial';
+                await updateDoc(prodRef, { saldo: increment(-qtdEntrega) });
 
-                let batch = writeBatch(db);
+                await addDoc(collection(db, 'movimentacoes'), {
+                    tipo: 'SAÍDA', produto_id: codProduto, produto_nome: nomeProd,
+                    quantidade: qtdEntrega, local: snap.data().local || '-', setor: snap.data().setor || '-', fornecedor: '-',
+                    observacao: 'Baixa de Requisição', usuario_retirou: document.getElementById('baixa-req-solicitante').value || 'Sistema',
+                    finalidade: document.getElementById('baixa-req-finalidade').value,
+                    data: new Date(), usuario_sistema: auth.currentUser.email
+                });
 
-                // 2. Atualizar status e total da requisição
-                batch.update(doc(db, 'requisicoes', id), {
+                await updateDoc(doc(db, 'requisicoes', idReq), {
                     total_withdrawn: novoEntregue,
                     status: novoStatus
                 });
-
-                // 3. Dar baixa no saldo do produto
-                batch.update(prodRef, { saldo: increment(-qtdEntrega) });
-
-                // 4. Registrar no histórico de movimentações (Saída)
-                const movRef = doc(collection(db, 'movimentacoes'));
-                batch.set(movRef, {
-                    tipo: 'SAÍDA',
-                    produto_id: prodCod,
-                    produto_nome: prodNome,
-                    quantidade: qtdEntrega,
-                    local: prodLocal || '-',
-                    setor: prodSetor || '-',
-                    fornecedor: '-',
-                    finalidade: `Atendimento Req #${numReq}`,
-                    observacao: `Baixa via módulo de Requisições`,
-                    usuario_retirou: 'Requisitante',
-                    usuario_sistema: auth.currentUser.email,
-                    data: new Date()
-                });
                 
-                await batch.commit();
-                
-                showToast('Entrega e baixa de estoque realizadas com sucesso!');
+                showToast('Entrega registrada e estoque abatido!');
                 fecharModal('modal-baixa-req');
                 carregarRequisicoes();
-                carregarProdutos(); // Atualiza dashboard
+                carregarProdutos();
             } catch (err) {
                 showToast('Erro: ' + err.message, true);
             } finally {
-                btn.innerText = 'CONFIRMAR ENTREGA E BAIXA'; btn.disabled = false;
+                btn.innerText = 'CONFIRMAR E ABATER ESTOQUE'; btn.disabled = false;
             }
-        };
+        });
 
         window.excluirReq = async (id) => {
             if(confirm("Deseja realmente excluir esta requisição permanentemente?")) {
@@ -1066,97 +1142,6 @@
                 }
             }
         };
-
-        window.abrirModalEditMov = (idx) => {
-            const m = window.bancoMovimentacoes[idx];
-            document.getElementById('edit-mov-id').value = m.id;
-            document.getElementById('edit-mov-tipo').value = m.tipo;
-            document.getElementById('edit-mov-prod-id').value = m.produto_id || m.produto;
-            document.getElementById('edit-mov-qtd-antiga').value = m.quantidade;
-            
-            document.getElementById('edit-mov-prod-nome').innerText = `${m.produto_id || m.produto} - ${m.produto_nome || m.produto || ''}`;
-            const tipoEl = document.getElementById('edit-mov-tipo-display');
-            tipoEl.innerText = m.tipo;
-            tipoEl.className = m.tipo === 'ENTRADA' ? 'font-bold text-sm text-emerald-600' : 'font-bold text-sm text-rose-600';
-            
-            document.getElementById('edit-mov-qtd').value = m.quantidade;
-            document.getElementById('edit-mov-local').value = m.local || '';
-            document.getElementById('edit-mov-setor').value = m.setor || '';
-            document.getElementById('edit-mov-forn').value = m.fornecedor || '';
-            
-            document.getElementById('edit-mov-user').value = m.usuario_retirou || m.usuario || m.usuario_sistema || '';
-            document.getElementById('edit-mov-fin').value = m.finalidade || '';
-            document.getElementById('edit-mov-obs').value = m.observacao || m.obs || '';
-            
-            abrirModal('modal-edit-mov');
-        };
-
-        document.getElementById('form-edit-mov').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-salvar-edit-mov');
-            btn.innerText = 'SALVANDO...'; btn.disabled = true;
-
-            const id = document.getElementById('edit-mov-id').value;
-            const tipo = document.getElementById('edit-mov-tipo').value;
-            const prodId = document.getElementById('edit-mov-prod-id').value;
-            const qtdAntiga = Number(document.getElementById('edit-mov-qtd-antiga').value);
-            
-            const novaQtd = Number(document.getElementById('edit-mov-qtd').value);
-            const novoLocal = document.getElementById('edit-mov-local').value.trim();
-            const novoSetor = document.getElementById('edit-mov-setor').value.trim();
-            const novoForn = document.getElementById('edit-mov-forn').value.trim();
-            const novoUser = document.getElementById('edit-mov-user').value.trim();
-            const novaFin = document.getElementById('edit-mov-fin').value.trim();
-            const novaObs = document.getElementById('edit-mov-obs').value.trim();
-
-            try {
-                const diff = novaQtd - qtdAntiga;
-                if (diff !== 0 && prodId) {
-                    const prodRef = doc(db, 'produtos', prodId);
-                    const snap = await getDoc(prodRef);
-                    
-                    if (snap.exists()) {
-                        let saldoAtual = snap.data().saldo || 0;
-                        let novoSaldo;
-                        if (tipo === 'ENTRADA') {
-                            novoSaldo = saldoAtual + diff; 
-                        } else {
-                            novoSaldo = saldoAtual - diff;
-                        }
-                        
-                        if (novoSaldo < 0) throw new Error(`A alteração deixaria o saldo negativo (${novoSaldo}).`);
-                        
-                        await updateDoc(prodRef, { saldo: novoSaldo });
-                    }
-                }
-
-                const payloadMov = {
-                    quantidade: novaQtd,
-                    local: novoLocal,
-                    setor: novoSetor,
-                    fornecedor: novoForn,
-                    finalidade: novaFin,
-                    observacao: novaObs
-                };
-                
-                if (tipo === 'ENTRADA') {
-                    payloadMov.usuario_sistema = novoUser;
-                } else {
-                    payloadMov.usuario_retirou = novoUser;
-                }
-
-                await updateDoc(doc(db, 'movimentacoes', id), payloadMov);
-
-                showToast('Lançamento atualizado com sucesso!');
-                fecharModal('modal-edit-mov');
-                carregarMovimentacoes();
-                carregarProdutos(); 
-            } catch (err) {
-                showToast('Erro: ' + err.message, true);
-            } finally {
-                btn.innerText = 'SALVAR ALTERAÇÕES'; btn.disabled = false;
-            }
-        });
 
     </script>
 </body>
