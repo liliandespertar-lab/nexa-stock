@@ -183,7 +183,7 @@
         <main id="view-movimentacoes" class="view-section flex-1 max-w-[1400px] mx-auto w-full p-8 space-y-6">
             <div class="flex justify-between items-end mb-4">
                 <div>
-                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Movimentações e Logs</h2>
+                    <h2 class="text-2xl font-black text-slate-800 tracking-tight">Movimentações</h2>
                     <p class="text-sm text-slate-500 font-medium mt-1">Histórico completo de entradas e saídas do sistema.</p>
                 </div>
             </div>
@@ -493,7 +493,7 @@
 
     <!-- MODAL CRÍTICOS (DASHBOARD) -->
     <div id="modal-criticos" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4">
-        <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
+        <div class="glass-form w-full max-w-3xl p-8 animate-slide relative">
             <button onclick="fecharModal('modal-criticos')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
             <h2 class="text-2xl font-black text-rose-600 uppercase tracking-tighter mb-2">⚠️ Atenção: Estoque Mínimo</h2>
             <p class="text-xs text-slate-500 font-medium mb-6">Produtos que estão com saldo igual ou inferior ao alerta de mínimo.</p>
@@ -506,11 +506,54 @@
                             <th>Produto</th>
                             <th class="text-center">Min</th>
                             <th class="text-center text-rose-600">Atual</th>
+                            <th class="text-right">Ação</th>
                         </tr>
                     </thead>
                     <tbody id="list-criticos-body"></tbody>
                 </table>
             </div>
+        </div>
+    </div>
+
+    <!-- MODAL EDITAR PRODUTO -->
+    <div id="modal-edit-prod" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4">
+        <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
+            <button onclick="fecharModal('modal-edit-prod')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
+            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-6 flex items-center gap-2">✏️ Editar Produto</h2>
+            <form id="form-edit-prod" class="space-y-4">
+                <input type="hidden" id="edit-prod-id-original">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Código</label>
+                        <input type="text" id="edit-prod-cod" class="input-nexa bg-slate-100 cursor-not-allowed" disabled>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nome</label>
+                        <input type="text" id="edit-prod-nome" class="input-nexa" required>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Localização</label>
+                        <input type="text" id="edit-prod-local" class="input-nexa">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Setor</label>
+                        <input type="text" id="edit-prod-setor" class="input-nexa">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Fornecedor</label>
+                        <input type="text" id="edit-prod-forn" class="input-nexa">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Estoque Mínimo</label>
+                        <input type="number" id="edit-prod-min" class="input-nexa font-black text-amber-500" min="0" required>
+                    </div>
+                </div>
+                <button type="submit" id="btn-salvar-edit-prod" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm mt-4 shadow-lg hover:bg-indigo-700 transition">SALVAR ALTERAÇÕES</button>
+            </form>
         </div>
     </div>
 
@@ -608,8 +651,9 @@
             try {
                 const snap = await getDocs(collection(db, "produtos"));
                 window.bancoProdutos = [];
-                let total = 0, criticos = 0, duplicados = 0, semCodigo = 0;
+                let total = 0, criticos = 0, semCodigo = 0;
                 
+                const contagemCodigos = {};
                 const contagemNomes = {};
 
                 snap.forEach(doc => {
@@ -618,18 +662,33 @@
                     total++;
                     if ((p.saldo || 0) <= (p.estoqueMinimo || 0)) criticos++;
                     
+                    const codStr = (p.id || '').trim().toLowerCase();
                     const nomeStr = (p.nome || '').trim().toLowerCase();
-                    if(nomeStr) {
-                        contagemNomes[nomeStr] = (contagemNomes[nomeStr] || 0) + 1;
-                    }
                     
-                    if(!p.id || p.id === '-' || p.id === p.nome || p.id.toLowerCase().includes('sem')) {
+                    // Lógica exata para considerar "Sem Código" (inclui '...')
+                    const isSemCod = !codStr || codStr === '-' || codStr === '...' || codStr === nomeStr || codStr.includes('sem');
+                    
+                    if (isSemCod) {
                         semCodigo++;
+                    } else {
+                        // Produtos sem código NÃO entram na verificação de duplicidade
+                        if (codStr) contagemCodigos[codStr] = (contagemCodigos[codStr] || 0) + 1;
+                        if (nomeStr) contagemNomes[nomeStr] = (contagemNomes[nomeStr] || 0) + 1;
                     }
                 });
 
-                Object.values(contagemNomes).forEach(count => {
-                    if (count > 1) duplicados += count; 
+                let duplicados = 0;
+                window.bancoProdutos.forEach(p => {
+                    const codStr = (p.id || '').trim().toLowerCase();
+                    const nomeStr = (p.nome || '').trim().toLowerCase();
+                    const isSemCod = !codStr || codStr === '-' || codStr === '...' || codStr === nomeStr || codStr.includes('sem');
+                    
+                    // Se for duplicado pelo CÓDIGO ou pelo NOME
+                    if (!isSemCod) {
+                        if ((contagemCodigos[codStr] > 1) || (contagemNomes[nomeStr] > 1)) {
+                            duplicados++;
+                        }
+                    }
                 });
 
                 document.getElementById('kpi-produtos').innerText = total;
@@ -666,16 +725,80 @@
                             <td>${p.nome}</td>
                             <td class="text-center font-bold text-slate-500">${min}</td>
                             <td class="text-center font-black text-rose-600 bg-rose-50">${saldo}</td>
+                            <td class="text-right">
+                                <button onclick="abrirEditProd('${p.id.replace(/'/g, "\\'")}')" class="text-indigo-500 hover:text-indigo-700 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition" title="Editar Produto">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </button>
+                            </td>
                         </tr>
                     `;
                 }
             });
 
             if(!encontrou) {
-                listBody.innerHTML = '<tr><td colspan="4" class="text-center py-6 text-slate-400">Nenhum produto crítico.</td></tr>';
+                listBody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Nenhum produto crítico.</td></tr>';
             }
             abrirModal('modal-criticos');
         };
+
+        // FUNÇÃO DE EXCLUSÃO DE PRODUTO
+        window.excluirProduto = async (id, nome) => {
+            if(confirm(`ATENÇÃO: Deseja realmente EXCLUIR O PRODUTO "${id} - ${nome}" do seu cadastro?\nIsso apagará o produto do sistema, mas as movimentações passadas ficarão mantidas no histórico.`)) {
+                try {
+                    await deleteDoc(doc(db, 'produtos', id));
+                    showToast('Produto excluído com sucesso!');
+                    carregarProdutos();
+                    if(document.getElementById('view-movimentacoes').classList.contains('active')) {
+                        carregarMovimentacoes();
+                    }
+                } catch(e) {
+                    showToast('Erro ao excluir produto.', true);
+                }
+            }
+        };
+
+        // FUNÇÕES DO MODAL DE EDITAR PRODUTO
+        window.abrirEditProd = (id) => {
+            const p = window.bancoProdutos.find(x => x.id === id);
+            if(!p) return;
+            document.getElementById('edit-prod-id-original').value = p.id;
+            document.getElementById('edit-prod-cod').value = p.id;
+            document.getElementById('edit-prod-nome').value = p.nome || '';
+            document.getElementById('edit-prod-local').value = p.local || '';
+            document.getElementById('edit-prod-setor').value = p.setor || '';
+            document.getElementById('edit-prod-forn').value = p.fornecedor || '';
+            document.getElementById('edit-prod-min').value = p.estoqueMinimo || 0;
+            
+            fecharModal('modal-criticos');
+            abrirModal('modal-edit-prod');
+        };
+
+        document.getElementById('form-edit-prod').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-edit-prod');
+            btn.innerText = 'SALVANDO...'; btn.disabled = true;
+
+            const id = document.getElementById('edit-prod-id-original').value;
+            const payload = {
+                nome: document.getElementById('edit-prod-nome').value.trim(),
+                local: document.getElementById('edit-prod-local').value.trim(),
+                setor: document.getElementById('edit-prod-setor').value.trim(),
+                fornecedor: document.getElementById('edit-prod-forn').value.trim(),
+                estoqueMinimo: Number(document.getElementById('edit-prod-min').value)
+            };
+
+            try {
+                await updateDoc(doc(db, 'produtos', id), payload);
+                showToast('Produto atualizado com sucesso!');
+                fecharModal('modal-edit-prod');
+                await carregarProdutos();
+                abrirModalCriticos(); 
+            } catch (err) {
+                showToast('Erro: ' + err.message, true);
+            } finally {
+                btn.innerText = 'SALVAR ALTERAÇÕES'; btn.disabled = false;
+            }
+        });
 
         function setupDropdown(inputId, listId, mode = 'entrada') {
             const input = document.getElementById(inputId);
@@ -879,11 +1002,18 @@
                 let dataIniStr = document.getElementById('filtro-mov-ini').value;
                 let dataFimStr = document.getElementById('filtro-mov-fim').value;
                 
+                const mapCodigos = {};
                 const mapNomes = {};
                 if (window.filtroEspecialMov === 'duplicados') {
                     window.bancoProdutos.forEach(p => {
+                        const c = (p.id || '').trim().toLowerCase();
                         const n = (p.nome || '').trim().toLowerCase();
-                        if(n) mapNomes[n] = (mapNomes[n] || 0) + 1;
+                        const isSemCod = !c || c === '-' || c === '...' || c === n || c.includes('sem');
+                        
+                        if(!isSemCod) {
+                            if(c) mapCodigos[c] = (mapCodigos[c] || 0) + 1;
+                            if(n) mapNomes[n] = (mapNomes[n] || 0) + 1;
+                        }
                     });
                 }
 
@@ -892,12 +1022,22 @@
                     d.id = doc.id;
                     let isValid = true;
 
+                    const pid = (d.produto_id || '').trim().toLowerCase();
+                    const pnome = (d.produto_nome || d.produto || '').trim().toLowerCase();
+                    const isSemCod = !pid || pid === '-' || pid === '...' || pid === pnome || pid.includes('sem');
+
                     if (window.filtroEspecialMov === 'duplicados') {
-                        const n = (d.produto_nome || '').trim().toLowerCase();
-                        if (!mapNomes[n] || mapNomes[n] <= 1) isValid = false;
+                        // Não mostra itens "sem código" no filtro de duplicados
+                        if (isSemCod) {
+                            isValid = false; 
+                        } else {
+                            // É duplicado se o código apareceu >1 ou o nome apareceu >1 no cadastro de produtos
+                            const dupCod = mapCodigos[pid] > 1;
+                            const dupNome = mapNomes[pnome] > 1;
+                            if (!dupCod && !dupNome) isValid = false;
+                        }
                     } else if (window.filtroEspecialMov === 'sem_codigo') {
-                        const pid = (d.produto_id || '').toLowerCase();
-                        if (pid && pid !== '-' && pid !== (d.produto_nome||'').toLowerCase() && !pid.includes('sem')) {
+                        if (!isSemCod) {
                             isValid = false; 
                         }
                     } else {
@@ -953,7 +1093,11 @@
                         <td class="text-xs">${d.usuario_retirou || d.usuario || d.usuario_sistema || '-'}</td>
                         <td class="text-xs truncate max-w-[120px]" title="${finTexto}">${finTexto}</td>
                         <td class="text-xs truncate max-w-[120px]" title="${obsTexto}">${obsTexto}</td>
-                        <td class="text-right"></td>
+                        <td class="text-right">
+                            <button onclick="excluirProduto('${d.produto_id}', '${(d.produto_nome || '').replace(/'/g, "\\'")}')" class="text-rose-500 hover:text-rose-700 p-2 bg-rose-50 hover:bg-rose-100 rounded-lg transition" title="Excluir Cadastro do Produto">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </td>
                     `;
                     grid.appendChild(tr);
                 });
