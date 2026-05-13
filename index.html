@@ -12,8 +12,8 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="https://firebasestorage.googleapis.com/v0/b/nexa-stock.firebasestorage.app/o/IMAGEM%20ICONE.png?alt=media&token=abe10eba-74c6-4e82-83d2-7fb0e25ddd3f">
-    
     <link rel="icon" href="https://firebasestorage.googleapis.com/v0/b/nexa-stock.firebasestorage.app/o/IMAGEM%20ICONE.png?alt=media&token=abe10eba-74c6-4e82-83d2-7fb0e25ddd3f">
+    
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     
@@ -59,7 +59,6 @@
         .view-section { display: none; }
         .view-section.active { display: block; animation: slideIn 0.4s ease-out forwards; }
 
-        /* REGRAS ESPECÍFICAS PARA IMPRESSÃO / EXPORTAÇÃO PDF */
         @media print {
             @page { size: landscape; margin: 1cm; }
             body { background-color: white !important; color: black !important; }
@@ -80,57 +79,28 @@
         <p class="font-bold tracking-widest uppercase text-xs text-indigo-200">Verificando Autenticação...</p>
     </div>
 
+    <!-- TELA DE LOGIN LIMPA E SEGURA (SÓ LOGIN) -->
     <div id="screen-login" class="fixed inset-0 z-50 bg-nexa items-center justify-center p-6 flex-col print:hidden" style="display: none;">
         <div class="w-full max-w-md relative z-10">
             <div class="glass-login p-10 rounded-[2.5rem] shadow-2xl relative">
                 <div class="text-center mb-8">
-                    <!-- LOGO TELA DE LOGIN -->
                     <img src="https://firebasestorage.googleapis.com/v0/b/nexa-stock.firebasestorage.app/o/IMAGEM%20ICONE.png?alt=media&token=abe10eba-74c6-4e82-83d2-7fb0e25ddd3f" alt="Logo Sistema" class="h-28 mx-auto mb-4 object-contain">
-                    
                     <h1 class="text-3xl font-black text-white tracking-tighter italic uppercase">NEXA <span class="text-indigo-400">STOCK</span></h1>
-                    <p id="login-subtitle" class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.4em] mt-2">Gestão de Estoque</p>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.4em] mt-2">Gestão de Estoque</p>
                 </div>
 
-                <!-- FORMULÁRIO DE LOGIN -->
                 <form id="form-login" class="space-y-5">
                     <div>
-                        <input type="email" id="log-email" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder-slate-500" placeholder="E-mail">
+                        <input type="email" id="log-email" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder-slate-500" placeholder="E-mail Corporativo">
                     </div>
                     <div>
                         <input type="password" id="log-pass" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder-slate-500" placeholder="Senha">
                     </div>
                     <button type="submit" id="btn-login" class="w-full btn-gradient text-white py-4 rounded-2xl font-black text-sm shadow-xl mt-4">ENTRAR NO SISTEMA</button>
-                    
-                    <p class="text-center text-xs text-slate-400 mt-6 cursor-pointer hover:text-indigo-400 transition" onclick="toggleAuthMode('register')">
-                        Não possui conta? <span class="font-bold text-white underline">Cadastre sua empresa</span>
-                    </p>
                 </form>
-
-                <!-- FORMULÁRIO DE CADASTRO (Oculto por padrão) -->
-                <form id="form-register" class="space-y-4 hidden">
-                    <div>
-                        <input type="text" id="reg-emp" required class="w-full px-6 py-3 bg-white/5 border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder-slate-500 text-sm" placeholder="Nome da Empresa">
-                    </div>
-                    <div>
-                        <input type="text" id="reg-nome" required class="w-full px-6 py-3 bg-white/5 border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder-slate-500 text-sm" placeholder="Seu Nome / Responsável">
-                    </div>
-                    <div>
-                        <input type="email" id="reg-email" required class="w-full px-6 py-3 bg-white/5 border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder-slate-500 text-sm" placeholder="E-mail de Acesso">
-                    </div>
-                    <div>
-                        <input type="password" id="reg-pass" required class="w-full px-6 py-3 bg-white/5 border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder-slate-500 text-sm" placeholder="Crie uma Senha (Mín. 6 caracteres)">
-                    </div>
-                    <button type="submit" id="btn-register" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-4 rounded-2xl font-black text-sm shadow-xl mt-2 transition">CRIAR CONTA E ACESSAR</button>
-                    
-                    <p class="text-center text-xs text-slate-400 mt-4 cursor-pointer hover:text-indigo-400 transition" onclick="toggleAuthMode('login')">
-                        Já possui conta? <span class="font-bold text-white underline">Faça Login</span>
-                    </p>
-                </form>
-
             </div>
         </div>
         
-        <!-- Créditos Podhium Digital (Tela de Login) -->
         <div class="absolute bottom-8 w-full text-center">
             <p class="text-[10px] text-slate-400/60 font-black uppercase tracking-[0.3em]">Desenvolvido por <span class="text-indigo-400">Podhium Digital</span></p>
         </div>
@@ -139,7 +109,6 @@
     <div id="screen-app" class="flex-1 flex flex-col w-full h-full" style="display: none;">
         <header class="header-nexa text-white px-6 py-4 flex flex-col md:flex-row justify-between items-center shadow-lg sticky top-0 z-40 gap-4">
             <div class="flex items-center gap-4">
-                <!-- LOGO CABEÇALHO -->
                 <img src="https://firebasestorage.googleapis.com/v0/b/nexa-stock.firebasestorage.app/o/IMAGEM%20ICONE.png?alt=media&token=abe10eba-74c6-4e82-83d2-7fb0e25ddd3f" alt="Logo" class="h-12 object-contain">
                 <div>
                     <h1 class="text-xl font-black italic tracking-tighter leading-none uppercase">NEXA <span class="text-indigo-400">STOCK</span></h1>
@@ -152,6 +121,9 @@
                 <button onclick="changeView('operacoes')" id="nav-operacoes" class="nav-item">Operações</button>
                 <button onclick="verTodasMovimentacoes()" id="nav-movimentacoes" class="nav-item">Movimentações</button>
                 <button onclick="changeView('requisicoes')" id="nav-requisicoes" class="nav-item">Requisições</button>
+                <!-- NOVA ABA: EQUIPE (Oculta por padrão, mostrada apenas para Admin) -->
+                <button onclick="carregarUsuariosView()" id="nav-usuarios" class="nav-item hidden">Equipe</button>
+                
                 <a href="tutorial.html" target="_blank" class="nav-item flex items-center gap-1.5 text-indigo-300 hover:text-white border-l border-white/10 pl-3 ml-1" title="Abrir Manual do Usuário">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
                     Ajuda
@@ -159,14 +131,13 @@
             </nav>
 
             <div class="flex items-center gap-4">
-                <!-- BOTÃO MÁGICO DE CONVERSÃO SAAS (Aparecerá apenas se houver dados órfãos) -->
                 <button id="btn-migrar-saas" onclick="converterDadosParaSaaS()" class="hidden bg-gradient-to-r from-amber-500 to-orange-600 text-white px-4 py-2 rounded-xl font-black text-xs shadow-lg animate-pulse hover:scale-105 transition-transform">
                     🚀 CONVERTER PARA SaaS
                 </button>
 
                 <div class="text-right border-r border-white/10 pr-4 hidden sm:block">
                     <p class="text-xs font-bold text-white" id="user-display">Carregando...</p>
-                    <p class="text-[9px] text-emerald-400 font-black uppercase tracking-widest">Online</p>
+                    <p class="text-[9px] text-emerald-400 font-black uppercase tracking-widest" id="user-role">Online</p>
                 </div>
                 <button onclick="fazerLogout()" class="text-slate-400 hover:text-rose-400 transition-colors p-2" title="Sair do Sistema">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
@@ -376,13 +347,72 @@
                 <p class="text-slate-500 mt-2 font-medium">Não encontramos nenhum pedido registrado ou na busca.</p>
             </div>
         </main>
+
+        <!-- NOVA TELA: GERENCIAR EQUIPE (Admin Only) -->
+        <main id="view-usuarios" class="view-section flex-1 max-w-6xl mx-auto w-full p-8 space-y-8 print:hidden">
+            <div class="mb-4">
+                <h2 class="text-2xl font-black text-slate-800 tracking-tight">Gestão de Equipe</h2>
+                <p class="text-sm text-slate-500 font-medium mt-1">Crie e gerencie os acessos dos funcionários da sua empresa.</p>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                <!-- Formulário de Novo Usuário -->
+                <div class="md:col-span-1 bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm h-fit">
+                    <h3 class="text-lg font-black text-slate-800 mb-4 flex items-center gap-2"><span class="text-indigo-500">➕</span> Novo Acesso</h3>
+                    <form id="form-novo-user" class="space-y-4">
+                        <div>
+                            <label class="text-[10px] font-black text-slate-500 uppercase block mb-1">Nome Completo</label>
+                            <input type="text" id="cad-user-nome" class="input-nexa bg-slate-50" placeholder="Ex: João da Silva" required>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-500 uppercase block mb-1">E-mail Corporativo</label>
+                            <input type="email" id="cad-user-email" class="input-nexa bg-slate-50" placeholder="joao@suaempresa.com" required>
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-500 uppercase block mb-1">Senha Provisória</label>
+                            <input type="text" id="cad-user-pass" class="input-nexa bg-slate-50" placeholder="Mínimo 6 caracteres" required minlength="6">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-black text-slate-500 uppercase block mb-1">Nível de Acesso</label>
+                            <select id="cad-user-nivel" class="input-nexa bg-white font-bold text-slate-700 cursor-pointer">
+                                <option value="Operador">Operador (Uso Normal)</option>
+                                <option value="Administrador">Administrador (Controle Total)</option>
+                            </select>
+                        </div>
+                        <button type="submit" id="btn-salvar-user" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm mt-2 shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition active:scale-95">CRIAR ACESSO</button>
+                    </form>
+                </div>
+
+                <!-- Tabela de Usuários -->
+                <div class="md:col-span-2 bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-sm flex flex-col">
+                    <div class="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
+                        <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest">Colaboradores Ativos</h3>
+                    </div>
+                    <div class="overflow-x-auto">
+                         <table class="table-nexa w-full">
+                            <thead>
+                                <tr>
+                                    <th>Nome</th>
+                                    <th>E-mail</th>
+                                    <th>Nível</th>
+                                    <th class="text-right">Ação</th>
+                                </tr>
+                            </thead>
+                            <tbody id="grid-usuarios">
+                                <tr><td colspan="4" class="text-center py-8 text-slate-400">Carregando equipe...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
         
-        <!-- Créditos Podhium Digital (Rodapé Interno do ERP) -->
         <footer class="mt-auto py-6 text-center border-t border-slate-200 print:hidden bg-slate-50">
             <p class="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em]">Desenvolvido por <span class="text-indigo-600">Podhium Digital</span></p>
         </footer>
     </div>
 
+    <!-- Modais (Manter todos os modais atuais) -->
     <div id="modal-entrada" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4 print:hidden">
         <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
             <button onclick="fecharModal('modal-entrada')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
@@ -771,7 +801,7 @@
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
         import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
-        import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, addDoc, deleteDoc, increment, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+        import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, addDoc, deleteDoc, increment, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
             apiKey: "AIzaSyA4RvrOh5EU6OXj1zbNB1hGwWDj9VNG-T4",
@@ -787,18 +817,19 @@
         const auth = getAuth(app);
         const db = getFirestore(app);
 
-        // VARIÁVEL GLOBAL PARA ISOLAMENTO MULTI-EMPRESAS (SAAS)
-        window.userEmpresa = null;
+        // APP SECUNDÁRIO PARA CRIAÇÃO DE USUÁRIOS (Evita deslogar o admin)
+        const app2 = initializeApp(firebaseConfig, "SecondaryApp");
+        const auth2 = getAuth(app2);
 
+        window.userEmpresa = null;
         window.bancoProdutos = [];
         window.bancoRequisicoes = [];
         window.bancoMovimentacoes = [];
         window.filtroEspecialMov = null; 
 
-        // Função de Normalização para Buscas e Comparações
         const normalizar = (str) => {
             if (!str) return '';
-            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/gi, '').toLowerCase().trim();
         };
 
         window.showToast = (msg, isError = false) => {
@@ -807,19 +838,6 @@
             t.innerText = msg;
             document.body.appendChild(t);
             setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(), 300); }, 3500);
-        };
-
-        // Alternar entre Login e Cadastro
-        window.toggleAuthMode = (mode) => {
-            if (mode === 'register') {
-                document.getElementById('form-login').classList.add('hidden');
-                document.getElementById('form-register').classList.remove('hidden');
-                document.getElementById('login-subtitle').innerText = 'Cadastro de Empresa';
-            } else {
-                document.getElementById('form-register').classList.add('hidden');
-                document.getElementById('form-login').classList.remove('hidden');
-                document.getElementById('login-subtitle').innerText = 'Gestão de Estoque';
-            }
         };
 
         window.changeView = (viewId) => {
@@ -843,41 +861,156 @@
         onAuthStateChanged(auth, async (user) => {
             document.getElementById('screen-loading').style.display = 'none';
             if (user) {
-                document.getElementById('screen-login').style.display = 'none';
-                document.getElementById('screen-app').style.display = 'flex';
-                
-                let displayTxt = user.email.split('@')[0];
-                
                 try {
                     const userDoc = await getDoc(doc(db, 'usuarios', user.uid));
                     if (userDoc.exists()) {
                         const uData = userDoc.data();
-                        window.userEmpresa = uData.empresa; // Define o Tenant/Empresa
-                        displayTxt = `${uData.nome} (${uData.empresa})`;
                         
-                        // Verifica se ainda existem dados na raiz para exibir o botão mágico de resgate
-                        const snapRaiz = await getDocs(collection(db, "produtos"));
-                        if(!snapRaiz.empty) document.getElementById('btn-migrar-saas').classList.remove('hidden');
+                        if(uData.status === 'Inativo') {
+                            showToast('Seu acesso foi revogado pelo administrador.', true);
+                            signOut(auth);
+                            return;
+                        }
+
+                        window.userEmpresa = uData.empresa; 
+                        document.getElementById('user-display').innerText = `${uData.nome} (${uData.empresa})`;
+                        document.getElementById('user-role').innerText = uData.nivel;
+
+                        // Libera Aba Equipe só para Admins
+                        if(uData.nivel === 'Administrador') {
+                            document.getElementById('nav-usuarios').classList.remove('hidden');
+                        } else {
+                            document.getElementById('nav-usuarios').classList.add('hidden');
+                        }
+
+                        document.getElementById('screen-login').style.display = 'none';
+                        document.getElementById('screen-app').style.display = 'flex';
+                        
+                        // Verifica se ainda existem dados órfãos na raiz (Botão SaaS)
+                        if(uData.nivel === 'Administrador') {
+                            const snapRaiz = await getDocs(collection(db, "produtos"));
+                            if(!snapRaiz.empty) document.getElementById('btn-migrar-saas').classList.remove('hidden');
+                        }
+                        
+                        carregarProdutos(); 
+                    } else {
+                        // Usuário apagado do banco de dados manualmente pelo Admin
+                        showToast('Conta não encontrada ou excluída.', true);
+                        signOut(auth);
                     }
                 } catch(e) { console.log('Erro ao buscar dados do usuário', e); }
-
-                document.getElementById('user-display').innerText = displayTxt;
-                if(window.userEmpresa) carregarProdutos(); 
             } else {
                 document.getElementById('screen-login').style.display = 'flex';
                 document.getElementById('screen-app').style.display = 'none';
             }
         });
 
-        // ==========================================
-        // FUNÇÃO DE RESGATE (MIGRAÇÃO DE DADOS RAIZ PARA A EMPRESA ATUAL)
-        // ==========================================
+        // ================= GESTÃO DE EQUIPE (ADMINS) =================
+        window.carregarUsuariosView = () => {
+            changeView('usuarios');
+            carregarTabelaUsuarios();
+        };
+
+        async function carregarTabelaUsuarios() {
+            const grid = document.getElementById('grid-usuarios');
+            grid.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-400">Carregando equipe...</td></tr>';
+            try {
+                // Como Firebase precisa de índice composto, para simplicidade de um ERP leve vamos filtrar na memória
+                const snap = await getDocs(collection(db, "usuarios"));
+                grid.innerHTML = '';
+                let encontrou = false;
+                
+                snap.forEach(doc => {
+                    const d = doc.data();
+                    // Só mostra os usuários que pertencem à mesma empresa
+                    if(d.empresa === window.userEmpresa && d.status !== 'Inativo') {
+                        encontrou = true;
+                        const tr = document.createElement('tr');
+                        const nivelColor = d.nivel === 'Administrador' ? 'text-purple-600 bg-purple-50' : 'text-slate-600 bg-slate-50';
+                        
+                        tr.innerHTML = `
+                            <td class="font-bold text-slate-800">${d.nome}</td>
+                            <td class="text-slate-500">${d.email}</td>
+                            <td><span class="px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${nivelColor}">${d.nivel}</span></td>
+                            <td class="text-right">
+                                <button onclick="excluirUsuarioSistema('${doc.id}', '${d.nome}')" class="text-rose-500 hover:text-rose-700 p-2 bg-rose-50 hover:bg-rose-100 rounded-lg transition" title="Revogar Acesso">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                            </td>
+                        `;
+                        grid.appendChild(tr);
+                    }
+                });
+                
+                if(!encontrou) grid.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-400">Nenhum outro usuário cadastrado.</td></tr>';
+                
+            } catch (err) {
+                grid.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-rose-500">Erro: ${err.message}</td></tr>`;
+            }
+        }
+
+        document.getElementById('form-novo-user').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-user');
+            btn.innerText = 'CRIANDO...'; btn.disabled = true;
+
+            const nome = document.getElementById('cad-user-nome').value.trim();
+            const email = document.getElementById('cad-user-email').value.trim();
+            const pass = document.getElementById('cad-user-pass').value;
+            const nivel = document.getElementById('cad-user-nivel').value;
+
+            try {
+                // Cria autenticação sem deslogar o Admin usando a instância secundária
+                const cred = await createUserWithEmailAndPassword(auth2, email, pass);
+                
+                // Salva os dados no banco usando a instância primária
+                await setDoc(doc(db, 'usuarios', cred.user.uid), {
+                    empresa: window.userEmpresa,
+                    nome: nome,
+                    email: email,
+                    nivel: nivel,
+                    status: 'Ativo',
+                    dataCadastro: new Date()
+                });
+                
+                // Desloga a instância secundária e limpa o form
+                await signOut(auth2);
+                document.getElementById('form-novo-user').reset();
+                showToast('Acesso criado com sucesso! O funcionário já pode fazer login.');
+                carregarTabelaUsuarios();
+                
+            } catch (err) {
+                let msg = 'Erro ao criar conta.';
+                if (err.code === 'auth/email-already-in-use') msg = 'Este e-mail já possui cadastro no sistema.';
+                if (err.code === 'auth/weak-password') msg = 'A senha deve ter no mínimo 6 caracteres.';
+                showToast(msg, true);
+            } finally {
+                btn.innerText = 'CRIAR ACESSO'; btn.disabled = false;
+            }
+        });
+
+        window.excluirUsuarioSistema = async (uid, nome) => {
+            if(uid === auth.currentUser.uid) {
+                showToast('Você não pode excluir a si mesmo.', true); return;
+            }
+            if(confirm(`ATENÇÃO: Deseja REVOGAR O ACESSO de "${nome}"?\nEle não conseguirá mais entrar no sistema.`)) {
+                try {
+                    // Nós mudamos o status ou deletamos o documento. Deletar é mais limpo.
+                    await deleteDoc(doc(db, 'usuarios', uid));
+                    showToast('Acesso revogado com sucesso!');
+                    carregarTabelaUsuarios();
+                } catch(e) {
+                    showToast('Erro ao remover usuário.', true);
+                }
+            }
+        };
+
+        // ================= FUNÇÃO DE RESGATE (SAAS) =================
         window.converterDadosParaSaaS = async () => {
-            if(!confirm(`ATENÇÃO: Você está prestes a converter o banco de dados para o modelo Multi-Empresas (SaaS).\n\nIsso moverá todos os produtos e movimentações soltos no sistema diretamente para a pasta isolada da sua empresa: "${window.userEmpresa}".\n\nDeseja continuar?`)) return;
+            if(!confirm(`ATENÇÃO: Converter banco de dados para a sua empresa: "${window.userEmpresa}".\nDeseja continuar?`)) return;
             
             const btn = document.getElementById('btn-migrar-saas');
-            btn.innerText = 'CONVERTENDO... AGUARDE';
-            btn.disabled = true;
+            btn.innerText = 'CONVERTENDO...'; btn.disabled = true;
 
             try {
                 const moverColecao = async (nomeColecao) => {
@@ -886,13 +1019,9 @@
                     let cont = 0;
                     
                     snap.forEach((d) => {
-                        // Copia para a subcoleção da empresa
                         batch.set(doc(db, "empresas", window.userEmpresa, nomeColecao, d.id), d.data());
-                        // Deleta da raiz pública
                         batch.delete(doc(db, nomeColecao, d.id));
                         cont += 2;
-                        
-                        // Limite do Firestore por batch é 500 operações
                         if(cont >= 400) { batch.commit(); batch = writeBatch(db); cont = 0; }
                     });
                     if(cont > 0) await batch.commit();
@@ -902,16 +1031,16 @@
                 await moverColecao("movimentacoes");
                 await moverColecao("requisicoes");
 
-                alert('SUCESSO! O sistema agora é um SaaS isolado. Seus dados estão seguros na pasta da sua empresa.');
+                alert('SUCESSO! Dados guardados com segurança na pasta da sua empresa.');
                 btn.classList.add('hidden');
                 carregarProdutos();
             } catch (err) {
                 alert('Erro durante conversão: ' + err.message);
-                btn.innerText = '🚀 TENTAR NOVAMENTE';
-                btn.disabled = false;
+                btn.innerText = '🚀 TENTAR NOVAMENTE'; btn.disabled = false;
             }
         };
 
+        // ================= LOGIN PRINCIPAL =================
         document.getElementById('form-login').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-login');
@@ -922,45 +1051,6 @@
                 showToast('E-mail ou senha incorretos!', true);
             } finally {
                 btn.innerText = 'ENTRAR NO SISTEMA';
-            }
-        });
-
-        // Evento de Criação de Nova Conta
-        document.getElementById('form-register').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = document.getElementById('btn-register');
-            btn.innerText = 'CRIANDO CONTA...'; 
-            btn.disabled = true;
-
-            const emp = document.getElementById('reg-emp').value.trim();
-            const nome = document.getElementById('reg-nome').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
-            const pass = document.getElementById('reg-pass').value;
-
-            try {
-                // 1. Cria a autenticação no Firebase
-                const cred = await createUserWithEmailAndPassword(auth, email, pass);
-                
-                // 2. Salva o perfil da empresa/usuário no banco de dados
-                await setDoc(doc(db, 'usuarios', cred.user.uid), {
-                    empresa: emp,
-                    nome: nome,
-                    email: email,
-                    nivel: 'Administrador',
-                    dataCadastro: new Date()
-                });
-                
-                showToast('Conta criada com sucesso! Bem-vindo.');
-                // O onAuthStateChanged vai detectar automaticamente o login e trocar de tela
-            } catch (err) {
-                let msg = 'Erro ao criar conta. Tente novamente.';
-                if (err.code === 'auth/email-already-in-use') msg = 'Este e-mail já está em uso por outra empresa.';
-                if (err.code === 'auth/weak-password') msg = 'A senha é muito fraca. Digite pelo menos 6 caracteres.';
-                if (err.code === 'auth/invalid-email') msg = 'O formato do e-mail é inválido.';
-                showToast(msg, true);
-            } finally {
-                btn.innerText = 'CRIAR CONTA E ACESSAR'; 
-                btn.disabled = false;
             }
         });
 
@@ -982,7 +1072,6 @@
         async function carregarProdutos() {
             if(!window.userEmpresa) return;
             try {
-                // ISOLAMENTO: Lê apenas da subcoleção da empresa logada
                 const snap = await getDocs(collection(db, "empresas", window.userEmpresa, "produtos"));
                 window.bancoProdutos = [];
                 let total = 0, criticos = 0, semCodigo = 0;
@@ -1055,6 +1144,7 @@
             }
         }
 
+        // ====== RESTANTE DOS CÓDIGOS ORIGINAIS (Dashboards, Movimentações, etc) ======
         window.abrirModalCriticos = () => {
             const listBody = document.getElementById('list-criticos-body');
             listBody.innerHTML = '';
@@ -1080,10 +1170,7 @@
                     `;
                 }
             });
-
-            if(!encontrou) {
-                listBody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Nenhum produto crítico.</td></tr>';
-            }
+            if(!encontrou) listBody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Nenhum produto crítico.</td></tr>';
             abrirModal('modal-criticos');
         };
 
@@ -1097,13 +1184,7 @@
                 const nomeStr = (p.nome || '').trim();
                 const codNorm = normalizar(codStr);
                 const nomeNorm = normalizar(nomeStr);
-                
-                const isSemCod = !codStr || 
-                                 codStr.includes('...') || 
-                                 codNorm === '0' || 
-                                 codNorm === 'sc' || 
-                                 codNorm === 'nd' || 
-                                 (codNorm === nomeNorm && codNorm !== '');
+                const isSemCod = !codStr || codStr.includes('...') || codNorm === '0' || codNorm === 'sc' || codNorm === 'nd' || (codNorm === nomeNorm && codNorm !== '');
                 
                 if (isSemCod) {
                     encontrou = true;
@@ -1125,7 +1206,6 @@
                     `;
                 }
             });
-
             if(!encontrou) listBody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Nenhum produto sem código.</td></tr>';
             abrirModal('modal-sem-codigos');
         };
@@ -1169,25 +1249,20 @@
                     `;
                 }
             });
-
             if(!encontrou) listBody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Nenhum produto em duplicidade.</td></tr>';
             abrirModal('modal-duplicados');
         };
 
         window.excluirProduto = async (id, nome) => {
-            if(confirm(`ATENÇÃO: Deseja realmente EXCLUIR O PRODUTO "${id} - ${nome}" do seu cadastro?\nIsso apagará o produto do sistema, mas as movimentações passadas ficarão mantidas no histórico.`)) {
+            if(confirm(`ATENÇÃO: Deseja realmente EXCLUIR O PRODUTO "${id} - ${nome}" do seu cadastro?\nIsso apagará o produto do sistema.`)) {
                 try {
                     await deleteDoc(doc(db, "empresas", window.userEmpresa, 'produtos', id));
                     showToast('Produto excluído com sucesso!');
                     fecharModal('modal-sem-codigos');
                     fecharModal('modal-duplicados');
                     carregarProdutos();
-                    if(document.getElementById('view-movimentacoes').classList.contains('active')) {
-                        carregarMovimentacoes();
-                    }
-                } catch(e) {
-                    showToast('Erro ao excluir produto.', true);
-                }
+                    if(document.getElementById('view-movimentacoes').classList.contains('active')) carregarMovimentacoes();
+                } catch(e) { showToast('Erro ao excluir produto.', true); }
             }
         };
 
@@ -1204,9 +1279,7 @@
             document.getElementById('edit-prod-un').value = p.unidade || 'UN';
             document.getElementById('edit-prod-usadas').value = p.saldoUsado || 0;
             
-            fecharModal('modal-criticos');
-            fecharModal('modal-sem-codigos');
-            fecharModal('modal-duplicados');
+            fecharModal('modal-criticos'); fecharModal('modal-sem-codigos'); fecharModal('modal-duplicados');
             abrirModal('modal-edit-prod');
         };
 
@@ -1231,9 +1304,7 @@
                 showToast('Produto atualizado com sucesso!');
                 fecharModal('modal-edit-prod');
                 await carregarProdutos();
-                if(document.getElementById('view-movimentacoes').classList.contains('active')) {
-                    carregarMovimentacoes();
-                }
+                if(document.getElementById('view-movimentacoes').classList.contains('active')) carregarMovimentacoes();
             } catch (err) {
                 showToast('Erro: ' + err.message, true);
             } finally {
@@ -1248,7 +1319,6 @@
             const render = () => {
                 const val = normalizar(input.value); 
                 list.innerHTML = '';
-                
                 const filtered = window.bancoProdutos.filter(p => {
                     const nomeNorm = normalizar(p.nome);
                     const codNorm = normalizar(p.id);
@@ -1266,8 +1336,7 @@
                         if (mode === 'saida') {
                             input.value = p.nome;
                             document.getElementById('sai-cod').value = p.id;
-                            const uni = p.unidade || 'UN';
-                            document.getElementById('sai-atual').value = (p.saldo || 0) + ' ' + uni;
+                            document.getElementById('sai-atual').value = (p.saldo || 0) + ' ' + (p.unidade || 'UN');
                             document.getElementById('sai-info-cod').innerText = p.id;
                             document.getElementById('sai-info-local').innerText = p.local || 'N/A';
                             document.getElementById('sai-info-setor').innerText = p.setor || 'N/A';
@@ -1288,15 +1357,13 @@
                             document.getElementById('baixa-req-prod-nome').value = p.nome;
                             document.getElementById('baixa-req-prod-local').value = p.local || '';
                             document.getElementById('baixa-req-prod-setor').value = p.setor || '';
-                            const uni = p.unidade || 'UN';
-                            document.getElementById('span-req-saldo').innerText = (p.saldo || 0) + ' ' + uni;
+                            document.getElementById('span-req-saldo').innerText = (p.saldo || 0) + ' ' + (p.unidade || 'UN');
                             document.getElementById('baixa-req-saldo-atual').classList.remove('hidden');
                         } else if (mode === 'filtro') {
                             input.value = p.nome;
                             document.getElementById('info-prod-nome').innerText = p.nome;
                             document.getElementById('info-prod-cod').innerText = p.id;
-                            const uni = p.unidade || 'UN';
-                            document.getElementById('info-prod-saldo').innerText = (p.saldo !== undefined ? p.saldo : '0') + ' ' + uni;
+                            document.getElementById('info-prod-saldo').innerText = (p.saldo !== undefined ? p.saldo : '0') + ' ' + (p.unidade || 'UN');
                             document.getElementById('info-prod-usadas').innerText = p.saldoUsado !== undefined ? p.saldoUsado : '0';
                             document.getElementById('info-prod-min').innerText = p.estoqueMinimo !== undefined ? p.estoqueMinimo : '0';
                             document.getElementById('info-produto-selecionado').classList.remove('hidden');
@@ -1321,10 +1388,7 @@
         document.getElementById('filtro-mov-prod').addEventListener('input', (e) => {
             if(e.target.value.trim() === '') {
                 const infoProd = document.getElementById('info-produto-selecionado');
-                if(infoProd) {
-                    infoProd.classList.add('hidden');
-                    infoProd.classList.remove('flex');
-                }
+                if(infoProd) { infoProd.classList.add('hidden'); infoProd.classList.remove('flex'); }
             }
         });
 
@@ -1333,13 +1397,8 @@
             document.getElementById('filtro-mov-prod').value = '';
             document.getElementById('filtro-mov-ini').value = '';
             document.getElementById('filtro-mov-fim').value = '';
-            
             const infoProd = document.getElementById('info-produto-selecionado');
-            if(infoProd) {
-                infoProd.classList.add('hidden');
-                infoProd.classList.remove('flex');
-            }
-            
+            if(infoProd) { infoProd.classList.add('hidden'); infoProd.classList.remove('flex'); }
             changeView('movimentacoes');
             carregarMovimentacoes();
         };
@@ -1351,12 +1410,8 @@
             document.getElementById('filtro-mov-fim').value = '';
             document.getElementById('grid-movimentacoes').innerHTML = '<tr><td colspan="14" class="text-center py-10 text-slate-400 font-medium">Filtros limpos. Utilize os campos acima e clique em "Buscar".</td></tr>';
             window.bancoMovimentacoes = [];
-            
             const infoProd = document.getElementById('info-produto-selecionado');
-            if(infoProd) {
-                infoProd.classList.add('hidden');
-                infoProd.classList.remove('flex');
-            }
+            if(infoProd) { infoProd.classList.add('hidden'); infoProd.classList.remove('flex'); }
         };
 
         document.getElementById('form-entrada').addEventListener('submit', async (e) => {
@@ -1408,7 +1463,6 @@
             e.preventDefault();
             const cod = document.getElementById('sai-cod').value;
             const qtd = Number(document.getElementById('sai-qtd').value);
-            
             if(!cod) { showToast('Por favor, selecione um produto válido da lista!', true); return; }
 
             const btn = document.getElementById('btn-salvar-sai');
@@ -1446,7 +1500,6 @@
         window.carregarMovimentacoes = async () => {
             const grid = document.getElementById('grid-movimentacoes');
             grid.innerHTML = '<tr><td colspan="14" class="text-center py-10 text-slate-400 font-medium animate-pulse">Buscando e filtrando registros...</td></tr>';
-            
             document.getElementById('print-date').innerText = 'Gerado em: ' + new Date().toLocaleString('pt-BR');
 
             try {
@@ -1456,7 +1509,6 @@
                 let prodFiltro = document.getElementById('filtro-mov-prod').value.trim();
                 let dataIniStr = document.getElementById('filtro-mov-ini').value;
                 let dataFimStr = document.getElementById('filtro-mov-fim').value;
-                
                 const prodNormFiltro = normalizar(prodFiltro);
 
                 snap.forEach(doc => {
@@ -1467,9 +1519,7 @@
                     if (prodNormFiltro) {
                         const nomeNorm = normalizar(d.produto_nome || d.produto || '');
                         const idNorm = normalizar(d.produto_id || '');
-                        if (!nomeNorm.includes(prodNormFiltro) && !idNorm.includes(prodNormFiltro)) {
-                            isValid = false;
-                        }
+                        if (!nomeNorm.includes(prodNormFiltro) && !idNorm.includes(prodNormFiltro)) isValid = false;
                     }
 
                     if (isValid && d.data && d.data.toDate) {
@@ -1485,10 +1535,8 @@
                 window.bancoMovimentacoes.sort((a, b) => {
                     const nomeA = normalizar(a.produto_nome || a.produto || '');
                     const nomeB = normalizar(b.produto_nome || b.produto || '');
-                    
                     if (nomeA < nomeB) return -1;
                     if (nomeA > nomeB) return 1;
-                    
                     const dateA = a.data && a.data.toDate ? a.data.toDate() : new Date(0);
                     const dateB = b.data && b.data.toDate ? b.data.toDate() : new Date(0);
                     return dateB - dateA;
@@ -1556,9 +1604,7 @@
                 snap.forEach(doc => { window.bancoRequisicoes.push({ id: doc.id, ...doc.data() }); });
                 window.bancoRequisicoes.sort((a,b) => new Date(b.dataPedido) - new Date(a.dataPedido));
                 renderizarRequisicoes();
-            } catch (e) {
-                showToast('Erro ao carregar requisições', true);
-            }
+            } catch (e) { showToast('Erro ao carregar requisições', true); }
         };
 
         document.getElementById('search-req').addEventListener('input', () => renderizarRequisicoes());
@@ -1581,7 +1627,6 @@
                 const reqTotal = r.total_requested || 0;
                 const reqWithdrawn = r.total_withdrawn || 0;
                 const perc = reqTotal > 0 ? Math.min((reqWithdrawn / reqTotal) * 100, 100) : 0;
-                
                 let statusClass = 'status-pending';
                 if(r.status === 'Entregue') statusClass = 'status-complete';
                 else if(r.status === 'Parcial') statusClass = 'status-partial';
@@ -1639,11 +1684,7 @@
                 showToast('Requisição criada com sucesso!');
                 fecharModal('modal-nova-req');
                 carregarRequisicoes();
-            } catch (err) {
-                showToast('Erro: ' + err.message, true);
-            } finally {
-                btn.innerText = 'SALVAR REQUISIÇÃO'; btn.disabled = false;
-            }
+            } catch (err) { showToast('Erro: ' + err.message, true); } finally { btn.innerText = 'SALVAR REQUISIÇÃO'; btn.disabled = false; }
         });
 
         window.abrirModalBaixaReq = (id, nome, total, entregue, setor, solicitante) => {
@@ -1653,7 +1694,6 @@
             document.getElementById('baixa-req-entregue').value = entregue;
             document.getElementById('baixa-req-finalidade').value = 'Req. ' + setor;
             document.getElementById('baixa-req-solicitante').value = solicitante;
-            
             document.getElementById('baixa-req-nome').innerText = nome;
             document.getElementById('baixa-req-restante').innerText = restante;
             document.getElementById('baixa-qtd').value = restante;
@@ -1664,7 +1704,6 @@
 
         document.getElementById('form-baixa-req').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
             const codProduto = document.getElementById('baixa-req-prod-cod').value;
             const qtdEntrega = Number(document.getElementById('baixa-qtd').value);
             const nomeProd = document.getElementById('baixa-req-prod-nome').value;
@@ -1690,7 +1729,6 @@
                 if (qtdEntrega > saldoAtual) throw new Error(`Saldo insuficiente! Só restam ${saldoAtual} unidades.`);
 
                 await updateDoc(prodRef, { saldo: increment(-qtdEntrega) });
-
                 await addDoc(collection(db, "empresas", window.userEmpresa, 'movimentacoes'), {
                     tipo: 'SAÍDA', produto_id: codProduto, produto_nome: nomeProd,
                     quantidade: qtdEntrega, local: snap.data().local || '-', setor: snap.data().setor || '-', fornecedor: '-',
@@ -1699,20 +1737,12 @@
                     data: new Date(), usuario_sistema: auth.currentUser.email
                 });
 
-                await updateDoc(doc(db, "empresas", window.userEmpresa, 'requisicoes', idReq), {
-                    total_withdrawn: novoEntregue,
-                    status: novoStatus
-                });
-                
+                await updateDoc(doc(db, "empresas", window.userEmpresa, 'requisicoes', idReq), { total_withdrawn: novoEntregue, status: novoStatus });
                 showToast('Entrega registrada e estoque abatido!');
                 fecharModal('modal-baixa-req');
                 carregarRequisicoes();
                 carregarProdutos();
-            } catch (err) {
-                showToast('Erro: ' + err.message, true);
-            } finally {
-                btn.innerText = 'CONFIRMAR E ABATER ESTOQUE'; btn.disabled = false;
-            }
+            } catch (err) { showToast('Erro: ' + err.message, true); } finally { btn.innerText = 'CONFIRMAR E ABATER ESTOQUE'; btn.disabled = false; }
         });
 
         window.excluirReq = async (id) => {
@@ -1721,9 +1751,7 @@
                     await deleteDoc(doc(db, "empresas", window.userEmpresa, 'requisicoes', id));
                     showToast('Requisição apagada!');
                     carregarRequisicoes();
-                } catch (err) {
-                    showToast('Erro ao apagar.', true);
-                }
+                } catch (err) { showToast('Erro ao apagar.', true); }
             }
         };
 
@@ -1734,7 +1762,6 @@
             document.getElementById('edit-mov-tipo').value = m.tipo;
             document.getElementById('edit-mov-prod-id').value = m.produto_id || m.produto;
             document.getElementById('edit-mov-qtd-antiga').value = m.quantidade;
-            
             document.getElementById('edit-mov-qtd').value = m.quantidade;
             document.getElementById('edit-mov-local').value = m.local || '';
             document.getElementById('edit-mov-setor').value = m.setor || '';
@@ -1742,12 +1769,10 @@
             document.getElementById('edit-mov-user').value = m.usuario_retirou || m.usuario || m.usuario_sistema || '';
             document.getElementById('edit-mov-fin').value = m.finalidade || '';
             document.getElementById('edit-mov-obs').value = m.observacao || m.obs || '';
-            
             document.getElementById('edit-mov-prod-nome').innerText = `${m.produto_id || m.produto} - ${m.produto_nome || ''}`;
             const tipoEl = document.getElementById('edit-mov-tipo-display');
             tipoEl.innerText = m.tipo;
             tipoEl.className = m.tipo === 'ENTRADA' ? 'font-bold text-sm text-emerald-600' : 'font-bold text-sm text-rose-600';
-            
             abrirModal('modal-edit-mov');
         };
 
@@ -1760,7 +1785,6 @@
             const tipo = document.getElementById('edit-mov-tipo').value;
             const prodId = document.getElementById('edit-mov-prod-id').value;
             const qtdAntiga = Number(document.getElementById('edit-mov-qtd-antiga').value);
-            
             const novaQtd = Number(document.getElementById('edit-mov-qtd').value);
             const novoLocal = document.getElementById('edit-mov-local').value.trim();
             const novoSetor = document.getElementById('edit-mov-setor').value.trim();
@@ -1781,30 +1805,16 @@
                         await updateDoc(prodRef, { saldo: novoSaldo });
                     }
                 }
-
-                const payloadMov = {
-                    quantidade: novaQtd,
-                    local: novoLocal,
-                    setor: novoSetor,
-                    fornecedor: novoForn,
-                    finalidade: novaFin,
-                    observacao: novaObs
-                };
-                
+                const payloadMov = { quantidade: novaQtd, local: novoLocal, setor: novoSetor, fornecedor: novoForn, finalidade: novaFin, observacao: novaObs };
                 if (tipo === 'ENTRADA') payloadMov.usuario_sistema = novoUser;
                 else payloadMov.usuario_retirou = novoUser;
 
                 await updateDoc(doc(db, "empresas", window.userEmpresa, 'movimentacoes', id), payloadMov);
-
                 showToast('Lançamento atualizado!');
                 fecharModal('modal-edit-mov');
                 carregarMovimentacoes();
                 carregarProdutos(); 
-            } catch (err) {
-                showToast('Erro: ' + err.message, true);
-            } finally {
-                btn.innerText = 'SALVAR E RECALCULAR'; btn.disabled = false;
-            }
+            } catch (err) { showToast('Erro: ' + err.message, true); } finally { btn.innerText = 'SALVAR E RECALCULAR'; btn.disabled = false; }
         });
 
         window.excluirMovimentacao = async (idMov, idProd, qtd, tipo) => {
@@ -1823,9 +1833,7 @@
                 showToast('Lançamento excluído!');
                 carregarMovimentacoes();
                 carregarProdutos();
-            } catch(e) {
-                showToast('Erro ao excluir lançamento.', true);
-            }
+            } catch(e) { showToast('Erro ao excluir lançamento.', true); }
         };
 
     </script>
