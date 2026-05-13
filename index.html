@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NEXA STOCK | ERP Firebase</title>
+    <title>NEXA STOCK | Gestão de Estoque</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800;900&display=swap" rel="stylesheet">
     <style>
@@ -54,7 +54,7 @@
             <div class="glass-login p-10 rounded-[2.5rem] shadow-2xl relative">
                 <div class="text-center mb-8">
                     <h1 class="text-3xl font-black text-white tracking-tighter italic uppercase">NEXA <span class="text-indigo-400">STOCK</span></h1>
-                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.4em] mt-2">Acesso Restrito</p>
+                    <p class="text-slate-400 text-[10px] font-bold uppercase tracking-[0.4em] mt-2">Gestão de Estoque</p>
                 </div>
                 <form id="form-login" class="space-y-5">
                     <div>
@@ -63,11 +63,10 @@
                     <div>
                         <input type="password" id="log-pass" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder-slate-500" placeholder="Senha">
                     </div>
-                    <button type="submit" id="btn-login" class="w-full btn-gradient text-white py-4 rounded-2xl font-black text-sm shadow-xl mt-4">ENTRAR NO ERP</button>
+                    <button type="submit" id="btn-login" class="w-full btn-gradient text-white py-4 rounded-2xl font-black text-sm shadow-xl mt-4">ENTRAR NO SISTEMA</button>
                 </form>
             </div>
         </div>
-    </div>
 
     <div id="screen-app" class="hidden flex-1 flex flex-col w-full h-full">
         <!-- Header & Navbar -->
@@ -75,7 +74,7 @@
             <div class="flex items-center gap-4">
                 <div>
                     <h1 class="text-xl font-black italic tracking-tighter leading-none uppercase">NEXA <span class="text-indigo-400">STOCK</span></h1>
-                    <p class="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 mt-1">ERP Firebase</p>
+                    <p class="text-[9px] font-black uppercase tracking-[0.4em] text-slate-500 mt-1">Gestão de Estoque</p>
                 </div>
             </div>
             
@@ -149,7 +148,7 @@
             </div>
         </main>
 
-        <main id="view-movimentacoes" class="view-section flex-1 max-w-7xl mx-auto w-full p-8 space-y-6">
+        <main id="view-movimentacoes" class="view-section flex-1 max-w-[1400px] mx-auto w-full p-8 space-y-6">
             <div class="flex justify-between items-end mb-4">
                 <div>
                     <h2 class="text-2xl font-black text-slate-800 tracking-tight">Movimentações e Logs</h2>
@@ -194,14 +193,17 @@
                                 <th>Cód. Produto</th>
                                 <th>Nome</th>
                                 <th>Qtd</th>
-                                <th>Setor/Forn.</th>
-                                <th>Usuário/Responsável</th>
+                                <th>Local</th>
+                                <th>Setor</th>
+                                <th>Fornecedor</th>
+                                <th>Responsável</th>
                                 <th>Finalidade</th>
+                                <th>Obs</th>
                                 <th class="text-right">Ações</th>
                             </tr>
                         </thead>
                         <tbody id="grid-movimentacoes">
-                            <tr><td colspan="9" class="text-center py-10 text-slate-400 font-medium">Utilize os filtros acima e clique em "Buscar" para listar as movimentações.</td></tr>
+                            <tr><td colspan="12" class="text-center py-10 text-slate-400 font-medium">Utilize os filtros acima e clique em "Buscar" para listar as movimentações.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -240,6 +242,7 @@
         </main>
     </div>
 
+    <!-- MODAL ENTRADA -->
     <div id="modal-entrada" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4">
         <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
             <button onclick="fecharModal('modal-entrada')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
@@ -268,12 +271,23 @@
                 
                 <div class="grid grid-cols-2 gap-4">
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Setor de Armazenamento</label>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Localização</label>
+                        <input type="text" id="ent-local" class="input-nexa" placeholder="Ex: Prateleira 4A">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Setor / Armazém</label>
                         <input type="text" id="ent-setor" class="input-nexa" placeholder="Ex: Almoxarifado Principal" required>
                     </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Fornecedor</label>
                         <input type="text" id="ent-forn" class="input-nexa" placeholder="Ex: Votorantim" required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Observações</label>
+                        <input type="text" id="ent-obs" class="input-nexa" placeholder="Ex: NF 1234, Lote XPTO...">
                     </div>
                 </div>
 
@@ -292,6 +306,7 @@
         </div>
     </div>
 
+    <!-- MODAL SAÍDA -->
     <div id="modal-saida" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4">
         <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
             <button onclick="fecharModal('modal-saida')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
@@ -309,10 +324,11 @@
                 </div>
                 
                 <div id="sai-info" class="hidden bg-slate-50 border border-slate-200 p-5 rounded-2xl">
-                    <div class="grid grid-cols-3 gap-4 text-sm mb-4 border-b border-slate-200 pb-4">
+                    <div class="grid grid-cols-4 gap-4 text-sm mb-4 border-b border-slate-200 pb-4">
                         <div><span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Código</span><span id="sai-info-cod" class="font-bold text-slate-800"></span></div>
+                        <div><span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Local</span><span id="sai-info-local" class="font-bold text-slate-800"></span></div>
                         <div><span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Setor</span><span id="sai-info-setor" class="font-bold text-slate-800"></span></div>
-                        <div><span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Estoque Mínimo</span><span id="sai-info-min" class="font-bold text-slate-800"></span></div>
+                        <div><span class="block text-[9px] font-black text-slate-400 uppercase tracking-widest">Mínimo</span><span id="sai-info-min" class="font-bold text-slate-800"></span></div>
                     </div>
                     <div class="grid grid-cols-2 gap-4 items-center">
                         <div>
@@ -336,11 +352,17 @@
                         <input type="text" id="sai-fin" class="input-nexa" placeholder="Ex: Manutenção Máquina A" required>
                     </div>
                 </div>
+                <div class="mt-2">
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Observações</label>
+                    <input type="text" id="sai-obs" class="input-nexa" placeholder="Notas adicionais, OS, lote...">
+                </div>
+                
                 <button type="submit" id="btn-salvar-sai" class="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-sm mt-4 shadow-lg hover:bg-black transition active:scale-95 disabled:opacity-50">CONFIRMAR E REGISTRAR SAÍDA</button>
             </form>
         </div>
     </div>
 
+    <!-- MODAL REQUISIÇÃO -->
     <div id="modal-nova-req" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4">
         <div class="glass-form w-full max-w-lg p-8 animate-slide relative">
             <button onclick="fecharModal('modal-nova-req')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
@@ -377,7 +399,7 @@
 
     <!-- Modal de Edição de Movimentação -->
     <div id="modal-edit-mov" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4">
-        <div class="glass-form w-full max-w-xl p-8 animate-slide relative">
+        <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
             <button onclick="fecharModal('modal-edit-mov')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
             <div class="mb-6">
                 <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2">✏️ Editar Registro</h2>
@@ -400,24 +422,40 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-3 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Local</label>
+                        <input type="text" id="edit-mov-local" class="input-nexa">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Setor</label>
+                        <input type="text" id="edit-mov-setor" class="input-nexa" required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Fornecedor</label>
+                        <input type="text" id="edit-mov-forn" class="input-nexa">
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mt-2">
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nova Quantidade</label>
                         <input type="number" id="edit-mov-qtd" class="input-nexa font-black text-indigo-600 text-xl" min="1" required>
                     </div>
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Setor / Fornecedor</label>
-                        <input type="text" id="edit-mov-setor" class="input-nexa" required>
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Responsável / Usuário</label>
                         <input type="text" id="edit-mov-user" class="input-nexa" required>
                     </div>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4 mt-2">
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Finalidade</label>
                         <input type="text" id="edit-mov-fin" class="input-nexa">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Observações</label>
+                        <input type="text" id="edit-mov-obs" class="input-nexa">
                     </div>
                 </div>
                 
@@ -468,8 +506,7 @@
             document.getElementById(`nav-${viewId}`).classList.add('active');
 
             if(viewId === 'movimentacoes') {
-                // Ao abrir a aba de movimentações, inicia em branco e pede pra usar os filtros
-                document.getElementById('grid-movimentacoes').innerHTML = '<tr><td colspan="9" class="text-center py-10 text-slate-400 font-medium">Utilize os filtros acima e clique em "Buscar" para listar as movimentações.</td></tr>';
+                document.getElementById('grid-movimentacoes').innerHTML = '<tr><td colspan="12" class="text-center py-10 text-slate-400 font-medium">Utilize os filtros acima e clique em "Buscar" para listar as movimentações.</td></tr>';
                 window.bancoMovimentacoes = [];
             }
             if(viewId === 'requisicoes') carregarRequisicoes();
@@ -502,7 +539,7 @@
             } catch (err) {
                 showToast('E-mail ou senha incorretos!', true);
             } finally {
-                btn.innerText = 'ENTRAR NO ERP';
+                btn.innerText = 'ENTRAR NO SISTEMA';
             }
         });
 
@@ -537,7 +574,6 @@
                 document.getElementById('kpi-produtos').innerText = total;
                 document.getElementById('kpi-criticos').innerText = criticos;
                 
-                // Contagem total de movimentações pro Dashboard
                 const movsSnap = await getDocs(collection(db, "movimentacoes"));
                 document.getElementById('kpi-movs').innerText = movsSnap.size;
             } catch (e) {
@@ -545,7 +581,7 @@
             }
         }
 
-        // Setup Dropdowns Dinâmicos (Entrada, Saída e Filtro de Movimentações)
+        // Setup Dropdowns Dinâmicos
         function setupDropdown(inputId, listId, mode = 'entrada') {
             const input = document.getElementById(inputId);
             const list = document.getElementById(listId);
@@ -568,17 +604,22 @@
                             document.getElementById('sai-cod').value = p.id;
                             document.getElementById('sai-atual').value = p.saldo || 0;
                             document.getElementById('sai-info-cod').innerText = p.id;
+                            document.getElementById('sai-info-local').innerText = p.local || 'N/A';
                             document.getElementById('sai-info-setor').innerText = p.setor || 'N/A';
                             document.getElementById('sai-info-min').innerText = p.estoqueMinimo || '0';
+                            
+                            // Vincula o 'local' e 'setor' originais do produto na hora da saída (variável global temporária ou no DOM)
+                            window._produto_selecionado = p;
+                            
                             document.getElementById('sai-info').classList.remove('hidden');
                         } else if (mode === 'entrada') {
                             document.getElementById('ent-nome').value = p.nome;
                             document.getElementById('ent-cod').value = p.id;
+                            document.getElementById('ent-local').value = p.local || '';
                             document.getElementById('ent-setor').value = p.setor || '';
                             document.getElementById('ent-forn').value = p.fornecedor || '';
                             document.getElementById('ent-min').value = p.estoqueMinimo || 0;
                         } else if (mode === 'filtro') {
-                            // Ao selecionar, preenche o campo de busca de forma resumida
                             input.value = p.nome;
                         }
                         list.style.display = 'none';
@@ -594,9 +635,9 @@
 
         setupDropdown('ent-nome', 'list-ent-nome', 'entrada');
         setupDropdown('sai-busca', 'list-sai-busca', 'saida');
-        setupDropdown('filtro-mov-prod', 'list-filtro-mov-prod', 'filtro'); // Inicializa dropdown do filtro
+        setupDropdown('filtro-mov-prod', 'list-filtro-mov-prod', 'filtro');
 
-        // Operações Salvar
+        // Operações Salvar ENTRADA
         document.getElementById('form-entrada').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-salvar-ent');
@@ -605,8 +646,10 @@
             const dataInc = document.getElementById('ent-data').value;
             const cod = document.getElementById('ent-cod').value.trim();
             const nome = document.getElementById('ent-nome').value.trim();
+            const local = document.getElementById('ent-local').value.trim();
             const setor = document.getElementById('ent-setor').value.trim();
             const forn = document.getElementById('ent-forn').value.trim();
+            const obs = document.getElementById('ent-obs').value.trim();
             const qtd = Number(document.getElementById('ent-qtd').value);
             const min = Number(document.getElementById('ent-min').value);
 
@@ -616,14 +659,14 @@
                 const snap = await getDoc(prodRef);
 
                 if (snap.exists()) {
-                    await updateDoc(prodRef, { nome: nome, setor: setor, fornecedor: forn, estoqueMinimo: min, saldo: increment(qtd) });
+                    await updateDoc(prodRef, { nome: nome, local: local, setor: setor, fornecedor: forn, estoqueMinimo: min, saldo: increment(qtd) });
                 } else {
-                    await setDoc(prodRef, { nome: nome, setor: setor, fornecedor: forn, estoqueMinimo: min, saldo: qtd });
+                    await setDoc(prodRef, { nome: nome, local: local, setor: setor, fornecedor: forn, estoqueMinimo: min, saldo: qtd });
                 }
 
                 await addDoc(collection(db, 'movimentacoes'), {
                     tipo: 'ENTRADA', produto_id: idSeguro, produto_nome: nome,
-                    quantidade: qtd, setor: setor, fornecedor: forn,
+                    quantidade: qtd, local: local, setor: setor, fornecedor: forn, observacao: obs,
                     data: dataInc ? new Date(dataInc + 'T12:00:00') : new Date(),
                     usuario_sistema: auth.currentUser.email
                 });
@@ -638,10 +681,12 @@
             }
         });
 
+        // Operações Salvar SAÍDA
         document.getElementById('form-saida').addEventListener('submit', async (e) => {
             e.preventDefault();
             const cod = document.getElementById('sai-cod').value;
             const qtd = Number(document.getElementById('sai-qtd').value);
+            
             if(!cod) { showToast('Por favor, selecione um produto válido da lista!', true); return; }
 
             const btn = document.getElementById('btn-salvar-sai');
@@ -658,8 +703,14 @@
                 await updateDoc(prodRef, { saldo: increment(-qtd) });
 
                 await addDoc(collection(db, 'movimentacoes'), {
-                    tipo: 'SAÍDA', produto_id: cod, produto_nome: snap.data().nome,
-                    quantidade: qtd, setor: snap.data().setor || '-',
+                    tipo: 'SAÍDA', 
+                    produto_id: cod, 
+                    produto_nome: snap.data().nome,
+                    quantidade: qtd, 
+                    local: snap.data().local || '-',
+                    setor: snap.data().setor || '-',
+                    fornecedor: '-',
+                    observacao: document.getElementById('sai-obs').value.trim(),
                     usuario_retirou: document.getElementById('sai-user').value.trim(),
                     finalidade: document.getElementById('sai-fin').value.trim(),
                     data: new Date(),
@@ -679,13 +730,11 @@
         // ================= BUSCA DE MOVIMENTAÇÕES (FILTRO EM MEMÓRIA) =================
         window.carregarMovimentacoes = async () => {
             const grid = document.getElementById('grid-movimentacoes');
-            grid.innerHTML = '<tr><td colspan="9" class="text-center py-10 text-slate-400 font-medium animate-pulse">Buscando e filtrando registros...</td></tr>';
+            grid.innerHTML = '<tr><td colspan="12" class="text-center py-10 text-slate-400 font-medium animate-pulse">Buscando e filtrando registros...</td></tr>';
             try {
-                // Coleta de Dados do Banco e Filtros em Memória
                 const snap = await getDocs(collection(db, "movimentacoes"));
                 window.bancoMovimentacoes = [];
                 
-                // Coleta e aplica a regra de filtro
                 let prodFiltro = document.getElementById('filtro-mov-prod').value.trim().toLowerCase();
                 let dataIniStr = document.getElementById('filtro-mov-ini').value;
                 let dataFimStr = document.getElementById('filtro-mov-fim').value;
@@ -695,7 +744,6 @@
                     d.id = doc.id;
                     let isValid = true;
 
-                    // 1. Filtragem de Produto
                     if (prodFiltro) {
                         const nome = (d.produto_nome || '').toLowerCase();
                         const id = (d.produto_id || d.produto || '').toLowerCase();
@@ -704,10 +752,9 @@
                         }
                     }
 
-                    // 2. Filtragem por Data Retroativa
                     if (isValid && d.data && d.data.toDate) {
                         const movDate = d.data.toDate();
-                        movDate.setHours(0, 0, 0, 0); // Zera as horas para comparar só o dia
+                        movDate.setHours(0, 0, 0, 0); 
                         
                         if (dataIniStr) {
                             const dIni = new Date(dataIniStr + 'T00:00:00');
@@ -724,7 +771,6 @@
                     }
                 });
 
-                // Ordenação na memória (Data mais recente primeiro)
                 window.bancoMovimentacoes.sort((a, b) => {
                     const dateA = a.data && a.data.toDate ? a.data.toDate() : new Date(0);
                     const dateB = b.data && b.data.toDate ? b.data.toDate() : new Date(0);
@@ -734,7 +780,7 @@
                 grid.innerHTML = '';
                 
                 if (window.bancoMovimentacoes.length === 0) {
-                    grid.innerHTML = '<tr><td colspan="9" class="text-center py-10 text-slate-400">Nenhum registro encontrado para os filtros selecionados.</td></tr>';
+                    grid.innerHTML = '<tr><td colspan="12" class="text-center py-10 text-slate-400">Nenhum registro encontrado para os filtros selecionados.</td></tr>';
                     return;
                 }
 
@@ -743,6 +789,9 @@
                     const dt = d.data && d.data.toDate ? d.data.toDate().toLocaleString('pt-BR') : 'Data inválida';
                     const tipoCor = d.tipo === 'ENTRADA' ? 'text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-md' : 'text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded-md';
                     
+                    const obsTexto = d.observacao || d.obs || '-';
+                    const finTexto = d.finalidade || '-';
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td>${dt}</td>
@@ -750,9 +799,12 @@
                         <td class="font-bold text-slate-700">${d.produto_id || '-'}</td>
                         <td>${d.produto_nome || d.produto || '-'}</td>
                         <td class="font-black text-slate-900">${d.quantidade}</td>
-                        <td class="text-xs">Setor: ${d.setor || '-'}<br>Forn: ${d.fornecedor || '-'}</td>
-                        <td class="text-xs">${d.usuario_retirou || d.usuario || d.usuario_sistema}</td>
-                        <td class="text-xs truncate max-w-[150px] cursor-help" title="${d.finalidade || '-'}">${d.finalidade || '-'}</td>
+                        <td class="text-xs">${d.local || '-'}</td>
+                        <td class="text-xs">${d.setor || '-'}</td>
+                        <td class="text-xs">${d.fornecedor || '-'}</td>
+                        <td class="text-xs">${d.usuario_retirou || d.usuario || d.usuario_sistema || '-'}</td>
+                        <td class="text-xs truncate max-w-[120px] cursor-help" title="${finTexto}">${finTexto}</td>
+                        <td class="text-xs truncate max-w-[120px] cursor-help" title="${obsTexto}">${obsTexto}</td>
                         <td class="text-right">
                             <button onclick="abrirModalEditMov(${idx})" class="text-indigo-500 hover:text-indigo-700 p-2 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition" title="Editar Lançamento">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
@@ -763,7 +815,7 @@
                     idx++;
                 });
             } catch (e) {
-                grid.innerHTML = `<tr><td colspan="9" class="text-center py-10 text-rose-500 font-bold">Erro ao carregar dados: ${e.message}</td></tr>`;
+                grid.innerHTML = `<tr><td colspan="12" class="text-center py-10 text-rose-500 font-bold">Erro ao carregar dados: ${e.message}</td></tr>`;
             }
         };
 
@@ -771,7 +823,7 @@
             document.getElementById('filtro-mov-prod').value = '';
             document.getElementById('filtro-mov-ini').value = '';
             document.getElementById('filtro-mov-fim').value = '';
-            document.getElementById('grid-movimentacoes').innerHTML = '<tr><td colspan="9" class="text-center py-10 text-slate-400 font-medium">Filtros limpos. Utilize os campos acima e clique em "Buscar".</td></tr>';
+            document.getElementById('grid-movimentacoes').innerHTML = '<tr><td colspan="12" class="text-center py-10 text-slate-400 font-medium">Filtros limpos. Utilize os campos acima e clique em "Buscar".</td></tr>';
             window.bancoMovimentacoes = [];
         };
 
@@ -948,9 +1000,13 @@
             tipoEl.className = m.tipo === 'ENTRADA' ? 'font-bold text-sm text-emerald-600' : 'font-bold text-sm text-rose-600';
             
             document.getElementById('edit-mov-qtd').value = m.quantidade;
-            document.getElementById('edit-mov-setor').value = m.setor || m.fornecedor || '';
+            document.getElementById('edit-mov-local').value = m.local || '';
+            document.getElementById('edit-mov-setor').value = m.setor || '';
+            document.getElementById('edit-mov-forn').value = m.fornecedor || '';
+            
             document.getElementById('edit-mov-user').value = m.usuario_retirou || m.usuario || m.usuario_sistema || '';
             document.getElementById('edit-mov-fin').value = m.finalidade || '';
+            document.getElementById('edit-mov-obs').value = m.observacao || m.obs || '';
             
             abrirModal('modal-edit-mov');
         };
@@ -966,9 +1022,12 @@
             const qtdAntiga = Number(document.getElementById('edit-mov-qtd-antiga').value);
             
             const novaQtd = Number(document.getElementById('edit-mov-qtd').value);
+            const novoLocal = document.getElementById('edit-mov-local').value.trim();
             const novoSetor = document.getElementById('edit-mov-setor').value.trim();
+            const novoForn = document.getElementById('edit-mov-forn').value.trim();
             const novoUser = document.getElementById('edit-mov-user').value.trim();
             const novaFin = document.getElementById('edit-mov-fin').value.trim();
+            const novaObs = document.getElementById('edit-mov-obs').value.trim();
 
             try {
                 const diff = novaQtd - qtdAntiga;
@@ -993,15 +1052,16 @@
 
                 const payloadMov = {
                     quantidade: novaQtd,
+                    local: novoLocal,
+                    setor: novoSetor,
+                    fornecedor: novoForn,
                     finalidade: novaFin,
+                    observacao: novaObs
                 };
                 
                 if (tipo === 'ENTRADA') {
-                    payloadMov.fornecedor = novoSetor;
-                    payloadMov.setor = novoSetor; 
                     payloadMov.usuario_sistema = novoUser;
                 } else {
-                    payloadMov.setor = novoSetor;
                     payloadMov.usuario_retirou = novoUser;
                 }
 
