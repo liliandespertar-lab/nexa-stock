@@ -808,15 +808,16 @@
                     const codStr = (p.id || '').trim().toLowerCase();
                     const nomeStr = (p.nome || '').trim().toLowerCase();
                     
-                    // LÓGICA ATUALIZADA: Considera sem código se for vazio, '-', tiver '...' ou se o código for igual ao nome
-                    const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || codStr === nomeStr;
+                    const codNorm = codStr.replace(/[^a-z0-9]/g, '');
+                    const nomeNorm = nomeStr.replace(/[^a-z0-9]/g, '');
+                    const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || (codNorm === nomeNorm && codNorm !== '');
                     
                     if (isSemCod) {
                         semCodigo++;
-                    } else {
-                        if (codStr) contagemCodigos[codStr] = (contagemCodigos[codStr] || 0) + 1;
-                        if (nomeStr) contagemNomes[nomeStr] = (contagemNomes[nomeStr] || 0) + 1;
                     }
+                    
+                    if (codStr) contagemCodigos[codStr] = (contagemCodigos[codStr] || 0) + 1;
+                    if (nomeStr) contagemNomes[nomeStr] = (contagemNomes[nomeStr] || 0) + 1;
                 });
 
                 // ORDENAR PRODUTOS EM ORDEM ALFABÉTICA GLOBALMENTE
@@ -831,13 +832,8 @@
                     const codStr = (p.id || '').trim().toLowerCase();
                     const nomeStr = (p.nome || '').trim().toLowerCase();
                     
-                    // LÓGICA ATUALIZADA TAMBÉM NA CONTAGEM DE DUPLICADOS
-                    const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || codStr === nomeStr;
-                    
-                    if (!isSemCod) {
-                        if ((contagemCodigos[codStr] > 1) || (contagemNomes[nomeStr] > 1)) {
-                            duplicados++;
-                        }
+                    if ((contagemCodigos[codStr] > 1) || (contagemNomes[nomeStr] > 1)) {
+                        duplicados++;
                     }
                 });
 
@@ -899,7 +895,9 @@
             window.bancoProdutos.forEach(p => {
                 const codStr = (p.id || '').trim().toLowerCase();
                 const nomeStr = (p.nome || '').trim().toLowerCase();
-                const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || codStr === nomeStr;
+                const codNorm = codStr.replace(/[^a-z0-9]/g, '');
+                const nomeNorm = nomeStr.replace(/[^a-z0-9]/g, '');
+                const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || (codNorm === nomeNorm && codNorm !== '');
                 
                 if (isSemCod) {
                     encontrou = true;
@@ -937,19 +935,15 @@
             window.bancoProdutos.forEach(p => {
                 const codStr = (p.id || '').trim().toLowerCase();
                 const nomeStr = (p.nome || '').trim().toLowerCase();
-                const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || codStr === nomeStr;
-                if (!isSemCod) {
-                    if (codStr) contagemCodigos[codStr] = (contagemCodigos[codStr] || 0) + 1;
-                    if (nomeStr) contagemNomes[nomeStr] = (contagemNomes[nomeStr] || 0) + 1;
-                }
+                if (codStr) contagemCodigos[codStr] = (contagemCodigos[codStr] || 0) + 1;
+                if (nomeStr) contagemNomes[nomeStr] = (contagemNomes[nomeStr] || 0) + 1;
             });
 
             window.bancoProdutos.forEach(p => {
                 const codStr = (p.id || '').trim().toLowerCase();
                 const nomeStr = (p.nome || '').trim().toLowerCase();
-                const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || codStr === nomeStr;
                 
-                if (!isSemCod && ((contagemCodigos[codStr] > 1) || (contagemNomes[nomeStr] > 1))) {
+                if ((contagemCodigos[codStr] > 1) || (contagemNomes[nomeStr] > 1)) {
                     encontrou = true;
                     listBody.innerHTML += `
                         <tr>
@@ -1248,14 +1242,8 @@
                     window.bancoProdutos.forEach(p => {
                         const c = (p.id || '').trim().toLowerCase();
                         const n = (p.nome || '').trim().toLowerCase();
-                        
-                        // LÓGICA ATUALIZADA PARA IDENTIFICAR OS SEM CÓDIGO AQUI TAMBÉM
-                        const isSemCod = !c || c === '-' || c.includes('...') || c === n;
-                        
-                        if(!isSemCod) {
-                            if(c) mapCodigos[c] = (mapCodigos[c] || 0) + 1;
-                            if(n) mapNomes[n] = (mapNomes[n] || 0) + 1;
-                        }
+                        if(c) mapCodigos[c] = (mapCodigos[c] || 0) + 1;
+                        if(n) mapNomes[n] = (mapNomes[n] || 0) + 1;
                     });
                 }
 
@@ -1267,17 +1255,14 @@
                     const pid = (d.produto_id || '').trim().toLowerCase();
                     const pnome = (d.produto_nome || d.produto || '').trim().toLowerCase();
                     
-                    // LÓGICA ATUALIZADA NAS MOVIMENTAÇÕES
-                    const isSemCod = !pid || pid === '-' || pid.includes('...') || pid === pnome;
+                    const pidNorm = pid.replace(/[^a-z0-9]/g, '');
+                    const pnomeNorm = pnome.replace(/[^a-z0-9]/g, '');
+                    const isSemCod = !pid || pid === '-' || pid.includes('...') || (pidNorm === pnomeNorm && pidNorm !== '');
 
                     if (window.filtroEspecialMov === 'duplicados') {
-                        if (isSemCod) {
-                            isValid = false; 
-                        } else {
-                            const dupCod = mapCodigos[pid] > 1;
-                            const dupNome = mapNomes[pnome] > 1;
-                            if (!dupCod && !dupNome) isValid = false;
-                        }
+                        const dupCod = mapCodigos[pid] > 1;
+                        const dupNome = mapNomes[pnome] > 1;
+                        if (!dupCod && !dupNome) isValid = false;
                     } else if (window.filtroEspecialMov === 'sem_codigo') {
                         if (!isSemCod) {
                             isValid = false; 
