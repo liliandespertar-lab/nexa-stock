@@ -139,6 +139,9 @@
                     <p class="text-xs font-bold text-white" id="user-display">Carregando...</p>
                     <p class="text-[9px] text-emerald-400 font-black uppercase tracking-widest" id="user-role">Online</p>
                 </div>
+                <button onclick="abrirModal('modal-alterar-senha')" class="text-slate-400 hover:text-indigo-400 transition-colors p-2" title="Alterar Minha Senha">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </button>
                 <button onclick="fazerLogout()" class="text-slate-400 hover:text-rose-400 transition-colors p-2" title="Sair do Sistema">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
                 </button>
@@ -376,8 +379,13 @@
                             <label class="text-[10px] font-black text-slate-500 uppercase block mb-1">Nível de Acesso</label>
                             <select id="cad-user-nivel" class="input-nexa bg-white font-bold text-slate-700 cursor-pointer">
                                 <option value="Operador">Operador (Uso Normal)</option>
-                                <option value="Administrador">Administrador (Controle Total)</option>
+                                <option value="Administrador">Administrador (Gestão da Empresa)</option>
+                                <option value="Master" id="opt-master" class="hidden text-indigo-600 font-black">Master (SaaS Global)</option>
                             </select>
+                        </div>
+                        <div id="campo-empresa-master" class="hidden">
+                            <label class="text-[10px] font-black text-indigo-500 uppercase block mb-1">Empresa Destino (SaaS)</label>
+                            <input type="text" id="cad-user-empresa" class="input-nexa border-indigo-200 bg-indigo-50 text-indigo-900 font-bold" placeholder="Nome exato da empresa">
                         </div>
                         <button type="submit" id="btn-salvar-user" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm mt-2 shadow-lg shadow-indigo-200 hover:bg-indigo-700 transition active:scale-95">CRIAR ACESSO</button>
                     </form>
@@ -394,12 +402,13 @@
                                 <tr>
                                     <th>Nome</th>
                                     <th>E-mail</th>
+                                    <th id="col-empresa" class="hidden text-indigo-600">Empresa</th>
                                     <th>Nível</th>
                                     <th class="text-right">Ação</th>
                                 </tr>
                             </thead>
                             <tbody id="grid-usuarios">
-                                <tr><td colspan="4" class="text-center py-8 text-slate-400">Carregando equipe...</td></tr>
+                                <tr><td colspan="5" class="text-center py-8 text-slate-400">Carregando equipe...</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -798,9 +807,29 @@
         </div>
     </div>
 
+    <div id="modal-alterar-senha" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4 print:hidden">
+        <div class="glass-form w-full max-w-md p-8 animate-slide relative">
+            <button onclick="fecharModal('modal-alterar-senha')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
+            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-2">🔒 Alterar Senha</h2>
+            <p class="text-xs font-medium text-slate-500 mb-6">Crie uma nova senha pessoal e segura para o seu acesso.</p>
+            
+            <form id="form-alterar-senha" class="space-y-4">
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nova Senha</label>
+                    <input type="password" id="nova-senha" class="input-nexa" placeholder="Mínimo de 6 caracteres" required minlength="6">
+                </div>
+                <div>
+                    <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Confirmar Nova Senha</label>
+                    <input type="password" id="confirma-nova-senha" class="input-nexa" placeholder="Repita a nova senha" required minlength="6">
+                </div>
+                <button type="submit" id="btn-salvar-senha" class="w-full bg-slate-900 text-white py-4 rounded-xl font-black text-sm mt-4 shadow-lg hover:bg-black transition">ATUALIZAR MINHA SENHA</button>
+            </form>
+        </div>
+    </div>
+
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, addDoc, deleteDoc, increment, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -826,6 +855,7 @@
         window.bancoRequisicoes = [];
         window.bancoMovimentacoes = [];
         window.filtroEspecialMov = null; 
+        window.userNivel = null; // Armazena o nível para uso global
 
         const normalizar = (str) => {
             if (!str) return '';
@@ -873,12 +903,22 @@
                         }
 
                         window.userEmpresa = uData.empresa; 
+                        window.userNivel = uData.nivel; // Salva o nível
+
                         document.getElementById('user-display').innerText = `${uData.nome} (${uData.empresa})`;
                         document.getElementById('user-role').innerText = uData.nivel;
 
-                        // Libera Aba Equipe só para Admins
-                        if(uData.nivel === 'Administrador') {
+                        // Libera Aba Equipe para Administrador ou Master
+                        if(uData.nivel === 'Administrador' || uData.nivel === 'Master') {
                             document.getElementById('nav-usuarios').classList.remove('hidden');
+                            
+                            // Se for Master, libera campos especiais de SaaS
+                            if(uData.nivel === 'Master') {
+                                document.getElementById('opt-master').classList.remove('hidden');
+                                document.getElementById('campo-empresa-master').classList.remove('hidden');
+                                document.getElementById('col-empresa').classList.remove('hidden');
+                                document.getElementById('cad-user-empresa').required = true;
+                            }
                         } else {
                             document.getElementById('nav-usuarios').classList.add('hidden');
                         }
@@ -913,24 +953,29 @@
 
         async function carregarTabelaUsuarios() {
             const grid = document.getElementById('grid-usuarios');
-            grid.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-400">Carregando equipe...</td></tr>';
+            grid.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-400">Carregando equipe...</td></tr>';
             try {
-                // Como Firebase precisa de índice composto, para simplicidade de um ERP leve vamos filtrar na memória
                 const snap = await getDocs(collection(db, "usuarios"));
                 grid.innerHTML = '';
                 let encontrou = false;
                 
                 snap.forEach(doc => {
                     const d = doc.data();
-                    // Só mostra os usuários que pertencem à mesma empresa
-                    if(d.empresa === window.userEmpresa && d.status !== 'Inativo') {
+                    // Se for Master vê todos, se for Admin vê só da sua empresa
+                    if((window.userNivel === 'Master' || d.empresa === window.userEmpresa) && d.status !== 'Inativo') {
                         encontrou = true;
                         const tr = document.createElement('tr');
-                        const nivelColor = d.nivel === 'Administrador' ? 'text-purple-600 bg-purple-50' : 'text-slate-600 bg-slate-50';
                         
+                        let nivelColor = 'text-slate-600 bg-slate-50';
+                        if(d.nivel === 'Administrador') nivelColor = 'text-purple-600 bg-purple-50';
+                        if(d.nivel === 'Master') nivelColor = 'text-amber-600 bg-amber-50 border border-amber-200';
+                        
+                        const tdEmpresa = window.userNivel === 'Master' ? `<td class="text-indigo-600 font-bold text-xs uppercase tracking-widest">${d.empresa}</td>` : '';
+
                         tr.innerHTML = `
                             <td class="font-bold text-slate-800">${d.nome}</td>
                             <td class="text-slate-500">${d.email}</td>
+                            ${tdEmpresa}
                             <td><span class="px-2 py-1 rounded-md text-xs font-bold uppercase tracking-wider ${nivelColor}">${d.nivel}</span></td>
                             <td class="text-right">
                                 <button onclick="excluirUsuarioSistema('${doc.id}', '${d.nome}')" class="text-rose-500 hover:text-rose-700 p-2 bg-rose-50 hover:bg-rose-100 rounded-lg transition" title="Revogar Acesso">
@@ -942,12 +987,13 @@
                     }
                 });
                 
-                if(!encontrou) grid.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-slate-400">Nenhum outro usuário cadastrado.</td></tr>';
+                if(!encontrou) grid.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-slate-400">Nenhum outro usuário cadastrado.</td></tr>';
                 
-            } catch (err) {
-                grid.innerHTML = `<tr><td colspan="4" class="text-center py-8 text-rose-500">Erro: ${err.message}</td></tr>`;
+            } catch (error) {
+                console.error("Erro ao carregar usuários:", error);
+                grid.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-rose-500">Erro ao carregar equipe.</td></tr>';
             }
-        }
+        } // Fechamento da função carregarTabelaUsuarios adicionado aqui
 
         document.getElementById('form-novo-user').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -958,6 +1004,12 @@
             const email = document.getElementById('cad-user-email').value.trim();
             const pass = document.getElementById('cad-user-pass').value;
             const nivel = document.getElementById('cad-user-nivel').value;
+            
+            let empresaDestino = window.userEmpresa;
+            if(window.userNivel === 'Master') {
+                empresaDestino = document.getElementById('cad-user-empresa').value.trim();
+                if(!empresaDestino) { showToast('Mestre, digite o nome da empresa do cliente!', true); btn.innerText = 'CRIAR ACESSO'; btn.disabled = false; return; }
+            }
 
             try {
                 // Cria autenticação sem deslogar o Admin usando a instância secundária
@@ -965,7 +1017,7 @@
                 
                 // Salva os dados no banco usando a instância primária
                 await setDoc(doc(db, 'usuarios', cred.user.uid), {
-                    empresa: window.userEmpresa,
+                    empresa: empresaDestino,
                     nome: nome,
                     email: email,
                     nivel: nivel,
@@ -1004,6 +1056,37 @@
                 }
             }
         };
+
+        // ================= ALTERAÇÃO DE SENHA PESSOAL =================
+        document.getElementById('form-alterar-senha').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = document.getElementById('btn-salvar-senha');
+            const p1 = document.getElementById('nova-senha').value;
+            const p2 = document.getElementById('confirma-nova-senha').value;
+
+            if (p1 !== p2) {
+                showToast('As senhas não são iguais! Digite novamente.', true);
+                return;
+            }
+
+            btn.innerText = 'ATUALIZANDO...'; btn.disabled = true;
+
+            try {
+                const user = auth.currentUser;
+                await updatePassword(user, p1);
+                showToast('Senha atualizada com sucesso! Use a nova senha no próximo login.');
+                fecharModal('modal-alterar-senha');
+            } catch (err) {
+                // Por segurança, o Firebase exige que o usuário tenha feito login recentemente para trocar a senha.
+                if (err.code === 'auth/requires-recent-login') {
+                    showToast('Por segurança, saia do sistema, faça login novamente e tente alterar a senha logo em seguida.', true);
+                } else {
+                    showToast('Erro ao atualizar senha: ' + err.message, true);
+                }
+            } finally {
+                btn.innerText = 'ATUALIZAR MINHA SENHA'; btn.disabled = false;
+            }
+        });
 
         // ================= FUNÇÃO DE RESGATE (SAAS) =================
         window.converterDadosParaSaaS = async () => {
