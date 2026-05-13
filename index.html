@@ -148,13 +148,13 @@
                     <span id="kpi-reqs" class="text-5xl font-black text-amber-600 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
                 </div>
                 <!-- E) Duplicados (Clicável) -->
-                <div onclick="verMovEsp('duplicados')" class="bg-white border border-purple-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-purple-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                <div onclick="abrirModalDuplicados()" class="bg-white border border-purple-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-purple-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-full w-2 bg-purple-500 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
                     <span class="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-1">Produtos em Duplicidade</span>
                     <span id="kpi-duplicados" class="text-5xl font-black text-purple-600 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
                 </div>
                 <!-- F) Sem Código (Clicável) -->
-                <div onclick="verMovEsp('sem_codigo')" class="bg-white border border-slate-300 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-slate-800 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                <div onclick="abrirModalSemCodigo()" class="bg-white border border-slate-300 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-slate-800 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-full w-2 bg-slate-800 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
                     <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Produtos Sem Código</span>
                     <span id="kpi-semcod" class="text-5xl font-black text-slate-800 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
@@ -542,6 +542,54 @@
         </div>
     </div>
 
+    <!-- MODAL DUPLICADOS -->
+    <div id="modal-duplicados" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4 print:hidden">
+        <div class="glass-form w-full max-w-4xl p-8 animate-slide relative">
+            <button onclick="fecharModal('modal-duplicados')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
+            <h2 class="text-2xl font-black text-purple-600 uppercase tracking-tighter mb-2">🔎 Produtos em Duplicidade</h2>
+            <p class="text-xs text-slate-500 font-medium mb-6">Produtos que possuem o mesmo código ou o mesmo nome cadastrados.</p>
+            
+            <div class="max-h-96 overflow-y-auto pr-2">
+                <table class="table-nexa w-full">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Produto</th>
+                            <th>Local</th>
+                            <th class="text-center">Saldo</th>
+                            <th class="text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list-duplicados-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL SEM CÓDIGO -->
+    <div id="modal-sem-codigos" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4 print:hidden">
+        <div class="glass-form w-full max-w-4xl p-8 animate-slide relative">
+            <button onclick="fecharModal('modal-sem-codigos')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
+            <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter mb-2">🔎 Produtos Sem Código</h2>
+            <p class="text-xs text-slate-500 font-medium mb-6">Produtos importados ou cadastrados usando apenas o nome como identificador.</p>
+            
+            <div class="max-h-96 overflow-y-auto pr-2">
+                <table class="table-nexa w-full">
+                    <thead>
+                        <tr>
+                            <th>Produto (Nome atua como ID)</th>
+                            <th>Local</th>
+                            <th>Setor</th>
+                            <th class="text-center">Saldo</th>
+                            <th class="text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list-semcod-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL EDITAR PRODUTO -->
     <div id="modal-edit-prod" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4 print:hidden">
         <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
@@ -843,11 +891,96 @@
             abrirModal('modal-criticos');
         };
 
+        window.abrirModalSemCodigo = () => {
+            const listBody = document.getElementById('list-semcod-body');
+            listBody.innerHTML = '';
+            let encontrou = false;
+
+            window.bancoProdutos.forEach(p => {
+                const codStr = (p.id || '').trim().toLowerCase();
+                const nomeStr = (p.nome || '').trim().toLowerCase();
+                const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || codStr === nomeStr;
+                
+                if (isSemCod) {
+                    encontrou = true;
+                    listBody.innerHTML += `
+                        <tr>
+                            <td class="font-bold text-slate-700">${p.nome}</td>
+                            <td class="text-xs text-slate-500">${p.local || '-'}</td>
+                            <td class="text-xs text-slate-500">${p.setor || '-'}</td>
+                            <td class="text-center font-black text-indigo-600 bg-indigo-50">${p.saldo || 0}</td>
+                            <td class="text-right flex justify-end gap-1">
+                                <button onclick="abrirEditProd('${p.id.replace(/'/g, "\\'")}')" class="text-indigo-500 hover:text-indigo-700 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition" title="Editar Produto">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </button>
+                                <button onclick="excluirProduto('${p.id.replace(/'/g, "\\'")}', '${(p.nome || '').replace(/'/g, "\\'")}')" class="text-rose-500 hover:text-rose-700 p-1.5 bg-rose-50 hover:bg-rose-100 rounded-lg transition" title="Excluir Produto">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+
+            if(!encontrou) listBody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Nenhum produto sem código.</td></tr>';
+            abrirModal('modal-sem-codigos');
+        };
+
+        window.abrirModalDuplicados = () => {
+            const listBody = document.getElementById('list-duplicados-body');
+            listBody.innerHTML = '';
+            let encontrou = false;
+
+            const contagemCodigos = {};
+            const contagemNomes = {};
+
+            window.bancoProdutos.forEach(p => {
+                const codStr = (p.id || '').trim().toLowerCase();
+                const nomeStr = (p.nome || '').trim().toLowerCase();
+                const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || codStr === nomeStr;
+                if (!isSemCod) {
+                    if (codStr) contagemCodigos[codStr] = (contagemCodigos[codStr] || 0) + 1;
+                    if (nomeStr) contagemNomes[nomeStr] = (contagemNomes[nomeStr] || 0) + 1;
+                }
+            });
+
+            window.bancoProdutos.forEach(p => {
+                const codStr = (p.id || '').trim().toLowerCase();
+                const nomeStr = (p.nome || '').trim().toLowerCase();
+                const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || codStr === nomeStr;
+                
+                if (!isSemCod && ((contagemCodigos[codStr] > 1) || (contagemNomes[nomeStr] > 1))) {
+                    encontrou = true;
+                    listBody.innerHTML += `
+                        <tr>
+                            <td class="font-bold text-slate-700">${p.id}</td>
+                            <td>${p.nome}</td>
+                            <td class="text-xs text-slate-500">${p.local || '-'}</td>
+                            <td class="text-center font-black text-purple-600 bg-purple-50">${p.saldo || 0}</td>
+                            <td class="text-right flex justify-end gap-1">
+                                <button onclick="abrirEditProd('${p.id.replace(/'/g, "\\'")}')" class="text-indigo-500 hover:text-indigo-700 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition" title="Editar Produto">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                                </button>
+                                <button onclick="excluirProduto('${p.id.replace(/'/g, "\\'")}', '${(p.nome || '').replace(/'/g, "\\'")}')" class="text-rose-500 hover:text-rose-700 p-1.5 bg-rose-50 hover:bg-rose-100 rounded-lg transition" title="Excluir Produto">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                }
+            });
+
+            if(!encontrou) listBody.innerHTML = '<tr><td colspan="5" class="text-center py-6 text-slate-400">Nenhum produto em duplicidade.</td></tr>';
+            abrirModal('modal-duplicados');
+        };
+
         window.excluirProduto = async (id, nome) => {
             if(confirm(`ATENÇÃO: Deseja realmente EXCLUIR O PRODUTO "${id} - ${nome}" do seu cadastro?\nIsso apagará o produto do sistema, mas as movimentações passadas ficarão mantidas no histórico.`)) {
                 try {
                     await deleteDoc(doc(db, 'produtos', id));
                     showToast('Produto excluído com sucesso!');
+                    fecharModal('modal-sem-codigos');
+                    fecharModal('modal-duplicados');
                     carregarProdutos();
                     if(document.getElementById('view-movimentacoes').classList.contains('active')) {
                         carregarMovimentacoes();
@@ -870,6 +1003,8 @@
             document.getElementById('edit-prod-min').value = p.estoqueMinimo || 0;
             
             fecharModal('modal-criticos');
+            fecharModal('modal-sem-codigos');
+            fecharModal('modal-duplicados');
             abrirModal('modal-edit-prod');
         };
 
