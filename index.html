@@ -227,7 +227,7 @@
                         <input type="date" id="filtro-mov-fim" class="input-nexa w-full">
                     </div>
                     <div class="flex gap-2">
-                        <button onclick="verTodasMovimentacoes()" class="bg-slate-100 text-slate-600 px-5 py-3.5 rounded-xl font-bold text-sm hover:bg-slate-200 transition">Limpar</button>
+                        <button onclick="limparFiltrosMov()" class="bg-slate-100 text-slate-600 px-5 py-3.5 rounded-xl font-bold text-sm hover:bg-slate-200 transition">Limpar</button>
                         <button onclick="window.print()" class="bg-emerald-600 text-white px-5 py-3.5 rounded-xl font-bold text-sm shadow-md hover:bg-emerald-700 transition flex items-center gap-2">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
                             Imprimir
@@ -254,6 +254,10 @@
                     <div class="pl-8 border-l border-indigo-200/60">
                         <p class="text-[10px] font-black text-indigo-400 uppercase tracking-widest mb-1">Saldo Atual</p>
                         <p id="info-prod-saldo" class="font-black text-indigo-600 text-2xl leading-none">--</p>
+                    </div>
+                    <div class="pl-8 border-l border-indigo-200/60">
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Usadas/Retif.</p>
+                        <p id="info-prod-usadas" class="font-bold text-slate-600 text-2xl leading-none">--</p>
                     </div>
                     <div class="pl-8 border-l border-indigo-200/60">
                         <p class="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">Estoque Mín</p>
@@ -331,8 +335,8 @@
         <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
             <button onclick="fecharModal('modal-entrada')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
             <div class="mb-8">
-                <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2"><span class="text-emerald-500">📥</span> Entrada de Produto</h2>
-                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Cadastro ou Atualização de Estoque</p>
+                <h2 class="text-2xl font-black text-slate-800 uppercase tracking-tighter flex items-center gap-2"><span class="text-emerald-500">📥</span> Entrada / Cadastro</h2>
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-widest mt-1">Cadastro de produto ou Atualização de Estoque</p>
             </div>
             
             <form id="form-entrada" class="space-y-4">
@@ -364,24 +368,35 @@
                     </div>
                 </div>
                 
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-2 gap-4 bg-indigo-50/50 p-4 rounded-xl border border-indigo-50">
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Fornecedor</label>
-                        <input type="text" id="ent-forn" class="input-nexa" placeholder="Ex: Votorantim" required>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Unidade de Medida</label>
+                        <input type="text" id="ent-un" class="input-nexa" placeholder="Ex: UN, KG, PC, M" value="UN" required>
                     </div>
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Observações</label>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Fornecedor</label>
+                        <input type="text" id="ent-forn" class="input-nexa" placeholder="Ex: Votorantim">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Saldo Usadas/Retificadas</label>
+                        <input type="number" id="ent-usadas" class="input-nexa font-black text-slate-500 text-xl" placeholder="0" min="0" value="0">
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Observações da Entrada</label>
                         <input type="text" id="ent-obs" class="input-nexa" placeholder="Ex: NF 1234, Lote...">
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-100 mt-2">
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Qtd a ser Incluída</label>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Qtd NOVA a ser Incluída</label>
                         <input type="number" id="ent-qtd" class="input-nexa font-black text-emerald-600 text-xl" placeholder="0" min="1" required>
                     </div>
                     <div>
-                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Estoque Mínimo</label>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Estoque Mínimo (Alerta)</label>
                         <input type="number" id="ent-min" class="input-nexa font-black text-amber-500 text-xl" placeholder="0" min="0" required>
                     </div>
                 </div>
@@ -417,7 +432,7 @@
                     <div class="grid grid-cols-2 gap-4 items-center">
                         <div>
                             <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest block mb-1">Saldo Atual</label>
-                            <input type="number" id="sai-atual" class="input-nexa bg-slate-200 text-slate-600 font-black cursor-not-allowed text-xl" disabled>
+                            <input type="text" id="sai-atual" class="input-nexa bg-slate-200 text-slate-600 font-black cursor-not-allowed text-xl" disabled>
                         </div>
                         <div>
                             <label class="text-[10px] font-black text-rose-500 uppercase tracking-widest block mb-1">Qtd a Retirar</label>
@@ -627,6 +642,16 @@
                         <input type="number" id="edit-prod-min" class="input-nexa font-black text-amber-500" min="0" required>
                     </div>
                 </div>
+                <div class="grid grid-cols-2 gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Unid. Medida</label>
+                        <input type="text" id="edit-prod-un" class="input-nexa" required>
+                    </div>
+                    <div>
+                        <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Saldo Usadas/Retificadas</label>
+                        <input type="number" id="edit-prod-usadas" class="input-nexa font-black text-slate-600" min="0">
+                    </div>
+                </div>
                 <button type="submit" id="btn-salvar-edit-prod" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm mt-4 shadow-lg hover:bg-indigo-700 transition">SALVAR ALTERAÇÕES</button>
             </form>
         </div>
@@ -723,6 +748,12 @@
         window.bancoMovimentacoes = [];
         window.filtroEspecialMov = null; 
 
+        // Função de Normalização para Buscas e Comparações
+        const normalizar = (str) => {
+            if (!str) return '';
+            return str.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        };
+
         window.showToast = (msg, isError = false) => {
             const t = document.createElement('div');
             t.className = `fixed bottom-5 right-5 p-4 rounded-xl shadow-2xl text-white font-bold text-sm z-[100] animate-slide ${isError ? 'bg-rose-500' : 'bg-emerald-500'}`;
@@ -805,35 +836,45 @@
                     total++;
                     if ((p.saldo || 0) <= (p.estoqueMinimo || 0)) criticos++;
                     
-                    const codStr = (p.id || '').trim().toLowerCase();
-                    const nomeStr = (p.nome || '').trim().toLowerCase();
+                    const codStr = (p.id || '').trim();
+                    const nomeStr = (p.nome || '').trim();
                     
-                    const codNorm = codStr.replace(/[^a-z0-9]/g, '');
-                    const nomeNorm = nomeStr.replace(/[^a-z0-9]/g, '');
-                    const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || (codNorm === nomeNorm && codNorm !== '');
+                    const codNorm = normalizar(codStr);
+                    const nomeNorm = normalizar(nomeStr);
+                    
+                    const isSemCod = !codStr || 
+                                     codStr.includes('...') || 
+                                     codNorm === '0' || 
+                                     codNorm === 'sc' || 
+                                     codNorm === 'nd' || 
+                                     (codNorm === nomeNorm && codNorm !== '');
                     
                     if (isSemCod) {
                         semCodigo++;
                     }
                     
-                    if (codStr) contagemCodigos[codStr] = (contagemCodigos[codStr] || 0) + 1;
-                    if (nomeStr) contagemNomes[nomeStr] = (contagemNomes[nomeStr] || 0) + 1;
+                    if (codNorm) contagemCodigos[codNorm] = (contagemCodigos[codNorm] || 0) + 1;
+                    if (nomeNorm) contagemNomes[nomeNorm] = (contagemNomes[nomeNorm] || 0) + 1;
                 });
 
                 // ORDENAR PRODUTOS EM ORDEM ALFABÉTICA GLOBALMENTE
                 window.bancoProdutos.sort((a, b) => {
-                    const nA = (a.nome || '').toLowerCase();
-                    const nB = (b.nome || '').toLowerCase();
+                    const nA = normalizar(a.nome);
+                    const nB = normalizar(b.nome);
                     return nA.localeCompare(nB);
                 });
 
                 let duplicados = 0;
+                const processadosDup = new Set();
                 window.bancoProdutos.forEach(p => {
-                    const codStr = (p.id || '').trim().toLowerCase();
-                    const nomeStr = (p.nome || '').trim().toLowerCase();
+                    const codNorm = normalizar(p.id);
+                    const nomeNorm = normalizar(p.nome);
                     
-                    if ((contagemCodigos[codStr] > 1) || (contagemNomes[nomeStr] > 1)) {
-                        duplicados++;
+                    if ((contagemCodigos[codNorm] > 1) || (contagemNomes[nomeNorm] > 1)) {
+                        if (!processadosDup.has(codNorm + nomeNorm)) {
+                            duplicados++;
+                            processadosDup.add(codNorm + nomeNorm);
+                        }
                     }
                 });
 
@@ -893,11 +934,17 @@
             let encontrou = false;
 
             window.bancoProdutos.forEach(p => {
-                const codStr = (p.id || '').trim().toLowerCase();
-                const nomeStr = (p.nome || '').trim().toLowerCase();
-                const codNorm = codStr.replace(/[^a-z0-9]/g, '');
-                const nomeNorm = nomeStr.replace(/[^a-z0-9]/g, '');
-                const isSemCod = !codStr || codStr === '-' || codStr.includes('...') || (codNorm === nomeNorm && codNorm !== '');
+                const codStr = (p.id || '').trim();
+                const nomeStr = (p.nome || '').trim();
+                const codNorm = normalizar(codStr);
+                const nomeNorm = normalizar(nomeStr);
+                
+                const isSemCod = !codStr || 
+                                 codStr.includes('...') || 
+                                 codNorm === '0' || 
+                                 codNorm === 'sc' || 
+                                 codNorm === 'nd' || 
+                                 (codNorm === nomeNorm && codNorm !== '');
                 
                 if (isSemCod) {
                     encontrou = true;
@@ -933,17 +980,17 @@
             const contagemNomes = {};
 
             window.bancoProdutos.forEach(p => {
-                const codStr = (p.id || '').trim().toLowerCase();
-                const nomeStr = (p.nome || '').trim().toLowerCase();
-                if (codStr) contagemCodigos[codStr] = (contagemCodigos[codStr] || 0) + 1;
-                if (nomeStr) contagemNomes[nomeStr] = (contagemNomes[nomeStr] || 0) + 1;
+                const codNorm = normalizar(p.id);
+                const nomeNorm = normalizar(p.nome);
+                if (codNorm) contagemCodigos[codNorm] = (contagemCodigos[codNorm] || 0) + 1;
+                if (nomeNorm) contagemNomes[nomeNorm] = (contagemNomes[nomeNorm] || 0) + 1;
             });
 
             window.bancoProdutos.forEach(p => {
-                const codStr = (p.id || '').trim().toLowerCase();
-                const nomeStr = (p.nome || '').trim().toLowerCase();
+                const codNorm = normalizar(p.id);
+                const nomeNorm = normalizar(p.nome);
                 
-                if ((contagemCodigos[codStr] > 1) || (contagemNomes[nomeStr] > 1)) {
+                if ((contagemCodigos[codNorm] > 1) || (contagemNomes[nomeNorm] > 1)) {
                     encontrou = true;
                     listBody.innerHTML += `
                         <tr>
@@ -995,6 +1042,8 @@
             document.getElementById('edit-prod-setor').value = p.setor || '';
             document.getElementById('edit-prod-forn').value = p.fornecedor || '';
             document.getElementById('edit-prod-min').value = p.estoqueMinimo || 0;
+            document.getElementById('edit-prod-un').value = p.unidade || 'UN';
+            document.getElementById('edit-prod-usadas').value = p.saldoUsado || 0;
             
             fecharModal('modal-criticos');
             fecharModal('modal-sem-codigos');
@@ -1013,7 +1062,9 @@
                 local: document.getElementById('edit-prod-local').value.trim(),
                 setor: document.getElementById('edit-prod-setor').value.trim(),
                 fornecedor: document.getElementById('edit-prod-forn').value.trim(),
-                estoqueMinimo: Number(document.getElementById('edit-prod-min').value)
+                estoqueMinimo: Number(document.getElementById('edit-prod-min').value),
+                unidade: document.getElementById('edit-prod-un').value.toUpperCase().trim(),
+                saldoUsado: Number(document.getElementById('edit-prod-usadas').value) || 0
             };
 
             try {
@@ -1021,7 +1072,9 @@
                 showToast('Produto atualizado com sucesso!');
                 fecharModal('modal-edit-prod');
                 await carregarProdutos();
-                abrirModalCriticos(); 
+                if(document.getElementById('view-movimentacoes').classList.contains('active')) {
+                    carregarMovimentacoes();
+                }
             } catch (err) {
                 showToast('Erro: ' + err.message, true);
             } finally {
@@ -1034,11 +1087,14 @@
             const list = document.getElementById(listId);
             
             const render = () => {
-                const val = input.value.toLowerCase(); 
+                const val = normalizar(input.value); 
                 list.innerHTML = '';
-                const filtered = window.bancoProdutos.filter(p => 
-                    (p.nome && p.nome.toLowerCase().includes(val)) || (p.id && p.id.toLowerCase().includes(val))
-                ).slice(0, 15);
+                
+                const filtered = window.bancoProdutos.filter(p => {
+                    const nomeNorm = normalizar(p.nome);
+                    const codNorm = normalizar(p.id);
+                    return nomeNorm.includes(val) || codNorm.includes(val);
+                }).slice(0, 15);
                 
                 if (filtered.length === 0 && mode !== 'entrada') { list.style.display = 'none'; return; }
                 
@@ -1051,7 +1107,8 @@
                         if (mode === 'saida') {
                             input.value = p.nome;
                             document.getElementById('sai-cod').value = p.id;
-                            document.getElementById('sai-atual').value = p.saldo || 0;
+                            const uni = p.unidade || 'UN';
+                            document.getElementById('sai-atual').value = (p.saldo || 0) + ' ' + uni;
                             document.getElementById('sai-info-cod').innerText = p.id;
                             document.getElementById('sai-info-local').innerText = p.local || 'N/A';
                             document.getElementById('sai-info-setor').innerText = p.setor || 'N/A';
@@ -1064,19 +1121,24 @@
                             document.getElementById('ent-setor').value = p.setor || '';
                             document.getElementById('ent-forn').value = p.fornecedor || '';
                             document.getElementById('ent-min').value = p.estoqueMinimo || 0;
+                            document.getElementById('ent-un').value = p.unidade || 'UN';
+                            document.getElementById('ent-usadas').value = p.saldoUsado || 0;
                         } else if (mode === 'baixa-req') {
                             input.value = p.nome;
                             document.getElementById('baixa-req-prod-cod').value = p.id;
                             document.getElementById('baixa-req-prod-nome').value = p.nome;
                             document.getElementById('baixa-req-prod-local').value = p.local || '';
                             document.getElementById('baixa-req-prod-setor').value = p.setor || '';
-                            document.getElementById('span-req-saldo').innerText = p.saldo || 0;
+                            const uni = p.unidade || 'UN';
+                            document.getElementById('span-req-saldo').innerText = (p.saldo || 0) + ' ' + uni;
                             document.getElementById('baixa-req-saldo-atual').classList.remove('hidden');
                         } else if (mode === 'filtro') {
                             input.value = p.nome;
                             document.getElementById('info-prod-nome').innerText = p.nome;
                             document.getElementById('info-prod-cod').innerText = p.id;
-                            document.getElementById('info-prod-saldo').innerText = p.saldo !== undefined ? p.saldo : '0';
+                            const uni = p.unidade || 'UN';
+                            document.getElementById('info-prod-saldo').innerText = (p.saldo !== undefined ? p.saldo : '0') + ' ' + uni;
+                            document.getElementById('info-prod-usadas').innerText = p.saldoUsado !== undefined ? p.saldoUsado : '0';
                             document.getElementById('info-prod-min').innerText = p.estoqueMinimo !== undefined ? p.estoqueMinimo : '0';
                             document.getElementById('info-produto-selecionado').classList.remove('hidden');
                             document.getElementById('info-produto-selecionado').classList.add('flex');
@@ -1107,7 +1169,6 @@
             }
         });
 
-        // FORÇA A BUSCA GLOBAL COMPLETA
         window.verTodasMovimentacoes = () => {
             window.filtroEspecialMov = null;
             document.getElementById('filtro-mov-prod').value = '';
@@ -1124,20 +1185,19 @@
             carregarMovimentacoes();
         };
 
-        window.verMovEsp = (tipo) => {
-            window.filtroEspecialMov = tipo;
+        window.limparFiltrosMov = () => {
+            window.filtroEspecialMov = null;
             document.getElementById('filtro-mov-prod').value = '';
             document.getElementById('filtro-mov-ini').value = '';
             document.getElementById('filtro-mov-fim').value = '';
+            document.getElementById('grid-movimentacoes').innerHTML = '<tr><td colspan="14" class="text-center py-10 text-slate-400 font-medium">Filtros limpos. Utilize os campos acima e clique em "Buscar".</td></tr>';
+            window.bancoMovimentacoes = [];
             
             const infoProd = document.getElementById('info-produto-selecionado');
             if(infoProd) {
                 infoProd.classList.add('hidden');
                 infoProd.classList.remove('flex');
             }
-            
-            changeView('movimentacoes');
-            carregarMovimentacoes();
         };
 
         document.getElementById('form-entrada').addEventListener('submit', async (e) => {
@@ -1154,6 +1214,8 @@
             const obs = document.getElementById('ent-obs').value.trim();
             const qtd = Number(document.getElementById('ent-qtd').value);
             const min = Number(document.getElementById('ent-min').value);
+            const un = document.getElementById('ent-un').value.toUpperCase().trim() || 'UN';
+            const usadas = Number(document.getElementById('ent-usadas').value) || 0;
 
             try {
                 const idSeguro = cod.replace(/\//g, '-').replace(/\\/g, '-');
@@ -1161,9 +1223,9 @@
                 const snap = await getDoc(prodRef);
 
                 if (snap.exists()) {
-                    await updateDoc(prodRef, { nome: nome, local: local, setor: setor, fornecedor: forn, estoqueMinimo: min, saldo: increment(qtd) });
+                    await updateDoc(prodRef, { nome: nome, local: local, setor: setor, fornecedor: forn, estoqueMinimo: min, unidade: un, saldo: increment(qtd) });
                 } else {
-                    await setDoc(prodRef, { nome: nome, local: local, setor: setor, fornecedor: forn, estoqueMinimo: min, saldo: qtd });
+                    await setDoc(prodRef, { nome: nome, local: local, setor: setor, fornecedor: forn, estoqueMinimo: min, unidade: un, saldoUsado: usadas, saldo: qtd });
                 }
 
                 await addDoc(collection(db, 'movimentacoes'), {
@@ -1232,67 +1294,42 @@
                 const snap = await getDocs(collection(db, "movimentacoes"));
                 window.bancoMovimentacoes = [];
                 
-                let prodFiltro = document.getElementById('filtro-mov-prod').value.trim().toLowerCase();
+                let prodFiltro = document.getElementById('filtro-mov-prod').value.trim();
                 let dataIniStr = document.getElementById('filtro-mov-ini').value;
                 let dataFimStr = document.getElementById('filtro-mov-fim').value;
                 
-                const mapCodigos = {};
-                const mapNomes = {};
-                if (window.filtroEspecialMov === 'duplicados') {
-                    window.bancoProdutos.forEach(p => {
-                        const c = (p.id || '').trim().toLowerCase();
-                        const n = (p.nome || '').trim().toLowerCase();
-                        if(c) mapCodigos[c] = (mapCodigos[c] || 0) + 1;
-                        if(n) mapNomes[n] = (mapNomes[n] || 0) + 1;
-                    });
-                }
+                const prodNormFiltro = normalizar(prodFiltro);
 
                 snap.forEach(doc => {
                     const d = doc.data();
                     d.id = doc.id;
                     let isValid = true;
 
-                    const pid = (d.produto_id || '').trim().toLowerCase();
-                    const pnome = (d.produto_nome || d.produto || '').trim().toLowerCase();
-                    
-                    const pidNorm = pid.replace(/[^a-z0-9]/g, '');
-                    const pnomeNorm = pnome.replace(/[^a-z0-9]/g, '');
-                    const isSemCod = !pid || pid === '-' || pid.includes('...') || (pidNorm === pnomeNorm && pidNorm !== '');
+                    if (prodNormFiltro) {
+                        const nomeNorm = normalizar(d.produto_nome || d.produto || '');
+                        const idNorm = normalizar(d.produto_id || '');
+                        if (!nomeNorm.includes(prodNormFiltro) && !idNorm.includes(prodNormFiltro)) {
+                            isValid = false;
+                        }
+                    }
 
-                    if (window.filtroEspecialMov === 'duplicados') {
-                        const dupCod = mapCodigos[pid] > 1;
-                        const dupNome = mapNomes[pnome] > 1;
-                        if (!dupCod && !dupNome) isValid = false;
-                    } else if (window.filtroEspecialMov === 'sem_codigo') {
-                        if (!isSemCod) {
-                            isValid = false; 
-                        }
-                    } else {
-                        if (prodFiltro) {
-                            const nome = (d.produto_nome || '').toLowerCase();
-                            const id = (d.produto_id || d.produto || '').toLowerCase();
-                            if (!nome.includes(prodFiltro) && !id.includes(prodFiltro)) isValid = false;
-                        }
-                        if (isValid && d.data && d.data.toDate) {
-                            const movDate = d.data.toDate();
-                            movDate.setHours(0, 0, 0, 0); 
-                            if (dataIniStr) { const dIni = new Date(dataIniStr + 'T00:00:00'); if (movDate < dIni) isValid = false; }
-                            if (dataFimStr) { const dFim = new Date(dataFimStr + 'T00:00:00'); if (movDate > dFim) isValid = false; }
-                        }
+                    if (isValid && d.data && d.data.toDate) {
+                        const movDate = d.data.toDate();
+                        movDate.setHours(0, 0, 0, 0); 
+                        if (dataIniStr) { const dIni = new Date(dataIniStr + 'T00:00:00'); if (movDate < dIni) isValid = false; }
+                        if (dataFimStr) { const dFim = new Date(dataFimStr + 'T00:00:00'); if (movDate > dFim) isValid = false; }
                     }
 
                     if (isValid) window.bancoMovimentacoes.push(d);
                 });
 
-                // ORDENAÇÃO: ORDEM ALFABÉTICA DO PRODUTO, DEPOIS PELA DATA
                 window.bancoMovimentacoes.sort((a, b) => {
-                    const nomeA = (a.produto_nome || a.produto || '').toLowerCase();
-                    const nomeB = (b.produto_nome || b.produto || '').toLowerCase();
+                    const nomeA = normalizar(a.produto_nome || a.produto || '');
+                    const nomeB = normalizar(b.produto_nome || b.produto || '');
                     
                     if (nomeA < nomeB) return -1;
                     if (nomeA > nomeB) return 1;
                     
-                    // Se o nome do produto for igual, organiza pela data (mais recente no topo)
                     const dateA = a.data && a.data.toDate ? a.data.toDate() : new Date(0);
                     const dateB = b.data && b.data.toDate ? b.data.toDate() : new Date(0);
                     return dateB - dateA;
@@ -1309,7 +1346,8 @@
                     const tipoCor = d.tipo === 'ENTRADA' ? 'text-emerald-600 font-bold bg-emerald-50 px-2 py-1 rounded-md' : 'text-rose-600 font-bold bg-rose-50 px-2 py-1 rounded-md';
                     
                     const pIndex = window.bancoProdutos.find(p => p.id === d.produto_id);
-                    const pSaldo = pIndex ? pIndex.saldo : '--';
+                    const un = pIndex ? (pIndex.unidade || 'UN') : 'UN';
+                    const pSaldo = pIndex ? pIndex.saldo + ' ' + un : '--';
                     const pMin = pIndex ? pIndex.estoqueMinimo : '--';
 
                     const obsTexto = d.observacao || d.obs || '-';
@@ -1368,13 +1406,13 @@
 
         function renderizarRequisicoes() {
             const container = document.getElementById('grid-requisicoes');
-            const filtro = (document.getElementById('search-req').value || '').toLowerCase();
+            const filtro = normalizar(document.getElementById('search-req').value || '');
             
             const lista = window.bancoRequisicoes.filter(r => 
-                String(r.numero).toLowerCase().includes(filtro) || 
-                String(r.material_name).toLowerCase().includes(filtro) || 
-                String(r.setor).toLowerCase().includes(filtro) ||
-                String(r.solicitante).toLowerCase().includes(filtro)
+                normalizar(String(r.numero)).includes(filtro) || 
+                normalizar(String(r.material_name)).includes(filtro) || 
+                normalizar(String(r.setor)).includes(filtro) ||
+                normalizar(String(r.solicitante)).includes(filtro)
             );
 
             if (!lista.length) { container.innerHTML = ''; document.getElementById('empty-req').classList.remove('hidden'); return; }
@@ -1530,7 +1568,6 @@
             }
         };
 
-        // ================= EDITAR E EXCLUIR MOVIMENTAÇÕES =================
         window.abrirModalEditMov = (id) => {
             const m = window.bancoMovimentacoes.find(x => x.id === id);
             if(!m) return;
