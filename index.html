@@ -49,7 +49,14 @@
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <div id="screen-login" class="fixed inset-0 z-50 flex items-center justify-center p-6 bg-nexa overflow-hidden flex flex-col transition-opacity duration-500">
+    <!-- TELA DE LOADING INICIAL -->
+    <div id="screen-loading" class="fixed inset-0 z-[60] flex items-center justify-center bg-nexa flex-col">
+        <div class="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mb-4"></div>
+        <p class="text-white font-bold tracking-widest uppercase text-xs">Verificando Autenticação...</p>
+    </div>
+
+    <!-- TELA DE LOGIN -->
+    <div id="screen-login" class="hidden fixed inset-0 z-50 flex items-center justify-center p-6 bg-nexa overflow-hidden flex-col">
         <div class="w-full max-w-md relative z-10">
             <div class="glass-login p-10 rounded-[2.5rem] shadow-2xl relative">
                 <div class="text-center mb-8">
@@ -67,8 +74,10 @@
                 </form>
             </div>
         </div>
+    </div>
 
-    <div id="screen-app" class="hidden flex-1 flex flex-col w-full h-full">
+    <!-- APP PRINCIPAL -->
+    <div id="screen-app" class="hidden flex-1 flex-col w-full h-full">
         <!-- Header & Navbar -->
         <header class="header-nexa text-white px-6 py-4 flex flex-col md:flex-row justify-between items-center shadow-lg sticky top-0 z-40 gap-4">
             <div class="flex items-center gap-4">
@@ -486,7 +495,7 @@
 
         window.bancoProdutos = [];
         window.bancoRequisicoes = [];
-        window.bancoMovimentacoes = []; // Array Global para armazenar logs na memória
+        window.bancoMovimentacoes = [];
 
         // UI Toast Helper
         window.showToast = (msg, isError = false) => {
@@ -497,7 +506,6 @@
             setTimeout(() => { t.style.opacity='0'; setTimeout(()=>t.remove(), 300); }, 3500);
         };
 
-        // Gerenciamento de Views (SPA)
         window.changeView = (viewId) => {
             document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
@@ -513,20 +521,31 @@
             if(viewId === 'dashboard' || viewId === 'operacoes') carregarProdutos();
         };
 
-        // Controle de Auth
         onAuthStateChanged(auth, (user) => {
+            const loadingScreen = document.getElementById('screen-loading');
+            const loginScreen = document.getElementById('screen-login');
+            const appScreen = document.getElementById('screen-app');
+            
+            // Remove a tela de "Verificando..." da frente
+            if(loadingScreen) loadingScreen.classList.add('hidden');
+
             if (user) {
-                document.getElementById('screen-login').classList.add('hidden');
-                document.getElementById('screen-login').classList.remove('flex');
-                document.getElementById('screen-app').classList.remove('hidden');
-                document.getElementById('screen-app').classList.add('flex');
+                // Usuário está logado
+                loginScreen.classList.add('hidden');
+                loginScreen.classList.remove('flex');
+                
+                appScreen.classList.remove('hidden');
+                appScreen.classList.add('flex');
+                
                 document.getElementById('user-display').innerText = user.email.split('@')[0];
                 carregarProdutos(); 
             } else {
-                document.getElementById('screen-login').classList.remove('hidden');
-                document.getElementById('screen-login').classList.add('flex');
-                document.getElementById('screen-app').classList.add('hidden');
-                document.getElementById('screen-app').classList.remove('flex');
+                // Ninguém logado (ou deslogou agora)
+                appScreen.classList.add('hidden');
+                appScreen.classList.remove('flex');
+                
+                loginScreen.classList.remove('hidden');
+                loginScreen.classList.add('flex');
             }
         });
 
@@ -545,7 +564,6 @@
 
         window.fazerLogout = () => signOut(auth);
 
-        // Modais
         window.abrirModal = (id) => {
             document.getElementById(id).classList.remove('hidden');
             if(id === 'modal-entrada') document.getElementById('ent-data').valueAsDate = new Date();
@@ -581,7 +599,6 @@
             }
         }
 
-        // Setup Dropdowns Dinâmicos
         function setupDropdown(inputId, listId, mode = 'entrada') {
             const input = document.getElementById(inputId);
             const list = document.getElementById(listId);
@@ -608,9 +625,7 @@
                             document.getElementById('sai-info-setor').innerText = p.setor || 'N/A';
                             document.getElementById('sai-info-min').innerText = p.estoqueMinimo || '0';
                             
-                            // Vincula o 'local' e 'setor' originais do produto na hora da saída (variável global temporária ou no DOM)
                             window._produto_selecionado = p;
-                            
                             document.getElementById('sai-info').classList.remove('hidden');
                         } else if (mode === 'entrada') {
                             document.getElementById('ent-nome').value = p.nome;
@@ -637,7 +652,6 @@
         setupDropdown('sai-busca', 'list-sai-busca', 'saida');
         setupDropdown('filtro-mov-prod', 'list-filtro-mov-prod', 'filtro');
 
-        // Operações Salvar ENTRADA
         document.getElementById('form-entrada').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-salvar-ent');
@@ -681,7 +695,6 @@
             }
         });
 
-        // Operações Salvar SAÍDA
         document.getElementById('form-saida').addEventListener('submit', async (e) => {
             e.preventDefault();
             const cod = document.getElementById('sai-cod').value;
@@ -727,7 +740,6 @@
             }
         });
 
-        // ================= BUSCA DE MOVIMENTAÇÕES (FILTRO EM MEMÓRIA) =================
         window.carregarMovimentacoes = async () => {
             const grid = document.getElementById('grid-movimentacoes');
             grid.innerHTML = '<tr><td colspan="12" class="text-center py-10 text-slate-400 font-medium animate-pulse">Buscando e filtrando registros...</td></tr>';
@@ -903,7 +915,6 @@
             }).join('');
         }
 
-        // Criar Requisição
         document.getElementById('form-nova-req').addEventListener('submit', async (e) => {
             e.preventDefault();
             const btn = document.getElementById('btn-salvar-req');
@@ -931,7 +942,6 @@
             }
         });
 
-        // Dar Baixa na Requisição
         window.abrirModalBaixaReq = (id, nome, total, entregue) => {
             const restante = total - entregue;
             document.getElementById('baixa-req-id').value = id;
@@ -973,7 +983,6 @@
             }
         };
 
-        // Excluir Requisição
         window.excluirReq = async (id) => {
             if(confirm("Deseja realmente excluir esta requisição permanentemente?")) {
                 try {
@@ -986,7 +995,6 @@
             }
         };
 
-        // ================= EDITAR MOVIMENTAÇÕES =================
         window.abrirModalEditMov = (idx) => {
             const m = window.bancoMovimentacoes[idx];
             document.getElementById('edit-mov-id').value = m.id;
