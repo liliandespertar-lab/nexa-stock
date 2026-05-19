@@ -300,20 +300,20 @@
                     <table class="table-nexa w-full">
                         <thead>
                             <tr>
-                                <th>Data/Hora</th>
-                                <th>Tipo</th>
-                                <th>Cód. Produto</th>
-                                <th>Nome</th>
-                                <th class="text-center">Saldo</th>
-                                <th class="text-center">Mín</th>
-                                <th class="text-right">Qtd</th>
-                                <th>Local</th>
-                                <th>Setor</th>
-                                <th>Fornecedor</th>
-                                <th>Responsável</th>
-                                <th>Finalidade</th>
-                                <th>Obs</th>
-                                <th class="text-right print:hidden">Ações</th>
+                                <th>DATA</th>
+                                <th>TIPO</th>
+                                <th>CÓDIGO</th>
+                                <th>MATERIAL</th>
+                                <th class="text-center">QUANT (SALDO)</th>
+                                <th class="text-center">ESTOQ. MÍN</th>
+                                <th class="text-right">QUANT (MOV)</th>
+                                <th>ARMAZENAMENTO</th>
+                                <th>SETOR / MÁQ</th>
+                                <th>FORNECEDOR / PRESTADOR</th>
+                                <th>COLABORADOR</th>
+                                <th>FINALIDADE</th>
+                                <th>OBSERVAÇÕES</th>
+                                <th class="text-right print:hidden">AÇÕES</th>
                             </tr>
                         </thead>
                         <tbody id="grid-movimentacoes">
@@ -703,7 +703,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Código</label>
-                        <input type="text" id="edit-prod-cod" class="input-nexa bg-slate-100 cursor-not-allowed" disabled>
+                        <input type="text" id="edit-prod-cod" class="input-nexa border-indigo-200 focus:border-indigo-500" required>
                     </div>
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nome</label>
@@ -1401,7 +1401,16 @@
             const btn = document.getElementById('btn-salvar-edit-prod');
             btn.innerText = 'SALVANDO...'; btn.disabled = true;
 
-            const id = document.getElementById('edit-prod-id-original').value;
+            const idOriginal = document.getElementById('edit-prod-id-original').value;
+            const novoCodRaw = document.getElementById('edit-prod-cod').value.trim();
+            const novoCodSeguro = novoCodRaw.replace(/\//g, '-').replace(/\\/g, '-');
+            
+            if (!novoCodSeguro) {
+                showToast('O código do produto não pode ser vazio.', true);
+                btn.innerText = 'SALVAR ALTERAÇÕES'; btn.disabled = false;
+                return;
+            }
+
             const payload = {
                 nome: document.getElementById('edit-prod-nome').value.trim(),
                 local: document.getElementById('edit-prod-local').value.trim(),
@@ -1413,8 +1422,54 @@
             };
 
             try {
-                await updateDoc(doc(db, "empresas", window.userEmpresa, 'produtos', id), payload);
-                showToast('Produto atualizado com sucesso!');
+                if (idOriginal !== novoCodSeguro) {
+                    // O usuário alterou o código do produto
+                    const novoProdRef = doc(db, "empresas", window.userEmpresa, 'produtos', novoCodSeguro);
+                    const snapNovo = await getDoc(novoProdRef);
+                    
+                    // 1. Verifica se o novo código já existe
+                    if (snapNovo.exists()) {
+                        showToast(`O código "${novoCodSeguro}" já está em uso por outro produto!`, true);
+                        btn.innerText = 'SALVAR ALTERAÇÕES'; btn.disabled = false;
+                        return;
+                    }
+
+                    // 2. Se não existe, transfere os dados para o novo código
+                    const oldProdRef = doc(db, "empresas", window.userEmpresa, 'produtos', idOriginal);
+                    const snapOld = await getDoc(oldProdRef);
+                    let oldData = snapOld.exists() ? snapOld.data() : {};
+                    
+                    const newData = { ...oldData, ...payload };
+                    await setDoc(novoProdRef, newData); // Cria o novo
+                    await deleteDoc(oldProdRef);        // Apaga o antigo
+
+                    // 3. Atualiza todo o histórico de movimentações para o novo código
+                    const qMovs = query(collection(db, "empresas", window.userEmpresa, "movimentacoes"), where("produto_id", "==", idOriginal));
+                    const snapMovs = await getDocs(qMovs);
+                    
+                    let batches = [];
+                    let currentBatch = writeBatch(db);
+                    let opCount = 0;
+
+                    snapMovs.forEach((movDoc) => {
+                        currentBatch.update(movDoc.ref, { produto_id: novoCodSeguro });
+                        opCount++;
+                        if (opCount === 400) {
+                            batches.push(currentBatch.commit());
+                            currentBatch = writeBatch(db);
+                            opCount = 0;
+                        }
+                    });
+                    if (opCount > 0) batches.push(currentBatch.commit());
+                    await Promise.all(batches);
+
+                    showToast('Produto e código atualizados com sucesso!');
+                } else {
+                    // O código não foi alterado, apenas atualiza as outras informações
+                    await updateDoc(doc(db, "empresas", window.userEmpresa, 'produtos', idOriginal), payload);
+                    showToast('Produto atualizado com sucesso!');
+                }
+
                 fecharModal('modal-edit-prod');
                 await carregarProdutos();
                 if(document.getElementById('view-movimentacoes').classList.contains('active')) carregarMovimentacoes();
