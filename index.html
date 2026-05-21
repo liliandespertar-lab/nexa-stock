@@ -160,9 +160,10 @@
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <!-- A) Total Cadastrados -->
-                <div class="bg-white border border-slate-200 rounded-[2rem] p-8 shadow-sm flex flex-col cursor-default">
-                    <span class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Produtos Cadastrados</span>
-                    <span id="kpi-produtos" class="text-5xl font-black text-slate-800 tracking-tighter mt-auto">--</span>
+                <div onclick="abrirModalInventario()" class="bg-white border border-indigo-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-indigo-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
+                    <div class="absolute right-0 top-0 h-full w-2 bg-indigo-500 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
+                    <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">Total Produtos (Inventário)</span>
+                    <span id="kpi-produtos" class="text-5xl font-black text-slate-800 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
                 </div>
                 <!-- B) Alerta Mínimo -->
                 <div onclick="abrirModalCriticos()" class="bg-white border border-rose-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-rose-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
@@ -694,6 +695,37 @@
         </div>
     </div>
 
+    <div id="modal-inventario" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4 print:hidden">
+        <div class="glass-form w-full max-w-5xl p-8 animate-slide relative">
+            <button onclick="fecharModal('modal-inventario')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-end mb-6 gap-4">
+                <div>
+                    <h2 class="text-2xl font-black text-indigo-600 uppercase tracking-tighter mb-2">📦 Inventário Completo</h2>
+                    <p class="text-xs text-slate-500 font-medium">Gerencie todos os produtos cadastrados no sistema.</p>
+                </div>
+                <div class="w-full md:w-1/3">
+                    <input type="text" id="busca-inventario" placeholder="Buscar por código ou nome..." class="input-nexa py-2 text-sm border-indigo-200 focus:border-indigo-500" onkeyup="filtrarInventario()">
+                </div>
+            </div>
+            
+            <div class="max-h-96 overflow-y-auto pr-2">
+                <table class="table-nexa w-full">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Produto</th>
+                            <th>Local</th>
+                            <th>Setor</th>
+                            <th class="text-center">Saldo</th>
+                            <th class="text-right">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody id="list-inventario-body"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
     <div id="modal-edit-prod" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4 print:hidden">
         <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
             <button onclick="fecharModal('modal-edit-prod')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
@@ -740,7 +772,10 @@
                         <input type="number" id="edit-prod-usadas" class="input-nexa font-black text-slate-600" min="0">
                     </div>
                 </div>
-                <button type="submit" id="btn-salvar-edit-prod" class="w-full bg-indigo-600 text-white py-4 rounded-xl font-black text-sm mt-4 shadow-lg hover:bg-indigo-700 transition">SALVAR ALTERAÇÕES</button>
+                <div class="flex gap-4 mt-4">
+                    <button type="button" onclick="excluirProdutoPeloEdit()" class="w-1/3 bg-rose-50 text-rose-600 py-4 rounded-xl font-black text-sm shadow-sm hover:bg-rose-100 transition border border-rose-100">EXCLUIR</button>
+                    <button type="submit" id="btn-salvar-edit-prod" class="w-2/3 bg-indigo-600 text-white py-4 rounded-xl font-black text-sm shadow-lg hover:bg-indigo-700 transition">SALVAR ALTERAÇÕES</button>
+                </div>
             </form>
         </div>
     </div>
@@ -1373,10 +1408,62 @@
                     showToast('Produto excluído com sucesso!');
                     fecharModal('modal-sem-codigos');
                     fecharModal('modal-duplicados');
-                    carregarProdutos();
+                    
+                    await carregarProdutos();
+                    if(!document.getElementById('modal-inventario').classList.contains('hidden')) abrirModalInventario();
+                    
                     if(document.getElementById('view-movimentacoes').classList.contains('active')) carregarMovimentacoes();
                 } catch(e) { showToast('Erro ao excluir produto.', true); }
             }
+        };
+
+        window.excluirProdutoPeloEdit = () => {
+            const id = document.getElementById('edit-prod-id-original').value;
+            const nome = document.getElementById('edit-prod-nome').value;
+            fecharModal('modal-edit-prod');
+            excluirProduto(id, nome);
+        };
+
+        window.abrirModalInventario = () => {
+            document.getElementById('busca-inventario').value = '';
+            renderizarInventario(window.bancoProdutos);
+            abrirModal('modal-inventario');
+        };
+
+        window.renderizarInventario = (lista) => {
+            const listBody = document.getElementById('list-inventario-body');
+            listBody.innerHTML = '';
+            if (lista.length === 0) {
+                listBody.innerHTML = '<tr><td colspan="6" class="text-center py-6 text-slate-400">Nenhum produto encontrado.</td></tr>';
+                return;
+            }
+            lista.forEach(p => {
+                listBody.innerHTML += `
+                    <tr>
+                        <td class="font-bold text-slate-700">${p.id}</td>
+                        <td>${p.nome}</td>
+                        <td class="text-xs text-slate-500">${p.local || '-'}</td>
+                        <td class="text-xs text-slate-500">${p.setor || '-'}</td>
+                        <td class="text-center font-black text-indigo-600 bg-indigo-50 rounded-lg">${p.saldo || 0}</td>
+                        <td class="text-right flex justify-end gap-1">
+                            <button onclick="abrirEditProd('${p.id.replace(/'/g, "\\'")}')" class="text-indigo-500 hover:text-indigo-700 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition" title="Editar Produto">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+                            </button>
+                            <button onclick="excluirProduto('${p.id.replace(/'/g, "\\'")}', '${(p.nome || '').replace(/'/g, "\\'")}')" class="text-rose-500 hover:text-rose-700 p-1.5 bg-rose-50 hover:bg-rose-100 rounded-lg transition" title="Excluir Produto">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+
+        window.filtrarInventario = () => {
+            const termo = normalizar(document.getElementById('busca-inventario').value);
+            const filtrados = window.bancoProdutos.filter(p => 
+                normalizar(p.nome).includes(termo) || normalizar(p.id).includes(termo)
+            );
+            renderizarInventario(filtrados);
         };
 
         window.abrirEditProd = (id) => {
@@ -1392,7 +1479,10 @@
             document.getElementById('edit-prod-un').value = p.unidade || 'UN';
             document.getElementById('edit-prod-usadas').value = p.saldoUsado || 0;
             
-            fecharModal('modal-criticos'); fecharModal('modal-sem-codigos'); fecharModal('modal-duplicados');
+            fecharModal('modal-criticos'); 
+            fecharModal('modal-sem-codigos'); 
+            fecharModal('modal-duplicados');
+            fecharModal('modal-inventario');
             abrirModal('modal-edit-prod');
         };
 
