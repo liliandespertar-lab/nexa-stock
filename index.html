@@ -1695,9 +1695,6 @@
                             <button onclick="excluirMovimentacao('${d.id}', '${d.produto_id}', ${d.quantidade}, '${d.tipo}')" class="text-amber-500 hover:text-amber-700 p-1.5 bg-amber-50 hover:bg-amber-100 rounded-lg transition" title="Excluir Lançamento">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 4H8l-7 8 7 8h13a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2z"></path><line x1="18" y1="9" x2="12" y2="15"></line><line x1="12" y1="9" x2="18" y2="15"></line></svg>
                             </button>
-                            <button onclick="excluirProduto('${d.produto_id}', '${(d.produto_nome || '').replace(/'/g, "\\'")}')" class="text-rose-500 hover:text-rose-700 p-1.5 bg-rose-50 hover:bg-rose-100 rounded-lg transition" title="Excluir Cadastro do Produto">
-                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                            </button>
                         </td>
                     `;
                     grid.appendChild(tr);
@@ -1879,13 +1876,15 @@
             document.getElementById('edit-mov-local').value = m.local || '';
             document.getElementById('edit-mov-setor').value = m.setor || '';
             document.getElementById('edit-mov-forn').value = m.fornecedor || '';
+            
+            // Lógica que faltava preencher
             document.getElementById('edit-mov-user').value = m.usuario_retirou || m.usuario || m.usuario_sistema || '';
             document.getElementById('edit-mov-fin').value = m.finalidade || '';
             document.getElementById('edit-mov-obs').value = m.observacao || m.obs || '';
-            document.getElementById('edit-mov-prod-nome').innerText = `${m.produto_id || m.produto} - ${m.produto_nome || ''}`;
-            const tipoEl = document.getElementById('edit-mov-tipo-display');
-            tipoEl.innerText = m.tipo;
-            tipoEl.className = m.tipo === 'ENTRADA' ? 'font-bold text-sm text-emerald-600' : 'font-bold text-sm text-rose-600';
+            document.getElementById('edit-mov-prod-nome').innerText = m.produto_nome || m.produto || '---';
+            document.getElementById('edit-mov-tipo-display').innerText = m.tipo;
+            document.getElementById('edit-mov-tipo-display').className = m.tipo === 'ENTRADA' ? 'font-bold text-emerald-600 text-sm' : 'font-bold text-rose-600 text-sm';
+            
             abrirModal('modal-edit-mov');
         };
 
@@ -1895,58 +1894,76 @@
             btn.innerText = 'SALVANDO...'; btn.disabled = true;
 
             const id = document.getElementById('edit-mov-id').value;
-            const tipo = document.getElementById('edit-mov-tipo').value;
             const prodId = document.getElementById('edit-mov-prod-id').value;
+            const tipo = document.getElementById('edit-mov-tipo').value;
             const qtdAntiga = Number(document.getElementById('edit-mov-qtd-antiga').value);
-            const novaQtd = Number(document.getElementById('edit-mov-qtd').value);
-            const novoLocal = document.getElementById('edit-mov-local').value.trim();
-            const novoSetor = document.getElementById('edit-mov-setor').value.trim();
-            const novoForn = document.getElementById('edit-mov-forn').value.trim();
-            const novoUser = document.getElementById('edit-mov-user').value.trim();
-            const novaFin = document.getElementById('edit-mov-fin').value.trim();
-            const novaObs = document.getElementById('edit-mov-obs').value.trim();
+            const qtdNova = Number(document.getElementById('edit-mov-qtd').value);
+
+            const payload = {
+                local: document.getElementById('edit-mov-local').value.trim(),
+                setor: document.getElementById('edit-mov-setor').value.trim(),
+                fornecedor: document.getElementById('edit-mov-forn').value.trim(),
+                quantidade: qtdNova,
+                usuario_retirou: document.getElementById('edit-mov-user').value.trim(),
+                finalidade: document.getElementById('edit-mov-fin').value.trim(),
+                observacao: document.getElementById('edit-mov-obs').value.trim()
+            };
 
             try {
-                const diff = novaQtd - qtdAntiga;
-                if (diff !== 0 && prodId) {
-                    const prodRef = doc(db, "empresas", window.userEmpresa, 'produtos', prodId);
+                // 1. Atualizar Documento da Movimentação
+                await updateDoc(doc(db, "empresas", window.userEmpresa, "movimentacoes", id), payload);
+
+                // 2. Recalcular o Estoque do Produto (apenas se a quantidade mudou)
+                if (qtdNova !== qtdAntiga) {
+                    const diff = qtdNova - qtdAntiga;
+                    // Se foi ENTRADA: diff positivo significa que entrou mais peças do que antes, então soma no saldo geral do produto.
+                    // Se foi SAÍDA: diff positivo significa que saíram mais peças do que antes, então subtrai do saldo geral do produto.
+                    const ajuste = tipo === 'ENTRADA' ? diff : -diff;
+
+                    const prodRef = doc(db, "empresas", window.userEmpresa, "produtos", prodId);
                     const snap = await getDoc(prodRef);
-                    if (snap.exists()) {
-                        let saldoAtual = snap.data().saldo || 0;
-                        let novoSaldo = tipo === 'ENTRADA' ? saldoAtual + diff : saldoAtual - diff;
-                        if (novoSaldo < 0) throw new Error(`A alteração deixaria o saldo negativo (${novoSaldo}).`);
-                        await updateDoc(prodRef, { saldo: novoSaldo });
+                    
+                    if(snap.exists()){
+                        await updateDoc(prodRef, { saldo: increment(ajuste) });
                     }
                 }
-                const payloadMov = { quantidade: novaQtd, local: novoLocal, setor: novoSetor, fornecedor: novoForn, finalidade: novaFin, observacao: novaObs };
-                if (tipo === 'ENTRADA') payloadMov.usuario_sistema = novoUser;
-                else payloadMov.usuario_retirou = novoUser;
 
-                await updateDoc(doc(db, "empresas", window.userEmpresa, 'movimentacoes', id), payloadMov);
-                showToast('Lançamento atualizado!');
+                showToast('Lançamento atualizado e estoque recalculado com sucesso!');
                 fecharModal('modal-edit-mov');
                 carregarMovimentacoes();
-                carregarProdutos(); 
-            } catch (err) { showToast('Erro: ' + err.message, true); } finally { btn.innerText = 'SALVAR E RECALCULAR'; btn.disabled = false; }
+                carregarProdutos(); // Para refletir o novo saldo no Dashboard e Operações
+            } catch(err) {
+                showToast('Erro ao atualizar: ' + err.message, true);
+            } finally {
+                btn.innerText = 'SALVAR E RECALCULAR'; btn.disabled = false;
+            }
         });
 
-        window.excluirMovimentacao = async (idMov, idProd, qtd, tipo) => {
-            if(!confirm('ATENÇÃO: Deseja EXCLUIR ESTE LANÇAMENTO? O estoque será recalculado automaticamente.')) return;
+        window.excluirMovimentacao = async (id, prodId, qtd, tipo) => {
+            if(!confirm(`ATENÇÃO: Deseja EXCLUIR DEFINITIVAMENTE este lançamento de ${tipo} do sistema?\nIsso reverterá a quantidade (${qtd}) no saldo atual do produto.`)) return;
+
             try {
-                if(idProd) {
-                    const prodRef = doc(db, "empresas", window.userEmpresa, 'produtos', idProd);
-                    const snap = await getDoc(prodRef);
-                    if(snap.exists()) {
-                        let saldoAtual = snap.data().saldo || 0;
-                        let novoSaldo = tipo === 'ENTRADA' ? saldoAtual - qtd : saldoAtual + qtd;
-                        await updateDoc(prodRef, { saldo: novoSaldo });
-                    }
+                // Se eu estou apagando uma ENTRADA (que somou no estoque), agora eu preciso subtrair do estoque
+                // Se eu estou apagando uma SAÍDA (que subtraiu do estoque), agora eu preciso devolver para o estoque
+                const ajuste = tipo === 'ENTRADA' ? -Number(qtd) : Number(qtd);
+
+                // 1. Deletar o registro de movimentação
+                await deleteDoc(doc(db, "empresas", window.userEmpresa, "movimentacoes", id));
+
+                // 2. Ajustar o saldo do produto fisicamente
+                const prodRef = doc(db, "empresas", window.userEmpresa, "produtos", prodId);
+                const snap = await getDoc(prodRef);
+                
+                if(snap.exists()){
+                    await updateDoc(prodRef, { saldo: increment(ajuste) });
                 }
-                await deleteDoc(doc(db, "empresas", window.userEmpresa, 'movimentacoes', idMov));
-                showToast('Lançamento excluído!');
+
+                showToast('Lançamento excluído e saldo do produto revertido!');
                 carregarMovimentacoes();
                 carregarProdutos();
-            } catch(e) { showToast('Erro ao excluir lançamento.', true); }
+            } catch(e) {
+                showToast('Erro ao excluir movimentação: ' + e.message, true);
+            }
         };
 
     </script>
