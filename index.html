@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NEXA STOCK | Gestão de Estoque</title>
     
-    <!-- Configurações para Web App (PWA) Mobile e Desktop -->
     <meta name="theme-color" content="#0f172a">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="NEXA STOCK">
@@ -79,7 +78,6 @@
         <p class="font-bold tracking-widest uppercase text-xs text-indigo-200">Verificando Autenticação...</p>
     </div>
 
-    <!-- TELA DE LOGIN -->
     <div id="screen-login" class="fixed inset-0 z-50 bg-nexa items-center justify-center p-6 flex-col print:hidden" style="display: none;">
         <div class="w-full max-w-md relative z-10">
             <div class="glass-login p-10 rounded-[2.5rem] shadow-2xl relative">
@@ -119,9 +117,8 @@
             <nav class="flex items-center gap-1 sm:gap-2 bg-slate-800/50 p-1.5 rounded-xl border border-white/5 overflow-x-auto max-w-full">
                 <button onclick="changeView('dashboard')" id="nav-dashboard" class="nav-item active">Dashboard</button>
                 <button onclick="changeView('operacoes')" id="nav-operacoes" class="nav-item">Operações</button>
-                <button onclick="verTodasMovimentacoes()" id="nav-movimentacoes" class="nav-item">Movimentações</button>
+                <button onclick="changeView('movimentacoes')" id="nav-movimentacoes" class="nav-item">Movimentações</button>
                 <button onclick="changeView('requisicoes')" id="nav-requisicoes" class="nav-item">Requisições</button>
-                <!-- NOVA ABA: EQUIPE (Oculta por padrão, mostrada apenas para Admin) -->
                 <button onclick="carregarUsuariosView()" id="nav-usuarios" class="nav-item hidden">Equipe</button>
                 
                 <a href="tutorial.html" target="_blank" class="nav-item flex items-center gap-1.5 text-indigo-300 hover:text-white border-l border-white/10 pl-3 ml-1" title="Abrir Manual do Usuário">
@@ -135,8 +132,7 @@
                     🚀 CONVERTER PARA SaaS
                 </button>
 
-                <!-- SELETOR DE EMPRESA MASTER -->
-                <select id="master-empresa-select" class="hidden bg-slate-800 text-indigo-300 font-bold border border-slate-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-indigo-500 cursor-pointer" title="Trocar Base de Dados da Empresa">
+                <select id="master-empresa-select" class="hidden bg-slate-800 text-indigo-300 font-bold border border-slate-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-indigo-50 cursor-pointer" title="Trocar Base de Dados da Empresa">
                 </select>
 
                 <div class="text-right border-r border-white/10 pr-4 hidden sm:block">
@@ -159,37 +155,31 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- A) Total Cadastrados -->
                 <div onclick="abrirModalInventario()" class="bg-white border border-indigo-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-indigo-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-full w-2 bg-indigo-500 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
                     <span class="text-[10px] font-black text-indigo-500 uppercase tracking-widest mb-1">Total Produtos (Inventário)</span>
                     <span id="kpi-produtos" class="text-5xl font-black text-slate-800 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
                 </div>
-                <!-- B) Alerta Mínimo -->
                 <div onclick="abrirModalCriticos()" class="bg-white border border-rose-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-rose-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-full w-2 bg-rose-500 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
                     <span class="text-[10px] font-black text-rose-400 uppercase tracking-widest mb-1">Alerta de Estoque Mínimo</span>
                     <span id="kpi-criticos" class="text-5xl font-black text-rose-600 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
                 </div>
-                <!-- C) Total Movimentações -->
                 <div onclick="verTodasMovimentacoes()" class="bg-white border border-emerald-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-emerald-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-full w-2 bg-emerald-500 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
                     <span class="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Total de Movimentações</span>
                     <span id="kpi-movs" class="text-5xl font-black text-emerald-600 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
                 </div>
-                <!-- D) Requisições Pendentes -->
                 <div onclick="changeView('requisicoes')" class="bg-white border border-amber-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-amber-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-full w-2 bg-amber-500 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
                     <span class="text-[10px] font-black text-amber-500 uppercase tracking-widest mb-1">Req. Pendentes / Atraso</span>
                     <span id="kpi-reqs" class="text-5xl font-black text-amber-600 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
                 </div>
-                <!-- E) Duplicados -->
                 <div onclick="abrirModalDuplicados()" class="bg-white border border-purple-200 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-purple-500 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-full w-2 bg-purple-500 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
                     <span class="text-[10px] font-black text-purple-500 uppercase tracking-widest mb-1">Produtos em Duplicidade</span>
                     <span id="kpi-duplicados" class="text-5xl font-black text-purple-600 tracking-tighter mt-auto group-hover:scale-105 transition-transform origin-left">--</span>
                 </div>
-                <!-- F) Sem Código -->
                 <div onclick="abrirModalSemCodigo()" class="bg-white border border-slate-300 rounded-[2rem] p-8 shadow-sm flex flex-col hover:border-slate-800 hover:shadow-lg transition-all cursor-pointer group relative overflow-hidden">
                     <div class="absolute right-0 top-0 h-full w-2 bg-slate-800 transform translate-x-2 group-hover:translate-x-0 transition-transform"></div>
                     <span class="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">Produtos Sem Código</span>
@@ -356,7 +346,6 @@
             </div>
         </main>
 
-        <!-- NOVA TELA: GERENCIAR EQUIPE (Admin Only) -->
         <main id="view-usuarios" class="view-section flex-1 max-w-6xl mx-auto w-full p-8 space-y-8 print:hidden">
             <div class="mb-4">
                 <h2 class="text-2xl font-black text-slate-800 tracking-tight">Gestão de Equipe</h2>
@@ -364,7 +353,6 @@
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <!-- Formulário de Novo Usuário -->
                 <div class="md:col-span-1 bg-white border border-slate-200 rounded-[2rem] p-6 shadow-sm h-fit">
                     <h3 class="text-lg font-black text-slate-800 mb-4 flex items-center gap-2"><span class="text-indigo-500">➕</span> Novo Acesso</h3>
                     <form id="form-novo-user" class="space-y-4">
@@ -396,7 +384,6 @@
                     </form>
                 </div>
 
-                <!-- Tabela de Usuários -->
                 <div class="md:col-span-2 bg-white border border-slate-200 rounded-[2rem] overflow-hidden shadow-sm flex flex-col">
                     <div class="p-6 border-b border-slate-100 bg-slate-50 flex justify-between items-center">
                         <h3 class="font-black text-slate-800 text-sm uppercase tracking-widest">Colaboradores Ativos</h3>
@@ -426,7 +413,6 @@
         </footer>
     </div>
 
-    <!-- Modais (Manter todos os modais atuais) -->
     <div id="modal-entrada" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4 print:hidden">
         <div class="glass-form w-full max-w-2xl p-8 animate-slide relative">
             <button onclick="fecharModal('modal-entrada')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
@@ -846,7 +832,6 @@
         </div>
     </div>
 
-    <!-- MODAL ALTERAR SENHA PESSOAL -->
     <div id="modal-alterar-senha" class="hidden fixed inset-0 z-50 modal-nexa flex items-center justify-center p-4 print:hidden">
         <div class="glass-form w-full max-w-md p-8 animate-slide relative">
             <button onclick="fecharModal('modal-alterar-senha')" class="absolute top-6 right-6 text-slate-400 hover:text-slate-800 text-3xl font-light">&times;</button>
@@ -1786,9 +1771,9 @@
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
                             </button>
                         </td>
-                    </tr>
-                `;
-            });
+                    `;
+                    grid.appendChild(tr);
+                });
             } catch (e) {
                 grid.innerHTML = `<tr><td colspan="14" class="text-center py-10 text-rose-500 font-bold">Erro: ${e.message}</td></tr>`;
             }
