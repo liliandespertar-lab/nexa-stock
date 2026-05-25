@@ -721,7 +721,7 @@
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Código</label>
-                        <input type="text" id="edit-prod-cod" class="input-nexa bg-slate-100 cursor-not-allowed" disabled>
+                        <input type="text" id="edit-prod-cod" class="input-nexa" required>
                     </div>
                     <div>
                         <label class="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-1">Nome</label>
@@ -1452,8 +1452,16 @@
         };
 
         window.abrirEditProd = (id) => {
+            if(!id) {
+                showToast('Este lançamento não possui código de produto vinculado.', true);
+                return;
+            }
+
             const p = window.bancoProdutos.find(x => x.id === id);
-            if(!p) return;
+            if(!p) {
+                showToast('Produto não encontrado no cadastro. Atualize os produtos e tente novamente.', true);
+                return;
+            }
             document.getElementById('edit-prod-id-original').value = p.id;
             document.getElementById('edit-prod-cod').value = p.id;
             document.getElementById('edit-prod-nome').value = p.nome || '';
@@ -1468,15 +1476,29 @@
             fecharModal('modal-sem-codigos'); 
             fecharModal('modal-duplicados');
             fecharModal('modal-inventario');
+            fecharModal('modal-edit-mov');
             abrirModal('modal-edit-prod');
         };
 
         document.getElementById('form-edit-prod').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const btn = document.getElementById('btn-salvar-edit-prod');
-            btn.innerText = 'SALVANDO...'; btn.disabled = true;
 
-            const id = document.getElementById('edit-prod-id-original').value;
+            const btn = document.getElementById('btn-salvar-edit-prod');
+            btn.innerText = 'SALVANDO...';
+            btn.disabled = true;
+
+            const idOriginal = document.getElementById('edit-prod-id-original').value;
+            const novoCodDigitado = document.getElementById('edit-prod-cod').value.trim();
+
+            if (!novoCodDigitado) {
+                showToast('O código do produto é obrigatório.', true);
+                btn.innerText = 'SALVAR ALTERAÇÕES';
+                btn.disabled = false;
+                return;
+            }
+
+            const novoId = novoCodDigitado.replace(/\//g, '-').replace(/\\/g, '-');
+
             const payload = {
                 nome: document.getElementById('edit-prod-nome').value.trim(),
                 local: document.getElementById('edit-prod-local').value.trim(),
@@ -1487,16 +1509,104 @@
                 saldoUsado: Number(document.getElementById('edit-prod-usadas').value) || 0
             };
 
+            if (!payload.nome) {
+                showToast('O nome do produto é obrigatório.', true);
+                btn.innerText = 'SALVAR ALTERAÇÕES';
+                btn.disabled = false;
+                return;
+            }
+
             try {
-                await updateDoc(doc(db, "empresas", window.userEmpresa, 'produtos', id), payload);
+                const prodRefOriginal = doc(db, "empresas", window.userEmpresa, "produtos", idOriginal);
+                const prodRefNovo = doc(db, "empresas", window.userEmpresa, "produtos", novoId);
+
+                const snapOriginal = await getDoc(prodRefOriginal);
+
+                if (!snapOriginal.exists()) {
+                    throw new Error('Produto original não encontrado.');
+                }
+
+                const dadosAtuais = snapOriginal.data();
+
+                if (novoId !== idOriginal) {
+                    const snapNovo = await getDoc(prodRefNovo);
+
+                    if (snapNovo.exists()) {
+                        throw new Error('Já existe um produto cadastrado com este novo código.');
+                    }
+
+                    await setDoc(prodRefNovo, {
+                        ...dadosAtuais,
+                        ...payload
+                    });
+
+                    await deleteDoc(prodRefOriginal);
+
+                    const movsSnap = await getDocs(collection(db, "empresas", window.userEmpresa, "movimentacoes"));
+
+                    const batch = writeBatch(db);
+                    let totalAtualizacoes = 0;
+
+                    movsSnap.forEach((movDoc) => {
+                        const mov = movDoc.data();
+
+                        if (mov.produto_id === idOriginal) {
+                            batch.update(
+                                doc(db, "empresas", window.userEmpresa, "movimentacoes", movDoc.id),
+                                {
+                                    produto_id: novoId,
+                                    produto_nome: payload.nome
+                                }
+                            );
+                            totalAtualizacoes++;
+                        }
+                    });
+
+                    if (totalAtualizacoes > 0) {
+                        await batch.commit();
+                    }
+
+                } else {
+                    await updateDoc(prodRefOriginal, payload);
+
+                    const movsSnap = await getDocs(collection(db, "empresas", window.userEmpresa, "movimentacoes"));
+
+                    const batch = writeBatch(db);
+                    let totalAtualizacoes = 0;
+
+                    movsSnap.forEach((movDoc) => {
+                        const mov = movDoc.data();
+
+                        if (mov.produto_id === idOriginal) {
+                            batch.update(
+                                doc(db, "empresas", window.userEmpresa, "movimentacoes", movDoc.id),
+                                {
+                                    produto_nome: payload.nome
+                                }
+                            );
+                            totalAtualizacoes++;
+                        }
+                    });
+
+                    if (totalAtualizacoes > 0) {
+                        await batch.commit();
+                    }
+                }
+
                 showToast('Produto atualizado com sucesso!');
                 fecharModal('modal-edit-prod');
+
                 await carregarProdutos();
-                if(document.getElementById('view-movimentacoes').classList.contains('active')) carregarMovimentacoes();
+
+                if (document.getElementById('view-movimentacoes').classList.contains('active')) {
+                    carregarMovimentacoes();
+                }
+
             } catch (err) {
                 showToast('Erro: ' + err.message, true);
             } finally {
-                btn.innerText = 'SALVAR ALTERAÇÕES'; btn.disabled = false;
+                btn.innerText = 'SALVAR ALTERAÇÕES';
+                btn.disabled = false;
             }
         });
 
@@ -1764,6 +1874,9 @@
                         <td class="text-xs truncate max-w-[120px]" title="${finTexto}">${finTexto}</td>
                         <td class="text-xs truncate max-w-[120px]" title="${obsTexto}">${obsTexto}</td>
                         <td class="text-right print:hidden flex justify-end gap-1">
+                            <button onclick="abrirEditProd('${(d.produto_id || '').replace(/'/g, "\'")}')" class="text-purple-500 hover:text-purple-700 p-1.5 bg-purple-50 hover:bg-purple-100 rounded-lg transition" title="Editar Produto: código, nome e cadastro">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path><polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline><line x1="12" y1="22.08" x2="12" y2="12"></line></svg>
+                            </button>
                             <button onclick="abrirModalEditMov('${d.id}')" class="text-indigo-500 hover:text-indigo-700 p-1.5 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition" title="Editar Lançamento">
                                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
                             </button>
