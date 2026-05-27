@@ -1219,8 +1219,6 @@
         window.fazerLogout = () => signOut(auth);
 
         window.enviarRedefinicaoSenha = async () => {
-            alert('Função de redefinição foi chamada.');
-
             const email = document.getElementById('log-email').value.trim();
 
             if (!email) {
@@ -1232,13 +1230,11 @@
             try {
                 await sendPasswordResetEmail(auth, email);
 
-                alert('Pedido enviado ao Firebase.');
-                showToast('Se este e-mail estiver cadastrado, o Firebase enviará um link de redefinição. Verifique spam e lixo eletrônico.');
+                showToast('Se este e-mail estiver cadastrado, enviaremos um link de redefinição. O recebimento pode levar alguns minutos. Verifique também Spam, Promoções e Atualizações.');
             } catch (err) {
-                alert('Erro Firebase: ' + err.code);
                 console.error('Erro ao enviar redefinição:', err);
 
-                let msg = 'Não foi possível enviar o link de redefinição.';
+                let msg = 'Não foi possível solicitar a redefinição de senha.';
 
                 if (err.code === 'auth/invalid-email') {
                     msg = 'Digite um e-mail válido.';
@@ -1259,6 +1255,7 @@
                 showToast(msg, true);
             }
         };
+
 
         window.abrirModal = (id) => {
             document.getElementById(id).classList.remove('hidden');
