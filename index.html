@@ -93,6 +93,11 @@
                     </div>
                     <div>
                         <input type="password" id="log-pass" required class="w-full px-6 py-4 bg-white/5 border border-white/10 rounded-2xl text-white focus:ring-2 focus:ring-indigo-500 outline-none transition-all placeholder-slate-500" placeholder="Senha">
+                        <div class="text-right mt-2">
+                            <button type="button" onclick="enviarRedefinicaoSenha()" class="text-xs font-bold text-indigo-300 hover:text-white transition-colors">
+                                Esqueci minha senha
+                            </button>
+                        </div>
                     </div>
                     <button type="submit" id="btn-login" class="w-full btn-gradient text-white py-4 rounded-2xl font-black text-sm shadow-xl mt-4">ENTRAR NO SISTEMA</button>
                 </form>
@@ -854,7 +859,7 @@
 
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut, updatePassword, sendPasswordResetEmail } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-auth.js";
         import { getFirestore, collection, doc, getDocs, getDoc, setDoc, updateDoc, addDoc, deleteDoc, increment, writeBatch, query, where } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
         const firebaseConfig = {
@@ -1212,6 +1217,36 @@
         });
 
         window.fazerLogout = () => signOut(auth);
+
+        window.enviarRedefinicaoSenha = async () => {
+            const emailInput = document.getElementById('log-email');
+            const email = emailInput.value.trim();
+
+            if (!email) {
+                showToast('Digite seu e-mail no campo de login antes de solicitar a redefinição.', true);
+                emailInput.focus();
+                return;
+            }
+
+            try {
+                await sendPasswordResetEmail(auth, email);
+                showToast('Enviamos um link de redefinição para o e-mail informado. Verifique também a caixa de spam.');
+            } catch (err) {
+                console.error('Erro ao enviar redefinição de senha:', err);
+
+                let msg = 'Não foi possível enviar o link de redefinição.';
+
+                if (err.code === 'auth/invalid-email') {
+                    msg = 'Digite um e-mail válido.';
+                } else if (err.code === 'auth/user-not-found') {
+                    msg = 'Não encontramos usuário cadastrado com este e-mail.';
+                } else if (err.code === 'auth/too-many-requests') {
+                    msg = 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.';
+                }
+
+                showToast(msg, true);
+            }
+        };
 
         window.abrirModal = (id) => {
             document.getElementById(id).classList.remove('hidden');
