@@ -1219,29 +1219,44 @@
         window.fazerLogout = () => signOut(auth);
 
         window.enviarRedefinicaoSenha = async () => {
-            const emailInput = document.getElementById('log-email');
-            const email = emailInput.value.trim();
+            alert('Função de redefinição foi chamada.');
+
+            const email = document.getElementById('log-email').value.trim();
 
             if (!email) {
                 showToast('Digite seu e-mail no campo de login antes de solicitar a redefinição.', true);
-                emailInput.focus();
+                document.getElementById('log-email').focus();
                 return;
             }
 
             try {
-                await sendPasswordResetEmail(auth, email);
-                showToast('Enviamos um link de redefinição para o e-mail informado. Verifique também a caixa de spam.');
+                await sendPasswordResetEmail(auth, email, {
+                    url: 'https://nexa-stock-kohl.vercel.app/',
+                    handleCodeInApp: false
+                });
+
+                alert('Pedido enviado ao Firebase.');
+                showToast('Se este e-mail estiver cadastrado, o Firebase enviará um link de redefinição. Verifique spam e lixo eletrônico.');
             } catch (err) {
-                console.error('Erro ao enviar redefinição de senha:', err);
+                alert('Erro Firebase: ' + err.code);
+                console.error('Erro ao enviar redefinição:', err);
 
                 let msg = 'Não foi possível enviar o link de redefinição.';
 
                 if (err.code === 'auth/invalid-email') {
                     msg = 'Digite um e-mail válido.';
-                } else if (err.code === 'auth/user-not-found') {
-                    msg = 'Não encontramos usuário cadastrado com este e-mail.';
-                } else if (err.code === 'auth/too-many-requests') {
-                    msg = 'Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente.';
+                }
+
+                if (err.code === 'auth/user-not-found') {
+                    msg = 'Não encontramos usuário cadastrado com este e-mail no Authentication.';
+                }
+
+                if (err.code === 'auth/unauthorized-continue-uri') {
+                    msg = 'O domínio da Vercel ainda não está autorizado no Firebase.';
+                }
+
+                if (err.code === 'auth/too-many-requests') {
+                    msg = 'Muitas tentativas. Aguarde alguns minutos e tente novamente.';
                 }
 
                 showToast(msg, true);
