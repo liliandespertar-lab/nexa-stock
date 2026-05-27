@@ -936,46 +936,55 @@
                         document.getElementById('user-role').innerText = uData.nivel;
 
                         // Libera Aba Equipe para Administrador ou Master
-                        if(uData.nivel === 'Administrador' || uData.nivel === 'Master') {
+                        // Segurança visual por nível de acesso
+                        // A base ativa de qualquer usuário começa SEMPRE pela empresa vinculada ao cadastro dele.
+                        window.userEmpresa = uData.empresa;
+
+                        const selectEmpresa = document.getElementById('master-empresa-select');
+                        selectEmpresa.classList.add('hidden');
+                        selectEmpresa.innerHTML = '';
+                        selectEmpresa.onchange = null;
+
+                        document.getElementById('opt-master').classList.add('hidden');
+                        document.getElementById('campo-empresa-master').classList.add('hidden');
+                        document.getElementById('col-empresa').classList.add('hidden');
+                        document.getElementById('cad-user-empresa').required = false;
+
+                        // Apenas Master gerencia empresas e acessos globais.
+                        // Administrador e Operador ficam presos à própria empresa definida em usuarios/{uid}. 
+                        if(uData.nivel === 'Master') {
                             document.getElementById('nav-usuarios').classList.remove('hidden');
+                            document.getElementById('opt-master').classList.remove('hidden');
+                            document.getElementById('campo-empresa-master').classList.remove('hidden');
+                            document.getElementById('col-empresa').classList.remove('hidden');
+                            document.getElementById('cad-user-empresa').required = true;
+
+                            selectEmpresa.classList.remove('hidden');
                             
-                            // SE FOR MASTER: Habilita funcionalidades Globais (SaaS)
-                            if(uData.nivel === 'Master') {
-                                document.getElementById('opt-master').classList.remove('hidden');
-                                document.getElementById('campo-empresa-master').classList.remove('hidden');
-                                document.getElementById('col-empresa').classList.remove('hidden');
-                                document.getElementById('cad-user-empresa').required = true;
+                            const snapUsers = await getDocs(collection(db, "usuarios"));
+                            const empresasSet = new Set();
+                            snapUsers.forEach(d => {
+                                if(d.data().empresa) empresasSet.add(d.data().empresa);
+                            });
+                            empresasSet.add(uData.empresa);
 
-                                // Mostrar e popular o Seletor de Empresas do Header
-                                const selectEmpresa = document.getElementById('master-empresa-select');
-                                selectEmpresa.classList.remove('hidden');
-                                
-                                const snapUsers = await getDocs(collection(db, "usuarios"));
-                                const empresasSet = new Set();
-                                snapUsers.forEach(d => {
-                                    if(d.data().empresa) empresasSet.add(d.data().empresa);
-                                });
-                                empresasSet.add(uData.empresa); // Garante a própria empresa na lista
+                            Array.from(empresasSet).sort().forEach(emp => {
+                                const opt = document.createElement('option');
+                                opt.value = emp;
+                                opt.textContent = `🏢 ${emp}`;
+                                if(emp === window.userEmpresa) opt.selected = true;
+                                selectEmpresa.appendChild(opt);
+                            });
 
-                                selectEmpresa.innerHTML = '';
-                                Array.from(empresasSet).sort().forEach(emp => {
-                                    const opt = document.createElement('option');
-                                    opt.value = emp;
-                                    opt.textContent = `🏢 ${emp}`;
-                                    if(emp === window.userEmpresa) opt.selected = true;
-                                    selectEmpresa.appendChild(opt);
-                                });
-
-                                // Ação ao trocar de empresa no dropdown
-                                selectEmpresa.onchange = (e) => {
-                                    window.userEmpresa = e.target.value;
-                                    document.getElementById('user-display').innerText = `${uData.nome} (${window.userEmpresa})`;
-                                    changeView('dashboard');
-                                    showToast(`Acessando a base de: ${window.userEmpresa}`);
-                                };
-                            }
+                            selectEmpresa.onchange = (e) => {
+                                window.userEmpresa = e.target.value;
+                                document.getElementById('user-display').innerText = `${uData.nome} (${window.userEmpresa})`;
+                                changeView('dashboard');
+                                showToast(`Acessando a base de: ${window.userEmpresa}`);
+                            };
                         } else {
                             document.getElementById('nav-usuarios').classList.add('hidden');
+                            document.getElementById('user-display').innerText = `${uData.nome} (${uData.empresa})`;
                         }
 
                         document.getElementById('screen-login').style.display = 'none';
@@ -984,16 +993,30 @@
                         // Garante que SEMPRE abrirá no Dashboard e carregará os dados
                         changeView('dashboard');
                         
-                        // Verifica se ainda existem dados órfãos na raiz (Botão Migrar SaaS)
-                        if(uData.nivel === 'Administrador' || uData.nivel === 'Master') {
-                            const snapRaiz = await getDocs(collection(db, "produtos"));
-                            if(!snapRaiz.empty) document.getElementById('btn-migrar-saas').classList.remove('hidden');
+                        // Verifica dados órfãos da arquitetura antiga apenas para Master.
+                        // Com regras seguras no Firestore, usuários comuns não devem tentar ler coleções da raiz.
+                        if(uData.nivel === 'Master') {
+                            try {
+                                const snapRaiz = await getDocs(collection(db, "produtos"));
+                                if(!snapRaiz.empty) document.getElementById('btn-migrar-saas').classList.remove('hidden');
+                            } catch(legacyErr) {
+                                console.warn('Verificação de dados antigos bloqueada pelas regras do Firestore:', legacyErr);
+                                document.getElementById('btn-migrar-saas').classList.add('hidden');
+                            }
+                        } else {
+                            document.getElementById('btn-migrar-saas').classList.add('hidden');
                         }
                     } else {
                         showToast('Conta não encontrada ou excluída.', true);
                         signOut(auth);
                     }
-                } catch(e) { console.log('Erro ao buscar dados do usuário', e); }
+                } catch(e) {
+                    console.error('Erro ao buscar dados do usuário', e);
+                    showToast('Não foi possível carregar seu perfil. Confira se seu usuário está Ativo no Firestore e vinculado a uma empresa.', true);
+                    document.getElementById('screen-login').style.display = 'flex';
+                    document.getElementById('screen-app').style.display = 'none';
+                    await signOut(auth);
+                }
             } else {
                 document.getElementById('screen-login').style.display = 'flex';
                 document.getElementById('screen-app').style.display = 'none';
