@@ -1230,10 +1230,7 @@
             }
 
             try {
-                await sendPasswordResetEmail(auth, email, {
-                    url: 'https://nexa-stock-kohl.vercel.app/',
-                    handleCodeInApp: false
-                });
+                await sendPasswordResetEmail(auth, email);
 
                 alert('Pedido enviado ao Firebase.');
                 showToast('Se este e-mail estiver cadastrado, o Firebase enviará um link de redefinição. Verifique spam e lixo eletrônico.');
@@ -1251,8 +1248,8 @@
                     msg = 'Não encontramos usuário cadastrado com este e-mail no Authentication.';
                 }
 
-                if (err.code === 'auth/unauthorized-continue-uri') {
-                    msg = 'O domínio da Vercel ainda não está autorizado no Firebase.';
+                if (err.code === 'auth/unauthorized-domain') {
+                    msg = 'O domínio atual não está autorizado no Firebase.';
                 }
 
                 if (err.code === 'auth/too-many-requests') {
